@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>司法行政系统招录公务员考试 · 行测机考模拟系统</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy-deep: #1b2e47;
+      --navy-bar: #1b4d89;
+      --crimson: #962925;
+      --parchment: #f6f1e9;
+      --exam-green-bg: #e7f5dc;
+      --exam-green-stripe: #dcf0cd;
+      --exam-green-border: #c5e1b0;
+      --q-font-size: 15px;
+    }
+    body.mode-white {
+      --exam-green-bg: #ffffff;
+      --exam-green-stripe: #f8fafc;
+      --exam-green-border: #e2e8f0;
+    }
+    body {
+      font-family: 'Inter', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+      background-color: var(--parchment);
+      color: #1f2937;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 999px; }
+
+    /* ===== 首页 1:1 司法行政设计视觉 ===== */
+    .hero-parchment {
+      background: radial-gradient(ellipse at 50% 42%, #f1e4d1 0%, #e7d5be 55%, #dec7ab 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-grain {
+      position: absolute;
+      inset: 0;
+      opacity: 0.2;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(70, 50, 30, 0.14) 1px, transparent 0);
+      background-size: 4px 4px;
+    }
+    .hero-sub-title {
+      color: #213752;
+      font-weight: 800;
+      font-style: italic;
+      letter-spacing: 0.04em;
+      font-size: clamp(14px, 2.2vw, 28px);
+      line-height: 1.35;
+      transform: skewX(-6deg);
+    }
+    .hero-main-title {
+      background: linear-gradient(180deg, #9d2d27 0%, #7f1f1b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 0.04em;
+      font-size: clamp(34px, 6.8vw, 90px);
+      line-height: 1.12;
+      transform: skewX(-8deg);
+      filter: drop-shadow(0 2px 0 rgba(255, 255, 255, 0.35));
+    }
+    .hero-star-line-left { height: 2px; background: linear-gradient(90deg, transparent 0%, #962925 100%); }
+    .hero-star-line-right { height: 2px; background: linear-gradient(90deg, #962925 0%, transparent 100%); }
+    .hero-cta-btn {
+      background: linear-gradient(180deg, #a1322c 0%, #83221d 100%);
+      color: #fdf8f3;
+      border: 1.5px solid rgba(255, 245, 235, 0.55);
+      box-shadow: 0 6px 20px rgba(110, 25, 22, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+    .hero-cta-btn:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 10px 24px rgba(110, 25, 22, 0.36); }
+    .hero-pill-nav {
+      background: rgba(255, 250, 243, 0.74);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(33, 55, 82, 0.16);
+      color: #213752;
+    }
+    .hero-pill-nav:hover { background: rgba(255, 250, 243, 0.96); border-color: rgba(150, 41, 37, 0.45); color: #8b241f; }
+
+    /* ===== 机考护眼绿界面 ===== */
+    .cbt-green-surface { background-color: var(--exam-green-bg); }
+    .cbt-stripe-even { background-color: var(--exam-green-bg); }
+    .cbt-stripe-odd { background-color: var(--exam-green-stripe); }
+    .cbt-green-border { border-color: var(--exam-green-border); }
+    .q-text { font-size: var(--q-font-size); line-height: 1.78; }
+    .opt-struck { text-decoration: line-through; opacity: 0.36; }
+    .highlight-mark { background-color: #fde047; color: #111827; padding: 0 2px; border-radius: 2px; }
+    .blank-slot { display: inline-block; min-width: 4em; border-bottom: 1.5px solid #1f2937; margin: 0 3px; vertical-align: -2px; }
+
+    .exam-std-table { width: 100%; border-collapse: collapse; background: #fff; color: #111827; margin: 0 auto; }
+    .exam-std-table th, .exam-std-table td { border: 1px solid #374151; text-align: center; padding: 7px 6px; font-size: 14px; }
+    .exam-std-table th { background: #f8fafc; font-weight: 600; }
+
+    .sheet-grid-btn {
+      height: 24px; font-size: 11px; font-family: 'Inter', monospace; border-radius: 3px;
+      border: 1px solid #cbd5e1; background: #fff; color: #334155;
+      position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .sheet-grid-btn.answered { background: #1d68b8; border-color: #1d68b8; color: #fff; font-weight: 600; }
+    .sheet-grid-btn.current { background: #f59e0b !important; border-color: #d97706 !important; color: #fff !important; font-weight: 700; }
+    .sheet-grid-btn.locked { background: #f1f5f9; border-color: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+    .sheet-grid-btn.locked.answered { background: #93c5fd; border-color: #93c5fd; color: #fff; }
+    .sheet-flag-dot { position: absolute; top: 1px; right: 1px; width: 0; height: 0; border-top: 6px solid #ef4444; border-left: 6px solid transparent; }
+
+    .cbt-radio-row { display: flex; align-items: flex-start; gap: 8px; padding: 7px 10px; border-radius: 6px; cursor: pointer; transition: background-color 0.1s; }
+    .cbt-radio-row:hover { background-color: rgba(29, 104, 184, 0.08); }
+    .cbt-radio-dot { width: 16px; height: 16px; border-radius: 999px; border: 1.5px solid #64748b; background: #fff; margin-top: 4px; flex-shrink: 0; }
+    .cbt-radio-row.selected .cbt-radio-dot { border-color: #1d68b8; background: #1d68b8; box-shadow: inset 0 0 0 3px #fff; }
+    .graphic-tile { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: #fff; cursor: pointer; transition: all 0.12s; }
+    .graphic-tile:hover { border-color: #1d68b8; }
+    .graphic-tile.selected { border-color: #1d68b8; background: #eff6ff; }
+    .scratch-canvas { touch-action: none; cursor: crosshair; }
+
+    @media (max-width: 640px) {
+      .exam-std-table th, .exam-std-table td { padding: 5px 3px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Toast -->
+  <div id="toast-container" class="fixed top-14 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-xs"></div>
+
+  <!-- Modal -->
+  <div id="modal-overlay" class="fixed inset-0 z-50 hidden bg-slate-900/55 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden border border-slate-200">
+      <div class="flex items-center justify-between px-4 py-3 bg-[#1b2e47] text-white">
+        <h3 id="modal-title" class="text-sm font-bold"></h3>
+        <button id="modal-close-btn" class="text-white/80 hover:text-white text-sm">✕</button>
+      </div>
+      <div id="modal-body" class="p-4 overflow-y-auto custom-scroll text-sm text-slate-700 leading-relaxed"></div>
+      <div id="modal-footer" class="px-4 py-3 border-t border-slate-200 flex justify-end gap-2 bg-[#faf7f2]"></div>
+    </div>
+  </div>
+
+  <!-- Scratchpad -->
+  <div id="scratchpad-modal" class="fixed inset-0 z-40 hidden bg-slate-900/50 flex items-center justify-center p-2 sm:p-6">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl h-[78vh] flex flex-col overflow-hidden border border-slate-300">
+      <div class="flex items-center justify-between gap-2 px-4 py-2.5 bg-[#1b2e47] text-white text-xs">
+        <span class="font-bold">电子草稿纸</span>
+        <div class="flex items-center gap-1.5">
+          <button data-pen="#1e293b" class="scratch-color w-5 h-5 rounded-full bg-slate-900 ring-2 ring-white" title="黑笔"></button>
+          <button data-pen="#dc2626" class="scratch-color w-5 h-5 rounded-full bg-red-600" title="红笔"></button>
+          <button data-pen="#2563eb" class="scratch-color w-5 h-5 rounded-full bg-blue-500" title="蓝笔"></button>
+          <button id="scratch-eraser-btn" class="px-2 py-1 rounded bg-white/15">橡皮</button>
+          <button id="scratch-clear-btn" class="px-2 py-1 rounded bg-red-500/80">清空</button>
+          <button id="scratch-close-btn" class="px-2.5 py-1 rounded bg-white text-[#1b2e47] font-semibold">收起</button>
+        </div>
+      </div>
+      <div class="flex-1 relative bg-white overflow-hidden">
+        <canvas id="scratch-canvas" class="scratch-canvas w-full h-full block"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW 1: 首页与子页面（纯净产品级 UI，零技术杂音） ==================== -->
+  <div id="view-lobby" class="min-h-screen flex flex-col">
+
+    <!-- Sub-view A: 1:1 司法行政首页 -->
+    <div id="lobby-home-pane" class="hero-parchment min-h-screen flex flex-col justify-between relative select-none">
+      <div class="hero-grain"></div>
+      <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1440 810" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="g-left-gray" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#9ca2a6" stop-opacity="0.72"/><stop offset="100%" stop-color="#c4c3bd" stop-opacity="0.48"/></linearGradient>
+          <linearGradient id="g-left-slate" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4e637a"/><stop offset="100%" stop-color="#7c8a96" stop-opacity="0.82"/></linearGradient>
+          <linearGradient id="g-left-navy" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#223650"/><stop offset="100%" stop-color="#304866"/></linearGradient>
+          <linearGradient id="g-right-rose" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#b96d60" stop-opacity="0.78"/><stop offset="100%" stop-color="#d7a796" stop-opacity="0.55"/></linearGradient>
+          <linearGradient id="g-right-red" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#9f2e2a"/><stop offset="100%" stop-color="#b8413a"/></linearGradient>
+          <linearGradient id="g-right-dark" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6c1e1d"/><stop offset="100%" stop-color="#872624"/></linearGradient>
+          <linearGradient id="g-bottom-navy" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1c2f48"/><stop offset="50%" stop-color="#192b42"/><stop offset="100%" stop-color="#1d314b"/></linearGradient>
+        </defs>
+        <polygon points="0,58 585,685 0,685" fill="url(#g-left-gray)"/>
+        <polygon points="0,272 520,665 0,665" fill="url(#g-left-slate)"/>
+        <polygon points="0,378 465,645 0,645" fill="url(#g-left-navy)"/>
+        <polygon points="0,486 410,632 0,632" fill="#9ea6ae" fill-opacity="0.55"/>
+        <polygon points="1440,36 820,695 1440,695" fill="url(#g-right-rose)"/>
+        <polygon points="1440,210 735,705 1440,705" fill="url(#g-right-red)"/>
+        <polygon points="1440,485 615,725 1440,725" fill="url(#g-right-dark)"/>
+        <polygon points="0,552 680,682 1440,612 1440,810 0,810" fill="url(#g-bottom-navy)"/>
+      </svg>
+
+      <!-- Clean Candidate-Only Top-Right Navigation -->
+      <div class="relative z-20 flex items-center justify-end gap-2 px-4 sm:px-8 pt-4 sm:pt-5">
+        <button id="btn-hero-blueprint" class="hero-pill-nav px-3.5 py-1.5 rounded-full text-xs font-medium transition">专项练习</button>
+        <button id="btn-hero-mistakes" class="hero-pill-nav px-3.5 py-1.5 rounded-full text-xs font-medium transition flex items-center gap-1">
+          <span>错题收藏</span>
+          <span id="hero-mistake-cnt" class="hidden px-1.5 rounded-full bg-[#962925] text-white text-[10px]">0</span>
+        </button>
+        <button id="btn-hero-history" class="hero-pill-nav px-3.5 py-1.5 rounded-full text-xs font-medium transition">成绩档案</button>
+      </div>
+
+      <!-- Pure Ceremonial Hero -->
+      <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-8 text-center -mt-4 sm:-mt-8">
+        <div class="flex items-center justify-center gap-3 sm:gap-5 mb-5 sm:mb-7 w-full max-w-xl">
+          <span class="h-[1px] flex-1 max-w-[72px] sm:max-w-[110px] bg-[#213752]/55"></span>
+          <span class="text-[#213752] text-xs sm:text-base font-medium tracking-[0.42em] whitespace-nowrap">以考促学&nbsp;&nbsp;以练致行</span>
+          <span class="h-[1px] flex-1 max-w-[72px] sm:max-w-[110px] bg-[#213752]/55"></span>
+        </div>
+
+        <h2 class="hero-sub-title mb-2 sm:mb-3 max-w-4xl">司法行政系统面向中央司法警官学院毕业生招录公务员考试</h2>
+        <h1 class="hero-main-title mb-4 sm:mb-5">行测机考模拟系统</h1>
+
+        <div class="flex items-center justify-center gap-4 w-full max-w-2xl mb-8 sm:mb-10">
+          <div class="hero-star-line-left flex-1"></div>
+          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#962925] shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/>
+          </svg>
+          <div class="hero-star-line-right flex-1"></div>
+        </div>
+
+        <div class="flex flex-col items-center gap-3">
+          <button id="btn-enter-prep" class="hero-cta-btn px-12 sm:px-16 py-3.5 sm:py-4 rounded-xl text-base sm:text-xl font-semibold tracking-[0.18em] flex items-center gap-2.5 cursor-pointer">
+            <span>开始考试</span>
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 opacity-90" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </button>
+
+          <button id="btn-resume-saved" class="hidden px-6 py-2 rounded-full bg-[#1b2e47] hover:bg-[#243d5e] text-[#f5ebdc] text-xs sm:text-sm font-medium shadow-md transition">
+            恢复上次未完考试
+          </button>
+        </div>
+      </div>
+
+      <footer class="relative z-10 py-5 sm:py-7 px-4 flex items-center justify-center gap-3 sm:gap-5 text-[#e8decb]/90 text-[11px] sm:text-sm tracking-[0.35em]">
+        <span class="h-[1px] w-10 sm:w-20 bg-[#e8decb]/40"></span>
+        <span class="whitespace-nowrap">夯实基础 · 锤炼能力 · 迎接挑战</span>
+        <span class="h-[1px] w-10 sm:w-20 bg-[#e8decb]/40"></span>
+      </footer>
+    </div>
+
+    <!-- Clean Sub-Page Header -->
+    <header id="subpage-header" class="hidden bg-[#1b2e47] text-[#f5ebdc] shadow-sm sticky top-0 z-20 border-b-2 border-[#962925]">
+      <div class="max-w-6xl mx-auto px-3 sm:px-5 h-14 flex items-center justify-between gap-2">
+        <button id="btn-nav-lobby" class="px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-xs font-semibold shrink-0">← 返回首页</button>
+        <div class="flex items-center gap-1.5 text-xs">
+          <button id="btn-nav-blueprint" class="px-3 py-1.5 rounded whitespace-nowrap">专项练习</button>
+          <button id="btn-nav-mistakes" class="px-3 py-1.5 rounded whitespace-nowrap">错题收藏</button>
+          <button id="btn-nav-history" class="px-3 py-1.5 rounded whitespace-nowrap">成绩档案</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sub-view B: 专项练习与考纲 -->
+    <main id="lobby-blueprint-pane" class="hidden flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 space-y-4">
+      <section class="bg-white rounded-xl border border-[#e3d9ca] overflow-hidden shadow-xs">
+        <div class="px-4 py-3 border-b border-[#e3d9ca] flex flex-wrap items-center justify-between gap-2 bg-[#faf7f2]">
+          <span class="font-bold text-sm text-[#1b2e47]">考试结构与单科限时专项（180 题 / 100 分 / 120 分钟）</span>
+          <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-slate-600">
+            <input id="opt-random-order" type="checkbox" checked class="rounded accent-[#962925]" />
+            <span>全真模考随机模块顺序</span>
+          </label>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm text-left border-collapse">
+            <thead>
+              <tr class="bg-[#faf7f2] border-b border-[#e3d9ca] text-slate-500">
+                <th class="py-2.5 px-4 text-center w-12">序号</th>
+                <th class="py-2.5 px-4">科目与题型分布</th>
+                <th class="py-2.5 px-4 text-center">题量</th>
+                <th class="py-2.5 px-4 text-center">分值</th>
+                <th class="py-2.5 px-4 text-center">总分</th>
+                <th class="py-2.5 px-4 text-center">时限</th>
+                <th class="py-2.5 px-4 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody id="lobby-blueprint-body" class="divide-y divide-[#eee6da]"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- Sub-view C: 错题收藏 -->
+    <main id="lobby-mistakes-pane" class="hidden flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <button id="btn-mtab-wrong" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-[#962925] text-white">错题本</button>
+          <button id="btn-mtab-fav" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-white border border-[#d8cbb8] text-[#1b2e47]">收藏夹</button>
+        </div>
+        <button id="btn-redo-mistake-list" class="px-4 py-1.5 rounded-lg bg-[#1b2e47] hover:bg-[#243d5e] text-white text-xs sm:text-sm font-semibold">重做全部</button>
+      </div>
+      <div id="mistakes-list-box" class="space-y-3"></div>
+    </main>
+
+    <!-- Sub-view D: 成绩档案 -->
+    <main id="lobby-history-pane" class="hidden flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold text-base text-[#1b2e47]">成绩档案</h2>
+        <button id="btn-clear-history" class="px-3 py-1 rounded border border-red-300 text-red-700 bg-white text-xs">清空记录</button>
+      </div>
+      <div id="history-list-box" class="space-y-2.5"></div>
+    </main>
+  </div>
+
+  <!-- ==================== VIEW 2: 考前准备页（100% 还原视频 00:08–00:30） ==================== -->
+  <div id="view-prep" class="hidden min-h-screen flex flex-col bg-[#f3f5f8]">
+    <div class="bg-[#1b4d89] text-white py-3 px-4 shadow-md">
+      <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-lg bg-white text-[#1b4d89] font-extrabold text-xl flex items-center justify-center shrink-0">考</div>
+          <div class="text-xs sm:text-sm space-y-0.5">
+            <div class="flex flex-wrap gap-x-5"><span><strong>姓名：</strong>考生</span><span><strong>考试类型：</strong>行政职业能力测验</span></div>
+            <div class="flex flex-wrap gap-x-5 text-blue-100"><span><strong>考试时间：</strong>120分钟</span><span id="prep-load-label"><strong>试卷加载：</strong>已加载，正在倒计时</span></div>
+          </div>
+        </div>
+        <div class="flex flex-col items-end gap-1.5 shrink-0">
+          <div class="px-4 py-1.5 rounded bg-[#f97316] text-white font-mono font-bold text-sm sm:text-base shadow">倒计时：<span id="prep-countdown">00:00:05</span></div>
+          <div class="w-52 bg-white/20 rounded-full h-3.5 overflow-hidden relative">
+            <div id="prep-progress-bar" class="h-full bg-blue-400 transition-all duration-300" style="width:100%"></div>
+            <span id="prep-progress-txt" class="absolute inset-0 text-[10px] text-center leading-3.5 font-semibold">100%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 flex flex-col">
+      <div class="bg-white rounded-lg border border-slate-200 shadow-sm flex-1 flex flex-col overflow-hidden">
+        <div class="text-center py-5 border-b border-slate-200"><h2 class="text-2xl font-bold text-[#1b4d89]">公务员录用电子化考试</h2></div>
+        <div class="flex border-b border-slate-200 bg-slate-50 px-6 text-sm font-medium">
+          <button data-ptab="notice" class="prep-tab px-5 py-3 border-b-2 border-[#1b4d89] text-[#1b4d89]">考生须知</button>
+          <button data-ptab="rules" class="prep-tab px-5 py-3 border-b-2 border-transparent text-slate-500">考场规则</button>
+          <button data-ptab="guide" class="prep-tab px-5 py-3 border-b-2 border-transparent text-slate-500">操作指南</button>
+        </div>
+        <div id="prep-tab-content" class="p-6 flex-1 overflow-y-auto custom-scroll text-sm leading-7 text-slate-700 space-y-3"></div>
+        <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-center gap-3">
+          <button id="btn-prep-cancel" class="px-5 py-2 rounded border border-slate-300 bg-white text-slate-600 text-sm">返回首页</button>
+          <button id="btn-prep-confirm" class="px-8 py-2 rounded bg-[#1b4d89] hover:bg-[#153d6e] text-white font-semibold text-sm shadow-xs">我已阅读，进入考试</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW 3: 正式机考操作界面 ==================== -->
+  <div id="view-exam" class="hidden fixed inset-0 z-30 flex flex-col bg-[#e7f5dc]">
+    <header class="bg-[#1b4d89] text-white h-12 px-3 sm:px-4 flex items-center justify-between gap-2 shrink-0 shadow-sm">
+      <div class="flex items-center gap-2 min-w-0">
+        <button id="btn-mobile-sheet" class="lg:hidden px-2 py-1 rounded bg-white/15 text-xs font-medium shrink-0">答题卡</button>
+        <div class="w-7 h-7 rounded bg-white text-[#1b4d89] font-extrabold text-xs hidden sm:flex items-center justify-center shrink-0">考</div>
+        <span class="text-xs sm:text-sm font-semibold truncate">司法行政系统招录公务员考试 · 行测机考</span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center gap-1 text-xs sm:text-sm bg-black/20 px-2.5 py-1 rounded">
+          <span id="exam-timer-label" class="text-blue-200 hidden sm:inline">剩余时间：</span>
+          <span id="exam-timer-clock" class="font-mono font-bold tracking-wider">00:02:00</span>
+          <button id="btn-pause-exam" class="ml-1 text-xs opacity-80 hover:opacity-100" title="暂停/继续">⏸</button>
+        </div>
+        <button id="btn-exam-exit-save" class="px-2.5 py-1 rounded bg-white/15 hover:bg-white/25 text-xs hidden sm:inline">暂存退出</button>
+        <button id="btn-exam-submit-all" class="px-3.5 py-1 rounded bg-[#f97316] hover:bg-[#ea580c] text-white font-bold text-xs sm:text-sm shadow-xs">交卷</button>
+      </div>
+    </header>
+
+    <div class="flex-1 flex min-h-0 overflow-hidden relative">
+      <aside id="left-sheet-panel" class="hidden lg:flex fixed lg:static inset-y-0 left-0 z-40 w-52 bg-white border-r border-slate-300 flex-col shrink-0 shadow-xl lg:shadow-none">
+        <div class="px-3 py-2 border-b border-slate-200 flex items-center justify-between text-xs bg-slate-50">
+          <span class="font-bold text-slate-700">答题卡</span>
+          <span id="sheet-done-counter" class="font-mono text-blue-700 font-semibold">0/180</span>
+          <button id="btn-close-left-sheet" class="lg:hidden text-slate-500">✕</button>
+        </div>
+        <div id="left-sheet-body" class="flex-1 overflow-y-auto custom-scroll p-2.5 space-y-3"></div>
+      </aside>
+      <div id="left-sheet-backdrop" class="hidden lg:hidden fixed inset-0 z-30 bg-black/40"></div>
+
+      <div class="flex-1 flex flex-col min-w-0 cbt-green-surface overflow-hidden">
+        <div class="bg-[#f3f6f9] border-b border-slate-300 px-3 sm:px-4 h-9 flex items-center justify-between gap-2 shrink-0 text-xs">
+          <span id="exam-part-banner" class="font-bold text-slate-800 truncate">第1部分 知觉速度与准确性</span>
+          <div class="flex items-center gap-1.5 shrink-0 text-slate-600">
+            <button id="btn-highlight-sel" class="px-2 py-0.5 rounded border border-slate-300 bg-white hover:bg-amber-50">高亮</button>
+            <button id="btn-split-toggle" class="hidden lg:inline-block px-2 py-0.5 rounded border border-slate-300 bg-white">分屏</button>
+            <button id="btn-font-dec" class="px-1.5 py-0.5 rounded border border-slate-300 bg-white">A-</button>
+            <button id="btn-font-inc" class="px-1.5 py-0.5 rounded border border-slate-300 bg-white">A+</button>
+            <button id="btn-bg-toggle" class="px-2 py-0.5 rounded border border-slate-300 bg-white hidden sm:inline-block">护眼</button>
+            <button id="btn-open-scratch" class="px-2 py-0.5 rounded border border-slate-300 bg-white">草稿</button>
+          </div>
+        </div>
+
+        <!-- Stage A: 知觉速度 2 分钟说明页 -->
+        <div id="stage-perceptual-intro" class="hidden flex-1 overflow-y-auto custom-scroll p-4 sm:p-8">
+          <div class="max-w-4xl mx-auto space-y-4 text-sm text-slate-800 leading-relaxed">
+            <h2 class="text-xl font-bold text-center text-slate-900">“知觉速度与准确性”说明</h2>
+            <p class="indent-8">本部分共 <strong>60 题</strong>，时限 <strong>10 分钟</strong>（2 分钟阅读说明 + 8 分钟作答），固定为第一部分，不允许先作答其他部分。超时自动锁定并进入下一部分，剩余时间不可累计。</p>
+            <p class="indent-8 text-red-700 font-semibold">⚠ 计分规则：答对得 +0.15 分，答错倒扣 -0.15 分（扣完本部分 0 分为止），不答得 0 分。请勿盲目蒙题；如需取消已选答案，请点击右侧「清空」或右键。</p>
+            <div class="bg-white rounded-lg border border-slate-300 p-4 space-y-2.5 text-xs sm:text-sm">
+              <div><strong>1. 定位数字区间（20题）：</strong>判断目标数字属于 ①～⑤ 哪一列区间。</div>
+              <div><strong>2. 词表对照（20题）：</strong>核对每题 5 词中有几个与 3×5 词表完全一致（A–E 对应 0–4）。</div>
+              <div><strong>3. 字符替换核对（20题）：</strong>按 2×10 对照表将 4 字词语替换为对应代码（A–E 五选一）。</div>
+            </div>
+            <div class="text-center pt-2">
+              <button id="btn-skip-perc-intro" class="px-6 py-2 rounded-lg bg-[#1b4d89] hover:bg-[#153d6e] text-white font-semibold text-sm shadow">跳过说明，立即开始作答</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage B: Active Exam Workspace -->
+        <div id="stage-active-exam" class="hidden flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div id="exam-split-wrap" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <div id="exam-top-material" class="hidden bg-white border-b border-slate-300 p-3 sm:p-4 overflow-y-auto custom-scroll shrink-0"></div>
+            <div id="exam-question-area" class="flex-1 overflow-y-auto custom-scroll"></div>
+          </div>
+        </div>
+
+        <footer class="bg-white border-t border-slate-300 px-2.5 sm:px-5 h-12 flex items-center justify-between gap-1.5 shrink-0 text-xs">
+          <div class="flex items-center gap-2.5 text-slate-600 min-w-0">
+            <span id="footer-mod-progress" class="font-medium truncate">进度：0/60</span>
+            <label class="hidden md:inline-flex items-center gap-1 cursor-pointer select-none shrink-0">
+              <input id="opt-auto-next" type="checkbox" class="rounded text-blue-600" />
+              <span>自动下一题</span>
+            </label>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button id="btn-fav-current" class="px-2 sm:px-2.5 py-1.5 rounded border border-amber-300 text-amber-700 hover:bg-amber-50 font-medium" title="收藏">☆</button>
+            <button id="btn-flag-current" class="px-2 sm:px-3 py-1.5 rounded border border-rose-300 text-rose-600 hover:bg-rose-50 font-medium">标记</button>
+            <button id="btn-prev-q" class="px-2.5 sm:px-3 py-1.5 rounded border border-slate-300 bg-slate-50 text-slate-700 font-medium disabled:opacity-40">上一题<span class="hidden sm:inline"> (F4)</span></button>
+            <button id="btn-next-q" class="px-3 sm:px-3.5 py-1.5 rounded bg-[#1d68b8] hover:bg-[#165294] text-white font-semibold">下一题<span class="hidden sm:inline"> (F5)</span></button>
+            <button id="btn-finish-module" class="px-2.5 sm:px-3 py-1.5 rounded bg-[#f97316] hover:bg-[#ea580c] text-white font-semibold">交本模块</button>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW 4: SCORE REPORT ==================== -->
+  <div id="view-report" class="hidden min-h-screen flex flex-col bg-[#f6f1e9]">
+    <header class="bg-[#1b2e47] text-[#f5ebdc] h-14 px-4 flex items-center justify-between border-b-2 border-[#962925]">
+      <span id="report-header-title" class="font-bold text-sm sm:text-base truncate">成绩诊断报告</span>
+      <div class="flex items-center gap-2 shrink-0">
+        <button id="btn-report-redo-wrong" class="px-3 py-1.5 rounded bg-[#962925] text-white font-semibold text-xs">重做错题</button>
+        <button id="btn-report-home" class="px-3 py-1.5 rounded bg-white text-[#1b2e47] font-semibold text-xs">返回首页</button>
+      </div>
+    </header>
+    <main class="max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 space-y-5">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="bg-white rounded-xl border border-[#e3d9ca] p-4"><div class="text-xs text-slate-500">折算总分（含知觉倒扣）</div><div id="rep-score" class="text-2xl font-bold text-[#962925] mt-1">0.00</div><div id="rep-max" class="text-xs text-slate-400">满分 100.0</div></div>
+        <div class="bg-white rounded-xl border border-[#e3d9ca] p-4"><div class="text-xs text-slate-500">整体正确率</div><div id="rep-acc" class="text-2xl font-bold text-emerald-700 mt-1">0%</div><div id="rep-cnt" class="text-xs text-slate-400">答对 0 / 0</div></div>
+        <div class="bg-white rounded-xl border border-[#e3d9ca] p-4"><div class="text-xs text-slate-500">知觉速度净得分</div><div id="rep-perc-net" class="text-2xl font-bold text-amber-600 mt-1">0.00</div><div id="rep-perc-detail" class="text-xs text-slate-400">对0 错0 空0</div></div>
+        <div class="bg-white rounded-xl border border-[#e3d9ca] p-4"><div class="text-xs text-slate-500">总耗时 / 超时题</div><div id="rep-time" class="text-2xl font-bold text-[#1b2e47] mt-1">0分0秒</div><div id="rep-slow-cnt" class="text-xs text-slate-400">耗时>90s：0 题</div></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl border border-[#e3d9ca] p-4"><div class="font-bold text-sm text-[#1b2e47] mb-2">各模块正确率雷达图</div><div class="relative h-64"><canvas id="chart-radar"></canvas></div></div>
+        <div class="bg-white rounded-xl border border-[#e3d9ca] p-4"><div class="font-bold text-sm text-[#1b2e47] mb-2">实际耗时 vs 时限（分钟）</div><div class="relative h-64"><canvas id="chart-bar"></canvas></div></div>
+      </div>
+
+      <section class="bg-white rounded-xl border border-[#e3d9ca] overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm text-left">
+            <thead>
+              <tr class="bg-[#faf7f2] border-b border-[#e3d9ca] text-slate-500">
+                <th class="py-2.5 px-4">作答顺序与模块</th><th class="py-2.5 px-4 text-center">对 / 错 / 空</th><th class="py-2.5 px-4 text-center">正确率</th><th class="py-2.5 px-4 text-center">得分</th><th class="py-2.5 px-4 text-center">耗时 / 限时</th>
+              </tr>
+            </thead>
+            <tbody id="rep-mod-tbody" class="divide-y divide-[#eee6da]"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-xl border border-[#e3d9ca] p-4 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="font-bold text-sm text-[#1b2e47]">逐题解析</h3>
+          <div class="flex flex-wrap gap-1.5 text-xs">
+            <button data-rf="all" class="rf-btn px-3 py-1 rounded bg-[#1b2e47] text-white">全部</button>
+            <button data-rf="wrong" class="rf-btn px-3 py-1 rounded bg-[#faf7f2] text-slate-700 border border-[#e3d9ca]">错题</button>
+            <button data-rf="unanswered" class="rf-btn px-3 py-1 rounded bg-[#faf7f2] text-slate-700 border border-[#e3d9ca]">未答</button>
+            <button data-rf="slow" class="rf-btn px-3 py-1 rounded bg-[#faf7f2] text-slate-700 border border-[#e3d9ca]">超时题(>90s)</button>
+            <button data-rf="flagged" class="rf-btn px-3 py-1 rounded bg-[#faf7f2] text-slate-700 border border-[#e3d9ca]">标记</button>
+          </div>
+        </div>
+        <div id="rep-review-list" class="space-y-3"></div>
+        <div id="rep-pagination" class="flex items-center justify-center gap-3 pt-2 text-xs"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // =========================================================================
+    // LAYER 1: BLUEPRINT & CONSTANTS
+    // =========================================================================
+    const LETTERS = ['A', 'B', 'C', 'D', 'E'];
+    const REPO_RAW = 'https://raw.githubusercontent.com/ERRRC/xingcezhenti/main/';
+    const REPO_CDN = 'https://cdn.jsdelivr.net/gh/ERRRC/xingcezhenti@main/';
+
+    const EXAM_MODULES = [
+      { id: 'perceptual', name: '知觉速度与准确性', count: 60, point: 0.15, maxScore: 9.0, introSec: 120, examSec: 480, timeLabel: '2+8 分钟', penalty: true, fixedFirst: true, desc: '定位数字区间 20 · 词表对照 20 · 字符替换 20（答错倒扣分）' },
+      { id: 'politics',   name: '政治理论',         count: 15, point: 0.6,  maxScore: 9.0, examSec: 600,  timeLabel: '10 分钟', repoFolder: '01-政治理论', desc: '党的创新理论、马克思主义哲学与时政理论' },
+      { id: 'common',     name: '常识判断',         count: 15, point: 0.5,  maxScore: 7.5, examSec: 600,  timeLabel: '10 分钟', repoFolder: '02-常识判断', desc: '法律、经济、科技、历史与人文地理常识' },
+      { id: 'verbal',     name: '言语理解与表达',   count: 25, point: 0.9,  maxScore: 22.5, examSec: 1200, timeLabel: '20 分钟', repoFolder: '03-言语理解与表达', desc: '逻辑填空 15 · 阅读理解 7 · 语句表达 3', subQuotas: [{ subType: '逻辑填空', count: 15 }, { subType: '阅读理解', count: 7 }, { subType: '语句表达', count: 3 }] },
+      { id: 'reasoning',  name: '判断推理',         count: 35, point: 0.7,  maxScore: 24.0, examSec: 2100, timeLabel: '35 分钟', repoFolder: '05-判断推理', desc: '图形推理 10 · 定义判断 10 · 类比推理 5 · 逻辑判断 10', subQuotas: [{ subType: '图形推理', count: 10 }, { subType: '定义判断', count: 10 }, { subType: '类比推理', count: 5 }, { subType: '逻辑判断', count: 10 }] },
+      { id: 'data',       name: '资料分析',         count: 20, point: 1.0,  maxScore: 20.0, examSec: 1200, timeLabel: '20 分钟', repoFolder: '06-资料分析', desc: '4 篇统计材料（每篇 5 题）' },
+      { id: 'quant',      name: '数量关系',         count: 10, point: 0.8,  maxScore: 8.0, examSec: 900,  timeLabel: '15 分钟', repoFolder: '04-数量关系', desc: '数学运算（工程、行程、利润、概率、容斥等）' }
+    ];
+    const MOD_MAP = Object.fromEntries(EXAM_MODULES.map(m => [m.id, m]));
+    const SUB_POINT_MAP = { '图形推理': 0.6, '定义判断': 0.7, '类比推理': 0.6, '逻辑判断': 0.8 };
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+
+    // =========================================================================
+    // LAYER 2: ZERO-COLD-START EMBEDDED 120Q CORE BANK + 60Q DYNAMIC PERCEPTUAL
+    // (Guarantees instant 180-question full-quota exam at T=0ms & offline!)
+    // =========================================================================
+    const WORD_TRAP_PAIRS = [
+      ['发奋','发愤'],['度过','渡过'],['反应','反映'],['精致','精制'],['富裕','富余'],
+      ['简洁','简捷'],['严谨','严禁'],['扎实','踏实'],['稳健','稳建'],['笃行','督行'],
+      ['清晰','清淅'],['处罚','处分'],['改善','改膳'],['溶化','融化'],['汛情','讯情'],
+      ['懊丧','懊恼'],['雾岚','雾气'],['荒烟','荒原'],['机械','机戒'],['端庄','端正'],
+      ['秋霜','秋爽'],['暖松','暖风'],['幽桥','幽悄'],['害羞','害臊'],['感激','感绩'],
+      ['艰苦','坚苦'],['坚强','艰强'],['空闲','空娴'],['批评','批平'],['接受','接收'],
+      ['沉重','沈重'],['落实','落石'],['创新','创兴'],['协调','协凋'],['敏锐','敏悦'],
+      ['推进','推近'],['践行','健行'],['突破','突波'],['清廉','清连'],['公正','公证'],
+      ['法制','法治'],['侦查','侦察'],['规章','规章制度'],['统筹','统筹'],['监督','督促']
+    ];
+    const CIPHER_CHARS = '则事友意理作护能清结使娇灼迈兵南午榷欺藩青春没有自只之了山水明风景如画政法经管文史哲仁义礼智信忠孝'.split('');
+    const CIPHER_SYMS = '1234567890ABCDEFGHKMNPQRSTUVWX!@#$%&*?'.split('');
+
+    function generateDynamicPerceptualBank() {
+      const qs = [], tag = Date.now().toString(36);
+      for (let g = 0; g < 2; g++) {
+        const gid = `pn_${tag}_${g}`, ranges = [];
+        let cur = 140 + Math.floor(Math.random() * 120);
+        for (let k = 0; k < 10; k++) { const hi = cur + 260 + Math.floor(Math.random() * 480); ranges.push([cur, hi]); cur = hi + 65 + Math.floor(Math.random() * 150); }
+        const sr = shuffle(ranges);
+        const cols = ['①','②','③','④','⑤'].map((label, ci) => ({ label, r1: sr[ci], r2: sr[ci + 5] }));
+        const matHtml = `<table class="exam-std-table max-w-2xl"><thead><tr>${cols.map(c => `<th>${c.label}</th>`).join('')}</tr></thead><tbody><tr>${cols.map(c => `<td class="font-mono">${c.r1[0]}～${c.r1[1]}</td>`).join('')}</tr><tr>${cols.map(c => `<td class="font-mono">${c.r2[0]}～${c.r2[1]}</td>`).join('')}</tr></tbody></table>`;
+        for (let i = 0; i < 10; i++) {
+          const ci = Math.floor(Math.random() * 5), pair = Math.random() < 0.5 ? cols[ci].r1 : cols[ci].r2;
+          const num = pair[0] + Math.floor(Math.random() * (pair[1] - pair[0] + 1));
+          qs.push({ id: `pn_${tag}_${g}_${i}`, module: 'perceptual', subType: '定位数字区间', groupId: gid, year: 2026, materialHtml: matHtml, stem: String(num), options: ['①','②','③','④','⑤'], answer: ci, explanation: `${num} 位于 ${pair[0]}～${pair[1]}，对应 ${cols[ci].label}，选 ${LETTERS[ci]}。` });
+        }
+      }
+      const pp = shuffle(WORD_TRAP_PAIRS);
+      for (let g = 0; g < 2; g++) {
+        const gid = `pw_${tag}_${g}`, cp = pp.slice(g * 15, g * 15 + 15);
+        const box = cp.map(p => p[0]), traps = cp.map(p => p[1]), boxSet = new Set(box);
+        const matHtml = `<table class="exam-std-table max-w-2xl"><tbody>${[0,5,10].map(o => `<tr>${box.slice(o,o+5).map(w => `<td class="font-medium py-2">${w}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+        for (let i = 0; i < 10; i++) {
+          const tCnt = [0,1,2,2,3,3,3,4,4,1][i];
+          const words = shuffle([...shuffle(box).slice(0, tCnt), ...shuffle(traps).slice(0, 5 - tCnt)]);
+          const hits = words.filter(w => boxSet.has(w));
+          qs.push({ id: `pw_${tag}_${g}_${i}`, module: 'perceptual', subType: '词表对照', groupId: gid, year: 2026, materialHtml: matHtml, stem: words.join('  '), options: ['0','1','2','3','4'], answer: hits.length, explanation: `词表中一致词语：${hits.length ? hits.join('、') : '无'}，共 ${hits.length} 个，选 ${LETTERS[hits.length]}。` });
+        }
+      }
+      const allCh = shuffle(CIPHER_CHARS);
+      for (let g = 0; g < 2; g++) {
+        const gid = `pc_${tag}_${g}`, chs = allCh.slice(g * 10, g * 10 + 10), syms = shuffle(CIPHER_SYMS).slice(0, 10);
+        const pairs = chs.map((c, idx) => [c, syms[idx]]), dict = Object.fromEntries(pairs);
+        const matHtml = `<div class="overflow-x-auto"><table class="exam-std-table max-w-3xl min-w-[340px]"><tbody><tr>${pairs.map(([c]) => `<td>${c}</td>`).join('')}</tr><tr>${pairs.map(([,s]) => `<td class="font-mono font-semibold">${s}</td>`).join('')}</tr></tbody></table></div>`;
+        for (let i = 0; i < 10; i++) {
+          const word = shuffle(chs).slice(0, 4).join(''), correct = [...word].map(c => dict[c]).join('');
+          const dSet = new Set([correct]), dists = [];
+          while (dists.length < 4) { const a = [...correct]; a[Math.floor(Math.random()*4)] = syms[Math.floor(Math.random()*syms.length)]; const c = a.join(''); if (!dSet.has(c)) { dSet.add(c); dists.push(c); } }
+          const opts = shuffle([correct, ...dists]);
+          qs.push({ id: `pc_${tag}_${g}_${i}`, module: 'perceptual', subType: '字符替换核对', groupId: gid, year: 2026, materialHtml: matHtml, stem: word, options: opts, answer: opts.indexOf(correct), explanation: `${[...word].map(c => `${c}→${dict[c]}`).join('，')}，结果为 ${correct}，选 ${LETTERS[opts.indexOf(correct)]}。` });
+        }
+      }
+      return qs;
+    }
+
+    function mkSvg(inner, cls = 'w-20 h-20') { return `<svg viewBox="0 0 100 100" class="${cls} border border-slate-300 rounded bg-white shrink-0">${inner}</svg>`; }
+    function mkSeries(list) { return `<div class="flex flex-wrap items-center gap-2 my-2">${list.map(x => mkSvg(x, 'w-16 h-16 sm:w-20 sm:h-20')).join('')}<div class="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-blue-400 rounded bg-blue-50/40 flex items-center justify-center text-xl font-bold text-blue-600">?</div></div>`; }
+
+    function buildEmbeddedCoreBank() {
+      const m1 = `<p>2024年，我国软件和信息技术服务业完成软件业务收入 <strong>137276亿元</strong>（+10.0%）；利润总额 <strong>16953亿元</strong>（+8.7%）；软件业务出口 <strong>569.5亿美元</strong>（+3.5%）。分领域：软件产品 30417亿元（+6.6%）；信息技术服务 92190亿元（+11.0%），其中云计算、大数据服务 14088亿元（+9.9%）；信息安全 2290亿元（+5.1%）；嵌入式系统软件 12379亿元（+11.8%）。</p><table class="exam-std-table text-xs mt-2"><thead><tr><th>分领域</th><th>2024年收入(亿元)</th><th>增速</th></tr></thead><tbody><tr><td>软件产品</td><td class="font-mono">30417</td><td class="font-mono">+6.6%</td></tr><tr><td>信息技术服务</td><td class="font-mono">92190</td><td class="font-mono">+11.0%</td></tr><tr><td>信息安全</td><td class="font-mono">2290</td><td class="font-mono">+5.1%</td></tr><tr><td>嵌入式系统软件</td><td class="font-mono">12379</td><td class="font-mono">+11.8%</td></tr></tbody></table>`;
+      const m2 = `<div class="font-semibold text-xs mb-1">2018—2022年全国新能源汽车产销量（万辆）</div><table class="exam-std-table text-xs"><thead><tr><th>年份</th><th>产量</th><th>销量</th></tr></thead><tbody><tr><td>2018</td><td class="font-mono">127.0</td><td class="font-mono">125.6</td></tr><tr><td>2019</td><td class="font-mono">124.2</td><td class="font-mono">120.6</td></tr><tr><td>2020</td><td class="font-mono">136.6</td><td class="font-mono">136.7</td></tr><tr><td>2021</td><td class="font-mono">354.5</td><td class="font-mono">352.1</td></tr><tr><td>2022</td><td class="font-mono">705.8</td><td class="font-mono">688.7</td></tr></tbody></table>`;
+      const m3 = `<p>2020年，全国快递服务企业业务量 <strong>833.6亿件</strong>（+31.2%），业务收入 <strong>8795.4亿元</strong>（+17.3%）。东、中、西部业务量占比分别为 79.4%、13.3%、7.3%；收入占比分别为 79.6%、11.9%、8.5%。</p>`;
+      const m4 = `<p>2017年，全国社会物流总额 <strong>252.8万亿元</strong>（+6.7%），其中工业品 234.5万亿元（+6.6%）、进口货物 12.5万亿元（+8.7%）、农产品 3.7万亿元（+3.9%）、再生资源 1.1万亿元（+9.8%）、单位与居民物品 1.0万亿元（+29.9%）。全国社会物流总费用 <strong>12.1万亿元</strong>（+9.2%），其中运输 6.6万亿元（+10.9%）、保管 3.9万亿元（+6.7%）、管理 1.6万亿元（+8.3%）。</p>`;
+
+      return [
+        // 政治理论 (15)
+        { id:'c_pol_1', module:'politics', subType:'政治理论', year:2025, stem:'习近平总书记指出，人民的创造性实践是马克思主义理论创新的不竭源泉。下列说法与这一论述相符的是：\n①人民不仅是物质财富的创造者，也是精神财富的创造者\n②要坚持以理论工作者的首创精神为引领\n③党的创新理论无不源自人民的智慧、探索与创造\n④各级领导干部身处实践最前沿，也是最聪慧', options:['①②','①③','②④','③④'], answer:1, explanation:'人民群众是历史创造者与首创精神主体，①③正确，选 B。' },
+        { id:'c_pol_2', module:'politics', subType:'政治理论', year:2025, stem:'关于矛盾的普遍性、客观性，下列说法正确的是：', options:['矛盾的普遍性是有条件的，随条件变化而变化','矛盾的客观性从属于主观性','矛盾的普遍性是矛盾的共性，特殊性是矛盾的个性','矛盾只存在于人类社会领域'], answer:2, explanation:'普遍性是共性、特殊性是个性，选 C。' },
+        { id:'c_pol_3', module:'politics', subType:'政治理论', year:2025, stem:'关于加快发展新质生产力，下列表述不正确的是：', options:['以全要素生产率大幅提升为核心标志','科技创新是发展新质生产力的核心要素','发展新质生产力就是要全面淘汰所有传统产业','新质生产力本身就是绿色生产力'], answer:2, explanation:'应用新技术改造提升传统产业，而非淘汰放弃，选 C。' },
+        { id:'c_pol_4', module:'politics', subType:'政治理论', year:2024, stem:'下列不属于中国式现代化五大特征的是：', options:['人口规模巨大的现代化','全体人民共同富裕的现代化','物质文明和精神文明相协调的现代化','以资本扩张为主导的现代化'], answer:3, explanation:'D 项不属于中国式现代化特征。' },
+        { id:'c_pol_5', module:'politics', subType:'政治理论', year:2024, stem:'“两个结合”是指把马克思主义基本原理同______相结合、同______相结合。', options:['中国具体实际  中华优秀传统文化','改革开放实践  世界文明成果','市场经济  科技革命','革命历史  基层治理'], answer:0, explanation:'同中国具体实际相结合、同中华优秀传统文化相结合，选 A。' },
+        { id:'c_pol_6', module:'politics', subType:'政治理论', year:2023, stem:'“六个必须坚持”中集中体现马克思主义根本政治立场的是：', options:['必须坚持自信自立','必须坚持人民至上','必须坚持系统观念','必须坚持胸怀天下'], answer:1, explanation:'人民立场是根本政治立场，选 B。' },
+        { id:'c_pol_7', module:'politics', subType:'政治理论', year:2023, stem:'全面建设社会主义现代化国家的首要任务是：', options:['全面深化改革开放','推进乡村全面振兴','高质量发展','建设文化强国'], answer:2, explanation:'高质量发展是首要任务，选 C。' },
+        { id:'c_pol_8', module:'politics', subType:'政治理论', year:2022, stem:'构建以国内大循环为主体、国内国际双循环相互促进的新发展格局，关键在于：', options:['扩大对外贸易顺差','经济循环的畅通无阻','降低国内消费比重','减少国际技术合作'], answer:1, explanation:'关键在于经济循环畅通无阻，选 B。' },
+        { id:'c_pol_9', module:'politics', subType:'政治理论', year:2022, stem:'实现我国全过程人民民主的重要制度载体和根本政治制度是：', options:['人民代表大会制度','基层群众自治制度','民族区域自治制度','政治协商制度'], answer:0, explanation:'人民代表大会制度是根本政治制度，选 A。' },
+        { id:'c_pol_10', module:'politics', subType:'政治理论', year:2021, stem:'伟大建党精神的内涵是：坚持真理、坚守理想，践行初心、担当使命，不怕牺牲、英勇斗争，______。', options:['实事求是、艰苦奋斗','对党忠诚、不负人民','谦虚谨慎、戒骄戒躁','解放思想、改革创新'], answer:1, explanation:'对党忠诚、不负人民，选 B。' },
+        { id:'c_pol_11', module:'politics', subType:'政治理论', year:2020, stem:'“纸上得来终觉浅，绝知此事要躬行”体现的认识论原理是：', options:['理性认识可脱离感性认识','实践是认识的来源和检验真理的唯一标准','间接经验更可靠','主观认识决定实践'], answer:1, explanation:'实践是认识的来源和基础，选 B。' },
+        { id:'c_pol_12', module:'politics', subType:'政治理论', year:2019, stem:'新时代我国社会主要矛盾已经转化为：', options:['物质文化需要同落后社会生产之间的矛盾','人民日益增长的美好生活需要和不平衡不充分的发展之间的矛盾','经济发展与生态保护之间的矛盾','城乡差距与共同富裕之间的矛盾'], answer:1, explanation:'选 B。' },
+        { id:'c_pol_13', module:'politics', subType:'政治理论', year:2018, stem:'“合抱之木，生于毫末；九层之台，起于累土”蕴含的唯物辩证法哲理是：', options:['矛盾双方相互转化','量变是质变的必要准备，质变是量变的必然结果','前进性与曲折性统一','主要矛盾决定事物性质'], answer:1, explanation:'质量互变规律，选 B。' },
+        { id:'c_pol_14', module:'politics', subType:'政治理论', year:2017, stem:'五大新发展理念中，注重解决发展动力问题的是______，注重解决社会公平正义问题的是______。', options:['创新  共享','协调  绿色','开放  协调','绿色  共享'], answer:0, explanation:'创新解决动力、共享解决公平正义，选 A。' },
+        { id:'c_pol_15', module:'politics', subType:'政治理论', year:2016, stem:'在“四个全面”战略布局中，作为战略目标的是：', options:['全面深化改革','全面依法治国','全面建设社会主义现代化国家','全面从严治党'], answer:2, explanation:'全面建设社会主义现代化国家是战略目标，选 C。' },
+
+        // 常识判断 (15)
+        { id:'c_com_1', module:'common', subType:'常识判断', year:2025, stem:'关于所有权的取得，下列说法正确的是：', options:['甲捡到金项链寻失主未果即取得所有权','乙以合理市价善意购买卖家借来的自行车并交付，可获得所有权','丙继承房产未办理登记前未取得所有权','丁承包集体田地同时取得土地所有权'], answer:1, explanation:'B 符合善意取得构成要件，选 B。' },
+        { id:'c_com_2', module:'common', subType:'常识判断', year:2025, stem:'下列与经济有关的说法正确的是：', options:['定期储蓄存款计入M1','人民币汇率降低，留美学费变便宜','营业税相比增值税能避免重复征税','外资企业在华产值计入中国GDP'], answer:3, explanation:'GDP 遵循国土原则，选 D。' },
+        { id:'c_com_3', module:'common', subType:'常识判断', year:2025, stem:'下列情境中两个物理量成正比例的是：①定值电阻电流与电压 ②浮力与物体总体积 ③弹性限度内弹簧伸长量与拉力 ④匀加速加速度与速度', options:['①②','②④','①③','③④'], answer:2, explanation:'欧姆定律与胡克定律成正比，选 C。' },
+        { id:'c_com_4', module:'common', subType:'常识判断', year:2024, stem:'房屋在租赁期内发生所有权变动的，根据《民法典》：', options:['新房东有权立即收回房屋','不影响原租赁合同的效力','原租赁合同自动解除','承租人必须重新签约'], answer:1, explanation:'买卖不破租赁原则，选 B。' },
+        { id:'c_com_5', module:'common', subType:'常识判断', year:2024, stem:'下列我国航天工程与任务对应不正确的是：', options:['嫦娥六号——月球背面采样返回','天问一号——火星探测','天宫空间站——载人空间站','北斗三号——深空小行星采样探测'], answer:3, explanation:'北斗三号为卫星导航系统，选 D。' },
+        { id:'c_com_6', module:'common', subType:'常识判断', year:2023, stem:'根据《行政处罚法》，下列不属于行政处罚种类的是：', options:['通报批评','暂扣许可证件','记过处分','没收违法所得'], answer:2, explanation:'记过属内部行政处分，选 C。' },
+        { id:'c_com_7', module:'common', subType:'常识判断', year:2023, stem:'下列二十四节气按时间先后排序正确的是：', options:['惊蛰—清明—谷雨—立夏','立秋—白露—处暑—秋分','小雪—冬至—大雪—小寒','立春—惊蛰—雨水—春分'], answer:0, explanation:'A 项顺序正确。' },
+        { id:'c_com_8', module:'common', subType:'常识判断', year:2022, stem:'按时间先后排序：①商鞅变法 ②安史之乱 ③王安石变法 ④张骞出使西域', options:['①④②③','①②④③','④①②③','①④③②'], answer:0, explanation:'战国→西汉→唐→北宋，选 A。' },
+        { id:'c_com_9', module:'common', subType:'常识判断', year:2021, stem:'关于我国地理国情，说法错误的是：', options:['塔里木盆地是最大内陆盆地','鄱阳湖是最大淡水湖','长江最终注入渤海','秦岭—淮河是南北分界线'], answer:2, explanation:'长江注入东海，选 C。' },
+        { id:'c_com_10', module:'common', subType:'常识判断', year:2020, stem:'营养素与缺乏症对应错误的是：', options:['维生素A——夜盲症','维生素C——坏血病','维生素D——佝偻病','铁元素——地方性甲状腺肿'], answer:3, explanation:'缺碘致甲状腺肿，选 D。' },
+        { id:'c_com_11', module:'common', subType:'常识判断', year:2019, stem:'根据《宪法》，行使国家立法权的机关是：', options:['国务院','全国人大及其常委会','最高法与最高检','国家监察委员会'], answer:1, explanation:'宪法第 58 条，选 B。' },
+        { id:'c_com_12', module:'common', subType:'常识判断', year:2018, stem:'生活化学常识说法不正确的是：', options:['食醋可除水垢','小苏打是碳酸氢钠','铁锅炒菜可补铁','干冰是固态的水'], answer:3, explanation:'干冰是固态二氧化碳，选 D。' },
+        { id:'c_com_13', module:'common', subType:'常识判断', year:2017, stem:'作品与作者对应错误的是：', options:['《资治通鉴》——司马光','《天工开物》——宋应星','《梦溪笔谈》——沈括','《齐民要术》——徐光启'], answer:3, explanation:'《齐民要术》作者为贾思勰，选 D。' },
+        { id:'c_com_14', module:'common', subType:'常识判断', year:2016, stem:'通胀严重时，央行通常采取的紧缩性货币政策是：', options:['降低存款准备金率','提高基准利率和存款准备金率','公开市场买入国债','增加财政补贴和减税'], answer:1, explanation:'提高利率与准备金率回收流动性，选 B。' },
+        { id:'c_com_15', module:'common', subType:'常识判断', year:2016, stem:'主要由光的折射原理引起的是：', options:['小孔成像','水中倒影','海市蜃楼','立竿见影'], answer:2, explanation:'海市蜃楼为光的折射与全反射，选 C。' },
+
+        // 言语理解与表达 (25 = 15 逻辑填空 + 7 阅读理解 + 3 语句表达)
+        { id:'c_vf_1', module:'verbal', subType:'逻辑填空', year:2025, stem:'文化遗产保护应通过数字化活化与创意转化，让古老技艺与现代生活______，在代际传承中焕发持久生命力。', options:['水乳交融','相得益彰','休戚与共','息息相通'], answer:0, explanation:'水乳交融形容深度融合为一体，选 A。' },
+        { id:'c_vf_2', module:'verbal', subType:'逻辑填空', year:2025, stem:'面对复杂多变的外部环境，既不能因为一时困难而______，也不能因为阶段性成绩而______，必须保持战略定力。', options:['畏葸不前  盲目乐观','妄自菲薄  趾高气扬','怨天尤人  得意忘形','自暴自弃  傲慢无礼'], answer:0, explanation:'畏葸不前与盲目乐观语义最贴切，选 A。' },
+        { id:'c_vf_3', module:'verbal', subType:'逻辑填空', year:2024, stem:'科普创作要求在保持严谨性的前提下，将晦涩的专业术语______，真正架起前沿科技与公众之间的桥梁。', options:['深入浅出','化繁为简','抽丝剥茧','娓娓道来'], answer:1, explanation:'将术语化繁为简，动宾搭配准确，选 B。' },
+        { id:'c_vf_4', module:'verbal', subType:'逻辑填空', year:2024, stem:'城市更新不是大拆大建，而是像“绣花”一样精细的______，既补齐短板又留住街巷肌理与城市记忆。', options:['精雕细琢','循序渐进','精益求精','因地制宜'], answer:0, explanation:'呼应“绣花”，选 A。' },
+        { id:'c_vf_5', module:'verbal', subType:'逻辑填空', year:2023, stem:'数据要素的价值在于流通共享。如果各部门各自为政形成“数据孤岛”，再庞大的数据资产也会______。', options:['束手无策','黯然失色','付诸东流','形同虚设'], answer:3, explanation:'形式上存在却不起作用即形同虚设，选 D。' },
+        { id:'c_vf_6', module:'verbal', subType:'逻辑填空', year:2023, stem:'重大科学发现往往始于科学家对习以为常现象的______追问，而非______地沿袭既有定论。', options:['刨根问底  墨守成规','吹毛求疵  循规蹈矩','求全责备  按部就班','浅尝辄止  故步自封'], answer:0, explanation:'第一空褒义选刨根问底，第二空选墨守成规，选 A。' },
+        { id:'c_vf_7', module:'verbal', subType:'逻辑填空', year:2022, stem:'好的政策既要有顶层设计的______，也要有基层执行的灵活性，切忌脱离实际搞“一刀切”。', options:['前瞻性','随机性','排他性','局限性'], answer:0, explanation:'顶层设计搭配前瞻性，选 A。' },
+        { id:'c_vf_8', module:'verbal', subType:'逻辑填空', year:2022, stem:'突发事件中权威信息发布越透明，谣言空间越狭小；反之若遮遮掩掩、______，只会引发公众猜测焦虑。', options:['语焉不详','直言不讳','侃侃而谈','言简意赅'], answer:0, explanation:'与遮遮掩掩并列选语焉不详，选 A。' },
+        { id:'c_vf_9', module:'verbal', subType:'逻辑填空', year:2021, stem:'博物馆文创之所以频频出圈，在于设计师深挖文物故事，将审美趣味与实用功能______。', options:['融会贯通','有机融合','相提并论','混为一谈'], answer:1, explanation:'有机融合搭配精准，选 B。' },
+        { id:'c_vf_10', module:'verbal', subType:'逻辑填空', year:2021, stem:'法治建设非一日之功，需要立法、执法、司法、守法各环节______，形成尊法学法守法用法风尚。', options:['齐头并进','协同发力','各显神通','单打独斗'], answer:1, explanation:'协同发力体现系统合力，选 B。' },
+        { id:'c_vf_11', module:'verbal', subType:'逻辑填空', year:2020, stem:'科研评价若唯论文数量，容易诱导追逐热门课题，而对周期长、风险高的基础研究______。', options:['趋之若鹜','望而却步','津津乐道','乐此不疲'], answer:1, explanation:'望而却步形容畏难退缩，选 B。' },
+        { id:'c_vf_12', module:'verbal', subType:'逻辑填空', year:2019, stem:'回望来路，我们之所以能在风雨考验中化危为机，靠的正是逢山开路、遇水架桥的______与韧劲。', options:['魄力','巧合','侥幸','妥协'], answer:0, explanation:'魄力与韧劲褒义并列，选 A。' },
+        { id:'c_vf_13', module:'verbal', subType:'逻辑填空', year:2018, stem:'制度的生命力在于执行。再完善的规章制度，如果落实不到位，最终也会沦为______的一纸空文。', options:['名副其实','高高挂起','无足轻重','流于形式'], answer:3, explanation:'流于形式搭配精准，选 D。' },
+        { id:'c_vf_14', module:'verbal', subType:'逻辑填空', year:2017, stem:'乡村治理不能照搬城市社区模板，而应充分尊重乡土社会公序良俗，做到______、分类施策。', options:['因地制宜','一视同仁','照本宣科','按图索骥'], answer:0, explanation:'因地制宜呼应分类施策，选 A。' },
+        { id:'c_vf_15', module:'verbal', subType:'逻辑填空', year:2016, stem:'在信息爆炸时代，真正稀缺的不是资讯本身，而是去伪存真、______的独立判断力。', options:['去粗取精','随波逐流','人云亦云','亦步亦趋'], answer:0, explanation:'去粗取精与去伪存真工整并列，选 A。' },
+        { id:'c_vr_1', module:'verbal', subType:'阅读理解', year:2025, stem:'一些地方基层治理过度依赖微信群“留痕”打卡。唯有把考核指挥棒从“重痕迹”转向“重实绩”，基层干部才能腾出精力深入一线。\n这段文字意在强调：', options:['微信群留痕加重了基层日常负担','基层治理考核应坚持实绩导向破除形式主义','群众满意度是衡量政府工作的唯一标准','基层干部应减少会议多深入调研'], answer:1, explanation:'唯有……才能……引出实绩导向对策，选 B。' },
+        { id:'c_vr_2', module:'verbal', subType:'阅读理解', year:2024, stem:'人工智能大模型偶尔会出现看似合理实则虚构的“幻觉”。若不加核验直接引用会导致虚假信息扩散。因此，建立人机协同事实核查机制刻不容缓。\n这段文字主要说明：', options:['AI大模型存在无法克服缺陷','应尽快建立人机协同事实核查机制应对AI幻觉','科研人员应禁止使用AI工具','虚假信息主要源于媒体失职'], answer:1, explanation:'因果结构“因此”引出核心对策，选 B。' },
+        { id:'c_vr_3', module:'verbal', subType:'阅读理解', year:2023, stem:'睡眠不足会干扰大脑“类淋巴系统”在深度睡眠期间清除代谢废物，长期睡眠少于6小时认知衰退风险显著高于7—8小时规律睡眠人群。\n下列说法正确的是：', options:['睡够8小时就能完全避免认知衰退','类淋巴系统仅在浅度睡眠起作用','长期睡眠不足会增加大脑代谢废物清除受阻风险','注意力下降是睡眠不足唯一短期表现'], answer:2, explanation:'C 项与原文一致，选 C。' },
+        { id:'c_vr_4', module:'verbal', subType:'阅读理解', year:2022, stem:'湿地被誉为“地球之肾”，在涵养水源、净化水质等方面作用不可替代。近年来我国通过退耕还湿、生态补水使大批候鸟重返栖息地。\n最适合做标题的是：', options:['濒危候鸟的跨洲迁徙之路','守护“地球之肾”，绘就生态画卷','退耕还湿的经济效益分析','气候变化对湿地生态的冲击'], answer:1, explanation:'B 项全面且贴合主旨，选 B。' },
+        { id:'c_vr_5', module:'verbal', subType:'阅读理解', year:2020, stem:'事实上，无论技术如何迭代升级，从精密仪器校准到航天发动机质检，都需要一线技术人员精益求精的坚守。技术越先进，对工匠精神的要求反而越高。\n这段文字旨在说明：', options:['传统手工业仍有存在价值','自动化生产已取代人工操作','现代高科技产业同样离不开工匠精神支撑','航天发动机质检是工匠精神最高体现'], answer:2, explanation:'转折后与尾句均强调高科技需要工匠精神，选 C。' },
+        { id:'c_vr_6', module:'verbal', subType:'阅读理解', year:2018, stem:'海洋吸收约四分之一二氧化碳缓解了全球变暖，但导致海水酸性增强即“海洋酸化”，削弱珊瑚礁和贝类骨骼形成能力，威胁海洋食物链稳定。\n与原文不符的是：', options:['吸收大量二氧化碳导致海洋酸化','海洋酸化影响珊瑚礁与贝类生长','海洋酸化有助于增强食物链长期稳定','海洋吸收二氧化碳缓解了全球变暖'], answer:2, explanation:'原文为“威胁稳定”，C 项相反，选 C。' },
+        { id:'c_vr_7', module:'verbal', subType:'阅读理解', year:2016, stem:'在乡村振兴中不能把农村简单改造成“微缩版城市”，千村一面只会让乡村失去独特乡土韵味。\n文中“微缩版城市”指的是：', options:['规模较小的现代化卫星城镇','盲目照搬城市建设模式、丧失乡村特色的改造方式','基础设施完善的新农村','城乡交通一体化示范镇'], answer:1, explanation:'贬义指代盲目照搬城市模板，选 B。' },
+        { id:'c_ve_1', module:'verbal', subType:'语句表达', year:2024, stem:'将以下5句重新排列，语序最连贯的是：\n①然而长期过度开采地下水会导致地面沉降\n②水是城市可持续发展的关键制约因素\n③因此统筹地上与地下水资源势在必行\n④缺水地区曾靠开采地下水缓解用水紧张\n⑤一旦地下水位下降，修复生态往往需数十年', options:['②④①⑤③','②①④⑤③','④①⑤②③','②④⑤①③'], answer:0, explanation:'②总起→④开采→①转折→⑤递进→③总结，选 A。' },
+        { id:'c_ve_2', module:'verbal', subType:'语句表达', year:2022, stem:'中小企业转型面临资金技术门槛。近年来工业互联网平台探索“轻量化、模块化”云端订阅服务，大幅降低了数字化改造成本。\n接下来最可能讲述：', options:['传统制造业面临的国际贸易摩擦','工业互联网“轻量化”服务的具体落地案例与成效','大型国企自主研发芯片历程','中小企业融资难历史成因'], answer:1, explanation:'承接尾句话题，选 B。' },
+        { id:'c_ve_3', module:'verbal', subType:'语句表达', year:2021, stem:'在信息碎片化、短视频盛行的当下，深度思考能力正在退化。______。唯有沉下心来品读经典，才能守住精神定力。\n填入最恰当的一句是：', options:['因此短视频平台应被全面取缔','经典著作往往篇幅冗长晦涩','这种快餐式阅读虽便捷，却难以滋养人的精神世界','纸质书销量近年出现一定波动'], answer:2, explanation:'承上启下衔接最紧，选 C。' },
+
+        // 判断推理 - 图形推理 (10 纯SVG无剧透)
+        { id:'c_gr_1', module:'reasoning', subType:'图形推理', year:2025, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="50" y2="16" stroke="#1e293b" stroke-width="3.5"/><circle cx="50" cy="16" r="5" fill="#1e293b"/>','<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="84" y2="50" stroke="#1e293b" stroke-width="3.5"/><circle cx="84" cy="50" r="5" fill="#1e293b"/>','<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="50" y2="84" stroke="#1e293b" stroke-width="3.5"/><circle cx="50" cy="84" r="5" fill="#1e293b"/>']), options:[mkSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="16" y2="50" stroke="#1e293b" stroke-width="3.5"/><circle cx="16" cy="50" r="5" fill="#1e293b"/>'),mkSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="50" y2="16" stroke="#1e293b" stroke-width="3.5"/><circle cx="50" cy="16" r="5" fill="#1e293b"/>'),mkSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="74" y2="26" stroke="#1e293b" stroke-width="3.5"/><circle cx="74" cy="26" r="5" fill="#1e293b"/>'),mkSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="26" y2="74" stroke="#1e293b" stroke-width="3.5"/><circle cx="26" cy="74" r="5" fill="#1e293b"/>')], answer:0, explanation:'指针顺时针每次旋转 90°（12→3→6→9点），选 A。' },
+        { id:'c_gr_2', module:'reasoning', subType:'图形推理', year:2024, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="18" x2="50" y2="82" stroke="#1e293b" stroke-width="2.5"/>','<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="39" y1="18" x2="39" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="61" y1="18" x2="61" y2="82" stroke="#1e293b" stroke-width="2.5"/>']), options:[mkSvg('<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="50" x2="82" y2="50" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="18" x2="50" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="50" x2="82" y2="50" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<circle cx="50" cy="50" r="32" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="18" x2="82" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="82" y1="18" x2="18" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="18" x2="50" y2="82" stroke="#1e293b" stroke-width="2.5"/>')], answer:1, explanation:'封闭区域数依次为 1、2、3、4，B 项田字格为 4 个面，选 B。' },
+        { id:'c_gr_3', module:'reasoning', subType:'图形推理', year:2023, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<polygon points="50,18 82,78 18,78" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<rect x="20" y="20" width="60" height="60" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<polygon points="50,16 83,40 70,80 30,80 17,40" fill="none" stroke="#1e293b" stroke-width="2.5"/>']), options:[mkSvg('<circle cx="50" cy="50" r="32" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<polygon points="50,18 82,78 18,78" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<polygon points="50,16 80,33 80,67 50,84 20,67 20,33" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="18" y="30" width="64" height="40" fill="none" stroke="#1e293b" stroke-width="2.5"/>')], answer:2, explanation:'边数依次为 3、4、5、6，选 C。' },
+        { id:'c_gr_4', module:'reasoning', subType:'图形推理', year:2022, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="32" cy="32" r="10" fill="#1e293b"/>','<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="68" cy="32" r="10" fill="#1e293b"/>','<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="68" cy="68" r="10" fill="#1e293b"/>']), options:[mkSvg('<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="32" cy="32" r="10" fill="#1e293b"/>'),mkSvg('<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="32" cy="68" r="10" fill="#1e293b"/>'),mkSvg('<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="68" cy="32" r="10" fill="#1e293b"/>'),mkSvg('<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="50" cy="50" r="10" fill="#1e293b"/>')], answer:1, explanation:'黑球每次顺时针平移一格：左上→右上→右下→左下，选 B。' },
+        { id:'c_gr_5', module:'reasoning', subType:'图形推理', year:2021, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<rect x="22" y="22" width="56" height="56" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<circle cx="50" cy="50" r="30" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<polygon points="50,16 80,50 50,84 20,50" fill="none" stroke="#1e293b" stroke-width="2.5"/>']), options:[mkSvg('<polygon points="50,18 82,78 18,78" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<polygon points="50,16 83,40 70,80 30,80 17,40" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<path d="M22,22 L78,22 L78,36 L36,36 L36,78 L22,78 Z" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<ellipse cx="50" cy="50" rx="34" ry="20" fill="none" stroke="#1e293b" stroke-width="2.5"/>')], answer:3, explanation:'均同时为轴对称与中心对称图形，仅 D 项椭圆满足，选 D。' },
+        { id:'c_gr_6', module:'reasoning', subType:'图形推理', year:2020, pureSvg: true, stem:'前两图按“同色变白、异色变黑”叠加，问号处应选择：' + mkSeries(['<rect x="18" y="18" width="32" height="64" fill="#1e293b"/><rect x="50" y="18" width="32" height="64" fill="none" stroke="#1e293b" stroke-width="2"/>','<rect x="18" y="18" width="64" height="32" fill="#1e293b"/><rect x="18" y="50" width="64" height="32" fill="none" stroke="#1e293b" stroke-width="2"/>']), options:[mkSvg('<rect x="50" y="18" width="32" height="32" fill="#1e293b"/><rect x="18" y="50" width="32" height="32" fill="#1e293b"/><rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2"/>'),mkSvg('<rect x="18" y="18" width="32" height="32" fill="#1e293b"/><rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2"/>'),mkSvg('<rect x="18" y="18" width="64" height="64" fill="#1e293b"/>'),mkSvg('<rect x="50" y="50" width="32" height="32" fill="#1e293b"/><rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2"/>')], answer:0, explanation:'黑白运算得右上黑+左下黑，选 A。' },
+        { id:'c_gr_7', module:'reasoning', subType:'图形推理', year:2019, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<circle cx="50" cy="50" r="8" fill="#1e293b"/>','<circle cx="34" cy="50" r="8" fill="#1e293b"/><circle cx="66" cy="50" r="8" fill="#1e293b"/>','<circle cx="50" cy="30" r="8" fill="#1e293b"/><circle cx="32" cy="65" r="8" fill="#1e293b"/><circle cx="68" cy="65" r="8" fill="#1e293b"/>']), options:[mkSvg('<circle cx="34" cy="34" r="8" fill="#1e293b"/><circle cx="66" cy="34" r="8" fill="#1e293b"/><circle cx="34" cy="66" r="8" fill="#1e293b"/><circle cx="66" cy="66" r="8" fill="#1e293b"/>'),mkSvg('<circle cx="50" cy="50" r="8" fill="#1e293b"/><circle cx="25" cy="50" r="8" fill="#1e293b"/><circle cx="75" cy="50" r="8" fill="#1e293b"/>'),mkSvg('<circle cx="34" cy="50" r="8" fill="none" stroke="#1e293b" stroke-width="2.5"/><circle cx="66" cy="50" r="8" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<circle cx="50" cy="24" r="7" fill="#1e293b"/><circle cx="24" cy="50" r="7" fill="#1e293b"/><circle cx="76" cy="50" r="7" fill="#1e293b"/><circle cx="35" cy="76" r="7" fill="#1e293b"/><circle cx="65" cy="76" r="7" fill="#1e293b"/>')], answer:0, explanation:'实心黑点数依次为 1、2、3、4，选 A。' },
+        { id:'c_gr_8', module:'reasoning', subType:'图形推理', year:2018, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<rect x="20" y="20" width="60" height="60" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<circle cx="50" cy="50" r="30" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<polygon points="50,18 82,78 18,78" fill="none" stroke="#1e293b" stroke-width="2.5"/>']), options:[mkSvg('<polygon points="50,16 80,50 50,84 20,50" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="20" y="30" width="60" height="40" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<path d="M20,50 C20,20 80,20 80,50 C80,80 20,80 20,50 Z" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<polygon points="20,25 80,25 65,75 35,75" fill="none" stroke="#1e293b" stroke-width="2.5"/>')], answer:2, explanation:'曲直性周期交替（直→曲→直→曲），选 C。' },
+        { id:'c_gr_9', module:'reasoning', subType:'图形推理', year:2017, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<rect x="16" y="16" width="68" height="68" fill="none" stroke="#1e293b" stroke-width="2.5"/><circle cx="50" cy="50" r="18" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><polygon points="50,30 68,64 32,64" fill="none" stroke="#1e293b" stroke-width="2.5"/>']), options:[mkSvg('<polygon points="50,14 86,80 14,80" fill="none" stroke="#1e293b" stroke-width="2.5"/><rect x="38" y="46" width="24" height="24" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="16" y="16" width="68" height="68" fill="none" stroke="#1e293b" stroke-width="2.5"/><polygon points="50,30 68,64 32,64" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><circle cx="50" cy="50" r="16" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="16" y="16" width="68" height="68" fill="none" stroke="#1e293b" stroke-width="2.5"/><rect x="34" y="34" width="32" height="32" fill="none" stroke="#1e293b" stroke-width="2.5"/>')], answer:0, explanation:'前一图内部图形变为后一图外部图形，选 A。' },
+        { id:'c_gr_10', module:'reasoning', subType:'图形推理', year:2016, pureSvg: true, stem:'下列四个图形中，能够“一笔画成”的是：', options:[mkSvg('<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="18" x2="50" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="50" x2="82" y2="50" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<circle cx="50" cy="50" r="32" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="50" x2="82" y2="50" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<line x1="50" y1="18" x2="50" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="36" x2="82" y2="36" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="64" x2="82" y2="64" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="16" y="16" width="30" height="30" fill="none" stroke="#1e293b" stroke-width="2.5"/><rect x="54" y="54" width="30" height="30" fill="none" stroke="#1e293b" stroke-width="2.5"/>')], answer:1, explanation:'B 项连通且仅 2 奇点，可一笔画成，选 B。' },
+
+        // 判断推理 - 定义判断 (10)
+        { id:'c_df_1', module:'reasoning', subType:'定义判断', year:2025, stem:'沉没成本指已发生且不可收回的支出。下列最符合“被沉没成本左右”的是：', options:['买50元电影票觉得无聊，想着钱已花便硬着头皮看完','研发投入100万前景极差后立即止损','比价后选择更便宜超市采购','餐厅推出满500送100活动'], answer:0, explanation:'选 A。' },
+        { id:'c_df_2', module:'reasoning', subType:'定义判断', year:2024, stem:'破窗效应指一处破损未及时修复诱发更多人效仿破坏导致秩序恶化。下列体现的是：', options:['张贴垃圾分类指南提升准确率','墙面出现第一张小广告无人清理，很快整面墙被贴满','业绩突出发放奖金','图书馆禁止喧哗'], answer:1, explanation:'选 B。' },
+        { id:'c_df_3', module:'reasoning', subType:'定义判断', year:2023, stem:'鲶鱼效应指引入富有活力的外部个体激发原有群体竞争效能。下列属于的是：', options:['精简冗余岗位降低成本','销售团队停滞，空降金牌销售后全队业绩大幅提升','按成绩分班授课','升级自动化流水线'], answer:1, explanation:'选 B。' },
+        { id:'c_df_4', module:'reasoning', subType:'定义判断', year:2022, stem:'信息茧房指只关注认同领域导致视野越来越窄。下列最符合的是：', options:['系统梳理十年真题','算法根据点赞不断推送同类立场文章使其看不到不同声音','深耕量子计算发论文','新闻联播播报多领域要闻'], answer:1, explanation:'选 B。' },
+        { id:'c_df_5', module:'reasoning', subType:'定义判断', year:2021, stem:'析数指利用数学上相加或相乘关系将数拆分的修辞手法。下列使用了“析数”的是：', options:['飞流直下三千尺','三五之夜，明月半墙','桃花潭水深千尺','白发三千丈'], answer:1, explanation:'三五=15，选 B。' },
+        { id:'c_df_6', module:'reasoning', subType:'定义判断', year:2020, stem:'机会成本指为了得到某种东西而放弃的另一些东西的最大价值。下列属于的是：', options:['辞去月薪1万工作全职备考放弃的每月1万薪资','花3000元买电脑','每月支付5万租金','超速被罚200元'], answer:0, explanation:'选 A。' },
+        { id:'c_df_7', module:'reasoning', subType:'定义判断', year:2019, stem:'生物入侵指外来物种在新生态区迅速繁殖并危害本地生态。下列属于的是：', options:['稻田同时养鱼','外来福寿螺在南方水系迅速繁殖啃食秧苗','动物园引进长颈鹿','荒山种本地松树'], answer:1, explanation:'选 B。' },
+        { id:'c_df_8', module:'reasoning', subType:'定义判断', year:2018, stem:'正当防卫指为免受正在进行的不法侵害而制止侵害的行为。下列属于的是：', options:['遭持刀抢劫夺木棍打伤抢劫者并制止抢劫','口角互殴致伤','三天后偶遇小偷将其打伤','破门救邻居家火灾儿童'], answer:0, explanation:'选 A。' },
+        { id:'c_df_9', module:'reasoning', subType:'定义判断', year:2017, stem:'首因效应指第一印象对后续交往关系的影响。下列体现的是：', options:['面试官因进门谈吐得体在后续问答中一直评价颇高','最后一场哭戏扭转平庸印象','长期共事发现同事热心','连续三年获金奖赢得信赖'], answer:0, explanation:'选 A。' },
+        { id:'c_df_10', module:'reasoning', subType:'定义判断', year:2016, stem:'口红效应指经济不景气时转向购买低价非必需品以获心理慰藉。下列符合的是：', options:['经济繁荣期奢侈品创新高','经济下行期平价甜品和迷你彩妆销量逆势大涨','寒潮羽绒服翻倍','开学季文具热销'], answer:1, explanation:'选 B。' },
+
+        // 判断推理 - 类比推理 (5)
+        { id:'c_an_1', module:'reasoning', subType:'类比推理', year:2025, stem:'易拉罐：拉环', options:['金库：黄金','燃气灶：点火器','书架：图书','水杯：开水'], answer:1, explanation:'必然组成关系，选 B。' },
+        { id:'c_an_2', module:'reasoning', subType:'类比推理', year:2024, stem:'绿豆：豌豆', options:['杯具：餐具','杨树：柳树','电脑：键盘','蔬菜：白菜'], answer:1, explanation:'并列关系，选 B。' },
+        { id:'c_an_3', module:'reasoning', subType:'类比推理', year:2022, stem:'指南针：辨别方向', options:['体温计：测量温度','显微镜：细菌病毒','照相机：风景名胜','收音机：广播电台'], answer:0, explanation:'功能对应，选 A。' },
+        { id:'c_an_4', module:'reasoning', subType:'类比推理', year:2019, stem:'小麦：面粉：馒头', options:['棉花：棉纱：棉布','铁矿：钢铁：大桥','葡萄：红酒：酒杯','木材：森林：家具'], answer:0, explanation:'单一原料加工链条，选 A。' },
+        { id:'c_an_5', module:'reasoning', subType:'类比推理', year:2016, stem:'雪中送炭：锦上添花', options:['落井下石：助人为乐','画蛇添足：多此一举','精雕细琢：粗制滥造','门庭若市：车水马龙'], answer:2, explanation:'结构工整语义对比，选 C。' },
+
+        // 判断推理 - 逻辑判断 (10)
+        { id:'c_lg_1', module:'reasoning', subType:'逻辑判断', year:2025, stem:'“只有通过业务考核，才能获得年度评优资格。”据此一定正确的是：', options:['通过考核一定获评优','获得评优一定通过了业务考核','未获评优一定未通过考核','只要通过考核就能获评优'], answer:1, explanation:'评优→考核，肯前必肯后，选 B。' },
+        { id:'c_lg_2', module:'reasoning', subType:'逻辑判断', year:2024, stem:'每天喝两杯黑咖啡者心血管发病率低15%，结论认为黑咖啡可预防心血管病。最能削弱的是：', options:['部分人爱吃甜点','喝黑咖啡者大多经济较好且保持规律运动习惯','黑咖啡含绿原酸','过量饮用导致失眠'], answer:1, explanation:'另有他因削弱，选 B。' },
+        { id:'c_lg_3', module:'reasoning', subType:'逻辑判断', year:2023, stem:'火星河床发现液态水环境形成的黏土矿物，推断曾存在大量液态水。最能支持的是：', options:['目前地表低于-60℃','地球河床也有类似矿物','除液态水长期浸泡外无任何已知地质作用能形成此类矿物','火星大气稀薄'], answer:2, explanation:'排除他因唯一因果，选 C。' },
+        { id:'c_lg_4', module:'reasoning', subType:'逻辑判断', year:2022, stem:'甲乙丙丁仅一人做好事、仅一人说真话：甲“不是我”，乙“是丁”，丙“是乙”，丁“不是我”。做好事的是：', options:['甲','乙','丙','丁'], answer:0, explanation:'乙丁矛盾，甲丙皆假，由甲假推知是甲，选 A。' },
+        { id:'c_lg_5', module:'reasoning', subType:'逻辑判断', year:2021, stem:'甲乙丙分别是教师、医生、工程师：①丙比医生大；②甲和工程师不同岁；③工程师比乙小。可推出：', options:['甲医生，乙教师，丙工程师','甲教师，乙医生，丙工程师','甲医生，乙工程师，丙教师','甲工程师，乙教师，丙医生'], answer:0, explanation:'丙为工程师，乙>丙>医生(甲)，选 A。' },
+        { id:'c_lg_6', module:'reasoning', subType:'逻辑判断', year:2020, stem:'提高市中心停车费以减少早高峰私家车驶入，必须基于的假设是：', options:['地铁未全覆盖','车位利用率95%','多数私家车主对停车费上涨较敏感','新能源车半价'], answer:2, explanation:'建立必要联系，选 C。' },
+        { id:'c_lg_7', module:'reasoning', subType:'逻辑判断', year:2019, stem:'超过七成受访者表示间隙拉伸10分钟后下午专注度提升。可合乎逻辑推出的是：', options:['所有人拉伸都能提升','不拉伸专注度必大降','对于相当一部分职场人士而言，适度拉伸有助于改善专注度','拉伸越长提升越明显'], answer:2, explanation:'从弱原则，选 C。' },
+        { id:'c_lg_8', module:'reasoning', subType:'逻辑判断', year:2018, stem:'成绩优异学生书桌更整齐，有人认为整理书桌能提高成绩。最能反驳的是：', options:['一般学生书桌也整齐','自律性强、规划能力好的学生既成绩好又习惯整理书桌','家长代劳影响独立性','书桌大小与成绩无关'], answer:1, explanation:'同源他因，选 B。' },
+        { id:'c_lg_9', module:'reasoning', subType:'逻辑判断', year:2017, stem:'如果不下雨就去郊游；如果去郊游就带帐篷。已知明天没带帐篷，必然推出：', options:['明天一定下雨了','没下雨但没去郊游','去了但忘带帐篷','可能下雨也可能没下'], answer:0, explanation:'连续逆否等价，选 A。' },
+        { id:'c_lg_10', module:'reasoning', subType:'逻辑判断', year:2016, stem:'某电动牙刷定价高于均价30%，市占率却逆势上升8个百分点。最能解释的是：', options:['缩减线上广告','凭借超长续航与护龈专利赢得中高端用户青睐','普通牙刷涨价5%','推出儿童漱口水'], answer:1, explanation:'产品力契合升级需求，选 B。' },
+
+        // 资料分析 (20 = 4组材料×5)
+        { id:'c_da_1', module:'data', subType:'资料分析', groupId:'c_m1', year:2025, materialHtml:m1, stem:'2023年我国软件业务收入约为多少万亿元？', options:['11.82','12.48','13.05','15.10'], answer:1, explanation:'137276÷1.10≈12.48万亿元，选 B。' },
+        { id:'c_da_2', module:'data', subType:'资料分析', groupId:'c_m1', year:2025, materialHtml:m1, stem:'2024年信息技术服务收入占软件业务总收入的比重约为：', options:['62.4%','65.1%','67.2%','71.5%'], answer:2, explanation:'92190÷137276≈67.2%，选 C。' },
+        { id:'c_da_3', module:'data', subType:'资料分析', groupId:'c_m1', year:2025, materialHtml:m1, stem:'与2023年相比，2024年我国软件业利润率：', options:['上升不到0.5个百分点','上升0.5个百分点以上','下降不到0.5个百分点','下降0.5个百分点以上'], answer:2, explanation:'8.7%<10.0%，下降约0.15个百分点，选 C。' },
+        { id:'c_da_4', module:'data', subType:'资料分析', groupId:'c_m1', year:2025, materialHtml:m1, stem:'2024年四个分领域中，收入同比增量最大的是：', options:['软件产品','信息技术服务','信息安全','嵌入式系统软件'], answer:1, explanation:'信息技术服务基数与增速占优，选 B。' },
+        { id:'c_da_5', module:'data', subType:'资料分析', groupId:'c_m1', year:2025, materialHtml:m1, stem:'能够从上述资料中推出的是：', options:['云计算、大数据服务占信息技术服务比重超15%','软件产品增速高于总体增速','信息安全增量高于嵌入式','出口额同比下降'], answer:0, explanation:'14088÷92190≈15.28%>15%，选 A。' },
+        { id:'c_da_6', module:'data', subType:'资料分析', groupId:'c_m2', year:2023, materialHtml:m2, stem:'2022年全国新能源汽车销量同比增长约：', options:['86.4%','95.6%','102.3%','114.8%'], answer:1, explanation:'(688.7-352.1)÷352.1≈95.6%，选 B。' },
+        { id:'c_da_7', module:'data', subType:'资料分析', groupId:'c_m2', year:2023, materialHtml:m2, stem:'2018—2022年产销率超过100%的年份有几个？', options:['1个','2个','3个','4个'], answer:0, explanation:'仅2020年销量>产量，选 A。' },
+        { id:'c_da_8', module:'data', subType:'资料分析', groupId:'c_m2', year:2023, materialHtml:m2, stem:'2019—2022年全国新能源汽车年均产量约为多少万辆？', options:['289.6','312.4','330.3','355.8'], answer:2, explanation:'1321.1÷4≈330.3万辆，选 C。' },
+        { id:'c_da_9', module:'data', subType:'资料分析', groupId:'c_m2', year:2023, materialHtml:m2, stem:'2022年产量约是2018年的多少倍？', options:['4.56倍','5.12倍','5.56倍','6.08倍'], answer:2, explanation:'705.8÷127.0≈5.56倍，选 C。' },
+        { id:'c_da_10', module:'data', subType:'资料分析', groupId:'c_m2', year:2023, materialHtml:m2, stem:'下列说法正确的是：', options:['五年产量逐年递增','2018—2022年累计销量超过1400万辆','2021年销量增量高于2022年','2019年产销差额小于2018年'], answer:1, explanation:'五年累计销量1423.7万辆>1400万辆，选 B。' },
+        { id:'c_da_11', module:'data', subType:'资料分析', groupId:'c_m3', year:2021, materialHtml:m3, stem:'2020年全国快递平均单价约为多少元/件？', options:['9.48','10.55','11.42','12.16'], answer:1, explanation:'8795.4÷833.6≈10.55元/件，选 B。' },
+        { id:'c_da_12', module:'data', subType:'资料分析', groupId:'c_m3', year:2021, materialHtml:m3, stem:'2020年中部地区快递业务量约为多少亿件？', options:['98.4','110.9','121.6','133.2'], answer:1, explanation:'833.6×13.3%≈110.9亿件，选 B。' },
+        { id:'c_da_13', module:'data', subType:'资料分析', groupId:'c_m3', year:2021, materialHtml:m3, stem:'东、中、西部快递平均单价从高到低排序为：', options:['东 > 中 > 西','西 > 东 > 中','东 > 西 > 中','西 > 中 > 东'], answer:1, explanation:'西部8.5/7.3最高，中部最低，选 B。' },
+        { id:'c_da_14', module:'data', subType:'资料分析', groupId:'c_m3', year:2021, materialHtml:m3, stem:'2019年全国快递业务收入约为多少亿元？', options:['7120','7498','7865','8120'], answer:1, explanation:'8795.4÷1.173≈7498亿元，选 B。' },
+        { id:'c_da_15', module:'data', subType:'资料分析', groupId:'c_m3', year:2021, materialHtml:m3, stem:'2020年全国快递平均单价同比约：', options:['下降10.6%','下降13.9%','上升10.6%','上升13.9%'], answer:0, explanation:'(17.3%-31.2%)÷1.312≈-10.6%，选 A。' },
+        { id:'c_da_16', module:'data', subType:'资料分析', groupId:'c_m4', year:2018, materialHtml:m4, stem:'2017年工业品物流总额占全国社会物流总额比重约为：', options:['88.5%','90.4%','92.8%','95.1%'], answer:2, explanation:'234.5÷252.8≈92.8%，选 C。' },
+        { id:'c_da_17', module:'data', subType:'资料分析', groupId:'c_m4', year:2018, materialHtml:m4, stem:'2017年运输费用占物流总费用比重同比：', options:['上升不到1个百分点','上升1个百分点以上','下降不到1个百分点','下降1个百分点以上'], answer:0, explanation:'上升约0.84个百分点，选 A。' },
+        { id:'c_da_18', module:'data', subType:'资料分析', groupId:'c_m4', year:2018, materialHtml:m4, stem:'2017年保管费用比管理费用多多少万亿元？', options:['1.9','2.1','2.3','2.7'], answer:2, explanation:'3.9-1.6=2.3万亿元，选 C。' },
+        { id:'c_da_19', module:'data', subType:'资料分析', groupId:'c_m4', year:2018, materialHtml:m4, stem:'2016年全国社会物流总费用约为多少万亿元？', options:['10.52','11.08','11.46','11.82'], answer:1, explanation:'12.1÷1.092≈11.08万亿元，选 B。' },
+        { id:'c_da_20', module:'data', subType:'资料分析', groupId:'c_m4', year:2018, materialHtml:m4, stem:'2017年下列分项中同比增速最快的是：', options:['进口货物','农产品','再生资源','单位与居民物品'], answer:3, explanation:'单位与居民物品增速29.9%最快，选 D。' },
+
+        // 数量关系 (10)
+        { id:'c_qn_1', module:'quant', subType:'数量关系', year:2025, stem:'一项工程甲独做需12天，乙需18天。甲先做3天，剩余甲乙合作还需几天？', options:['4.8天','5.0天','5.4天','6.0天'], answer:2, explanation:'(36-9)÷(3+2)=5.4天，选 C。' },
+        { id:'c_qn_2', module:'quant', subType:'数量关系', year:2024, stem:'两地相距360公里，甲60km/h、乙90km/h同时相向而行，多久相遇？', options:['2小时12分','2小时24分','2小时30分','2小时40分'], answer:1, explanation:'360÷150=2.4小时=2小时24分，选 B。' },
+        { id:'c_qn_3', module:'quant', subType:'数量关系', year:2023, stem:'商品进价200元，按50%利润定价后打八折出售，每件实际盈利多少元？', options:['30元','40元','50元','60元'], answer:1, explanation:'200×1.5×0.8-200=40元，选 B。' },
+        { id:'c_qn_4', module:'quant', subType:'数量关系', year:2022, stem:'60人中会英语38人、会日语25人、都不会8人，两种都会多少人？', options:['9人','11人','13人','15人'], answer:1, explanation:'38+25-(60-8)=11人，选 B。' },
+        { id:'c_qn_5', module:'quant', subType:'数量关系', year:2021, stem:'5男4女选3人组成巡查组，要求至少有1名女生，共有多少种选法？', options:['64种','70种','74种','80种'], answer:2, explanation:'C(9,3)-C(5,3)=74种，选 C。' },
+        { id:'c_qn_6', module:'quant', subType:'数量关系', year:2020, stem:'袋中3红5白，随机摸2球，恰好一红一白的概率为：', options:['15/56','15/28','3/8','5/14'], answer:1, explanation:'(3×5)÷C(8,2)=15/28，选 B。' },
+        { id:'c_qn_7', module:'quant', subType:'数量关系', year:2019, stem:'200克15%盐水加多少克水可稀释为10%？', options:['80克','100克','120克','150克'], answer:1, explanation:'30÷0.1-200=100克，选 B。' },
+        { id:'c_qn_8', module:'quant', subType:'数量关系', year:2018, stem:'今年父子年龄和56岁，4年前父亲是儿子3倍，今年儿子几岁？', options:['14岁','16岁','18岁','20岁'], answer:1, explanation:'(56-8)÷4+4=16岁，选 B。' },
+        { id:'c_qn_9', module:'quant', subType:'数量关系', year:2017, stem:'长方形周长40米，长比宽多4米，面积是多少平方米？', options:['84','92','96','100'], answer:2, explanation:'长12、宽8，面积96，选 C。' },
+        { id:'c_qn_10', module:'quant', subType:'数量关系', year:2016, stem:'等差数列首项5，公差3，前10项之和为：', options:['165','175','185','195'], answer:2, explanation:'(5+32)×10÷2=185，选 C。' }
+      ];
+    }
+    const EMBEDDED_CORE_BANK = buildEmbeddedCoreBank();
+
+    // =========================================================================
+    // LAYER 3: INVISIBLE STORAGE + SILENT BACKGROUND POOL EXPANSION
+    // =========================================================================
+    const DB_NAME = 'xc_judicial_cbt_v7', DB_STORE = 'kv';
+    function openDb() {
+      return new Promise((res, rej) => {
+        try { const req = indexedDB.open(DB_NAME, 1); req.onupgradeneeded = () => req.result.createObjectStore(DB_STORE); req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error); } catch (e) { rej(e); }
+      });
+    }
+    async function dbGet(k, fb = null) {
+      try { const db = await openDb(); const v = await new Promise((res, rej) => { const r = db.transaction(DB_STORE, 'readonly').objectStore(DB_STORE).get(k); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); return v === undefined ? fb : v; } catch (e) { return fb; }
+    }
+    async function dbSet(k, v) {
+      try { const db = await openDb(); await new Promise((res, rej) => { const tx = db.transaction(DB_STORE, 'readwrite'); tx.objectStore(DB_STORE).put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); } catch (e) {}
+    }
+    async function dbDel(k) {
+      try { const db = await openDb(); await new Promise((res, rej) => { const tx = db.transaction(DB_STORE, 'readwrite'); tx.objectStore(DB_STORE).delete(k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); } catch (e) {}
+    }
+
+    const state = {
+      livePool: [],      // Silently hydrated real past-paper pool
+      seenIds: new Set(),
+      mistakes: [],
+      favorites: [],
+      history: [],
+      mistakeTab: 'wrong',
+      fontSize: 15,
+      whiteBg: false,
+      dataSideSplit: true,
+      prepTimer: null,
+      exam: null,
+      examTimer: null,
+      report: null,
+      repFilter: 'all',
+      repPage: 1,
+      radarChart: null,
+      barChart: null
+    };
+
+    function escapeHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function resolveImg(rawP) {
+      let c = String(rawP || '').trim().split('|')[0].replace(/^\.\.\//, '').replace(/^\.\//, '');
+      if (/^(https?:|data:)/i.test(c)) return { p: c, f: '' };
+      if (c.includes('90-图片/')) c = c.slice(c.indexOf('90-图片/')); else c = '90-图片/' + c;
+      const enc = c.split('/').map(x => encodeURIComponent(x)).join('/');
+      return { p: REPO_CDN + enc, f: REPO_RAW + enc };
+    }
+    function renderRich(text) {
+      if (!text) return '';
+      if (text.includes('class="exam-std-table"') || text.includes('<svg')) return text;
+      const parts = String(text).split(/(\n?\|[^\n]+\|\n\|[\s:\-|]+\|\n(?:\|[^\n]+\|\n?)+)/g);
+      return parts.map(part => {
+        if (part.trim().startsWith('|') && part.includes('\n|')) {
+          const lines = part.trim().split('\n').filter(l => l.trim().startsWith('|'));
+          if (lines.length >= 2) {
+            const pr = l => l.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+            return `<div class="overflow-x-auto"><table class="exam-std-table my-2 text-xs"><thead><tr>${pr(lines[0]).map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${lines.slice(2).map(r => `<tr>${pr(r).map(c => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+          }
+        }
+        let s = escapeHtml(part);
+        s = s.replace(/!\[\[([^\]]+)\]\]|!\[([^\]]*)\]\(([^)]+)\)/g, (_, p1, alt, p2) => {
+          const { p, f } = resolveImg(p1 || p2);
+          const onerr = f ? `onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${f}';}"` : '';
+          return `<img src="${p}" ${onerr} alt="${alt || '配图'}" class="max-w-full max-h-64 rounded my-1.5 border border-slate-200 bg-white p-1 inline-block" loading="lazy" />`;
+        });
+        s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/_{4,}/g, '<span class="blank-slot"></span>');
+        return s.replace(/\n/g, '<br/>');
+      }).join('');
+    }
+
+    function inferVerbalSub(s) {
+      if (/重新排列|语序最连贯|语序正确|接下来最可能|下文最可能|填入画横线部分最恰当的一句|衔接最恰当/.test(s)) return '语句表达';
+      if (/_{2,}|（\s*）|\(\s*\)|依次填入|填入画横线部分最恰当的(?:一项|词语)/.test(s)) return '逻辑填空';
+      return '阅读理解';
+    }
+    function inferReasoningSub(s, opts) {
+      const j = s + ' ' + opts.join(' ');
+      if (j.includes('![') || j.includes('90-图片') || /图形|问号处|折叠|立体|视图|填入问号/.test(s)) return '图形推理';
+      if (/是指|定义|根据上述定义|符合上述定义|属于上述|不属于上述/.test(s) && s.length > 42) return '定义判断';
+      if ((s.includes('：') || s.includes(':')) && s.length < 55 && !/以下哪项|下列哪项|由此可以推出/.test(s)) return '类比推理';
+      return '逻辑判断';
+    }
+    function fingerprint(q) { return `${q.module}|${String(q.stem || '').replace(/[\s\p{P}]/gu, '').slice(0, 48)}`; }
+    function qualityScore(q, seenFp) {
+      let sc = 0;
+      const opts = Array.isArray(q.options) ? q.options : [];
+      if (q.stem && opts.length === 4 && new Set(opts).size === 4 && q.answer >= 0 && q.answer < 4) sc += 35;
+      if (String(q.explanation || '').trim().length >= 12) sc += 25;
+      if (q.module !== 'data' || q.materialHtml) sc += 20;
+      const fp = fingerprint(q);
+      if (!seenFp.has(fp)) { sc += 20; seenFp.add(fp); } else return 0;
+      return sc;
+    }
+
+    function parseRepoMd(mdText, modId, fileName) {
+      const raw = String(mdText || '').replace(/\r\n/g, '\n').replace(/^---[\s\S]*?---\n/, '');
+      let blocks = raw.split(/(?=^#{2,4}\s+)/m).filter(b => b.trim().length > 8);
+      if (blocks.length <= 2) blocks = raw.split(/\n---+\n/).filter(b => b.trim().length > 8);
+      const out = []; let curMat = '', matIdx = 0;
+      blocks.forEach((blk, idx) => {
+        const hasA = /(?:^|\n)\s*(?:[-*]\s*)?(?:\*\*)?[AＡ][\.、．\s\)]/m.test(blk);
+        const hasB = /(?:^|\n)\s*(?:[-*]\s*)?(?:\*\*)?[BＢ][\.、．\s\)]/m.test(blk);
+        if (!hasA || !hasB) {
+          if (modId === 'data' || /^#{2,4}\s*.*材料|根据以下资料/.test(blk)) { const c = blk.replace(/^#{1,4}\s+.*\n?/, '').trim(); if (c.length > 20) { curMat = c; matIdx++; } }
+          return;
+        }
+        const ansM = blk.match(/(?:答案|正确答案|官方答案|参考答案)\**\s*[：:】\]]\s*\**\s*([A-D])/i);
+        if (!ansM) return;
+        const answer = LETTERS.indexOf(ansM[1].toUpperCase());
+        const expM = blk.match(/(?:解析|官方解析|答案解析)\**\s*[：:】\]]\s*([\s\S]*?)(?=\n#{2,4}\s|$)/i);
+        const explanation = expM ? expM[1].replace(/<\/?details>|<\/?summary>/gi, '').replace(/^>\s?/gm, '').trim() : `标准答案：${LETTERS[answer]}`;
+        const body = blk.split(/(?:\n|>\s*|\*\*)(?:【?答案|【?正确答案|【?官方答案|【?参考答案|【?解析|> \[!)/)[0];
+        const optRe = /(?:^|\n)\s*(?:[-*]\s*)?(?:\*\*)?([A-D])[\.、．\)]\s*([\s\S]*?)(?=(?:\n\s*(?:[-*]\s*)?(?:\*\*)?[A-D][\.、．\)]|$))/g;
+        const om = {}; let first = -1, m;
+        while ((m = optRe.exec(body)) !== null) { if (first === -1) first = m.index; om[m[1].toUpperCase()] = m[2].trim(); }
+        if (!om.A || !om.B || !om.C || !om.D) return;
+        const stem = (first > 0 ? body.slice(0, first) : body).replace(/^#{2,4}\s+.*\n?/, '').replace(/<!--[\s\S]*?-->/g, '').replace(/`?qid[：:\s]*[A-Za-z0-9_-]+`?/gi, '').trim();
+        if (!stem) return;
+        const options = [om.A, om.B, om.C, om.D];
+        const subType = modId === 'verbal' ? inferVerbalSub(stem) : modId === 'reasoning' ? inferReasoningSub(stem, options) : (MOD_MAP[modId]?.name || modId);
+        out.push({ id: `live_${modId}_${idx}_${fileName.slice(0,10)}`, module: modId, subType, groupId: modId === 'data' && curMat ? `lm_${fileName}_${matIdx}` : undefined, materialHtml: modId === 'data' && curMat ? curMat : undefined, stem, options, answer, explanation });
+      });
+      return out;
+    }
+
+    // Completely silent background hydrator (zero UI noise, zero blocking)
+    async function silentBackgroundHydrate() {
+      try {
+        if (state.livePool.length >= 400) return;
+        const repoMods = EXAM_MODULES.filter(m => m.repoFolder);
+        const r = await fetch('https://data.jsdelivr.com/v1/packages/gh/ERRRC/xingcezhenti@main?structure=flat');
+        if (!r.ok) return;
+        const d = await r.json();
+        const files = [];
+        (d.files || []).forEach(f => {
+          const p = (f.name || '').replace(/^\//, '');
+          if (!p.endsWith('.md') || p.endsWith('README.md')) return;
+          const hit = repoMods.find(m => p.startsWith(m.repoFolder + '/'));
+          if (hit) files.push({ path: p, modId: hit.id, name: p.split('/').pop().replace(/\.md$/i, '') });
+        });
+        const targets = [];
+        repoMods.forEach(m => targets.push(...shuffle(files.filter(f => f.modId === m.id)).slice(0, 4)));
+        const seenFp = new Set(state.livePool.map(fingerprint));
+        for (let i = 0; i < targets.length; i += 6) {
+          await Promise.all(targets.slice(i, i + 6).map(async tf => {
+            const enc = tf.path.split('/').map(s => encodeURIComponent(s)).join('/');
+            for (const base of [REPO_CDN, REPO_RAW]) {
+              try {
+                const resp = await fetch(base + enc);
+                if (!resp.ok) continue;
+                parseRepoMd(await resp.text(), tf.modId, tf.name).forEach(q => {
+                  if (qualityScore(q, seenFp) >= 75) state.livePool.push(q);
+                });
+                break;
+              } catch (e) {}
+            }
+          }));
+        }
+        if (state.livePool.length) await dbSet('live_pool', state.livePool.slice(-1200));
+      } catch (e) {}
+    }
+
+    // Seamless Hybrid Paper Assembler: prefers unseen livePool, guarantees 100% full 180Q via EMBEDDED_CORE_BANK
+    function pickSeamless(liveCandidates, fallbackCandidates, count) {
+      const unseenLive = shuffle(liveCandidates.filter(q => !state.seenIds.has(q.id)));
+      const seenLive = shuffle(liveCandidates.filter(q => state.seenIds.has(q.id)));
+      const out = [...unseenLive, ...seenLive].slice(0, count);
+      if (out.length < count) {
+        const usedFp = new Set(out.map(fingerprint));
+        const fb = shuffle(fallbackCandidates).filter(q => !usedFp.has(fingerprint(q)));
+        out.push(...fb.slice(0, count - out.length));
+      }
+      return out.slice(0, count);
+    }
+
+    function assembleFullPaper(targetModIds = null) {
+      const randomOrder = document.getElementById('opt-random-order')?.checked ?? true;
+      let mods = targetModIds ? EXAM_MODULES.filter(m => targetModIds.includes(m.id)) : [...EXAM_MODULES];
+      if (!targetModIds && randomOrder) mods = [...mods.filter(m => m.fixedFirst), ...shuffle(mods.filter(m => !m.fixedFirst))];
+
+      let globalNo = 1;
+      return mods.map((mod, idx) => {
+        const liveM = state.livePool.filter(q => q.module === mod.id);
+        const coreM = EMBEDDED_CORE_BANK.filter(q => q.module === mod.id);
+        let picked = [];
+        if (mod.id === 'perceptual') {
+          picked = generateDynamicPerceptualBank();
+        } else if (mod.id === 'verbal' || mod.id === 'reasoning') {
+          mod.subQuotas.forEach(sq => {
+            picked.push(...pickSeamless(liveM.filter(q => q.subType === sq.subType), coreM.filter(q => q.subType === sq.subType), sq.count));
+          });
+        } else if (mod.id === 'data') {
+          const buildGroups = arr => { const mp = new Map(); arr.forEach(q => { const g = q.groupId || q.id; if (!mp.has(g)) mp.set(g, []); mp.get(g).push(q); }); return shuffle([...mp.values()]).filter(g => g.length >= 4).map(g => g.sort((a,b) => (a.groupOrder||0) - (b.groupOrder||0))); };
+          for (const grp of [...buildGroups(liveM), ...buildGroups(coreM)]) {
+            if (picked.length + grp.length <= mod.count) picked.push(...grp);
+            if (picked.length >= mod.count) break;
+          }
+        } else {
+          picked = pickSeamless(liveM, coreM, mod.count);
+        }
+        return { ...mod, partIndex: idx + 1, questions: picked.map(q => ({ ...q, examNo: globalNo++ })), status: 'pending', timeUsedSec: 0 };
+      });
+    }
+
+    // =========================================================================
+    // LAYER 4: UI HELPERS & NAVIGATION
+    // =========================================================================
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toast-container');
+      const cls = { info: 'bg-[#1b2e47] text-white', success: 'bg-emerald-700 text-white', warning: 'bg-amber-600 text-white', error: 'bg-red-700 text-white' };
+      const el = document.createElement('div');
+      el.className = `${cls[type] || cls.info} px-3.5 py-2 rounded-lg shadow-lg text-xs font-medium pointer-events-auto`;
+      el.textContent = msg; c.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 200); }, 2400);
+    }
+    function openModal(title, bodyHtml, buttons = []) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-body').innerHTML = bodyHtml;
+      const ft = document.getElementById('modal-footer'); ft.innerHTML = '';
+      buttons.forEach(b => {
+        const btn = document.createElement('button'); btn.textContent = b.label;
+        btn.className = b.primary ? 'px-4 py-1.5 rounded bg-[#962925] text-white text-xs font-semibold'
+          : b.danger ? 'px-4 py-1.5 rounded bg-red-600 text-white text-xs font-semibold'
+          : 'px-4 py-1.5 rounded border border-slate-300 bg-white text-slate-700 text-xs';
+        btn.addEventListener('click', () => { closeModal(); if (b.onClick) b.onClick(); });
+        ft.appendChild(btn);
+      });
+      document.getElementById('modal-overlay').classList.remove('hidden');
+    }
+    function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+    document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+
+    function showTopView(name) { ['lobby','prep','exam','report'].forEach(v => document.getElementById(`view-${v}`).classList.toggle('hidden', v !== name)); }
+    function switchLobbyPane(pane) {
+      ['home','blueprint','mistakes','history'].forEach(p => document.getElementById(`lobby-${p}-pane`).classList.toggle('hidden', p !== pane));
+      document.getElementById('subpage-header').classList.toggle('hidden', pane === 'home');
+      ['blueprint','mistakes','history'].forEach(p => {
+        const btn = document.getElementById(`btn-nav-${p}`);
+        if (btn) btn.className = p === pane ? 'px-3 py-1.5 rounded bg-[#962925] text-white font-semibold whitespace-nowrap' : 'px-3 py-1.5 rounded hover:bg-white/15 whitespace-nowrap';
+      });
+      if (pane === 'home' || pane === 'blueprint') renderLobby();
+      if (pane === 'mistakes') renderMistakesPane();
+      if (pane === 'history') renderHistoryPane();
+    }
+    document.getElementById('btn-nav-lobby').addEventListener('click', () => switchLobbyPane('home'));
+    document.getElementById('btn-nav-blueprint').addEventListener('click', () => switchLobbyPane('blueprint'));
+    document.getElementById('btn-nav-mistakes').addEventListener('click', () => switchLobbyPane('mistakes'));
+    document.getElementById('btn-nav-history').addEventListener('click', () => switchLobbyPane('history'));
+    document.getElementById('btn-hero-blueprint').addEventListener('click', () => switchLobbyPane('blueprint'));
+    document.getElementById('btn-hero-mistakes').addEventListener('click', () => switchLobbyPane('mistakes'));
+    document.getElementById('btn-hero-history').addEventListener('click', () => switchLobbyPane('history'));
+
+    async function renderLobby() {
+      const mCnt = document.getElementById('hero-mistake-cnt');
+      mCnt.textContent = state.mistakes.length;
+      mCnt.classList.toggle('hidden', state.mistakes.length === 0);
+      const saved = await dbGet('active_session');
+      document.getElementById('btn-resume-saved').classList.toggle('hidden', !saved);
+
+      const tbody = document.getElementById('lobby-blueprint-body');
+      tbody.innerHTML = EXAM_MODULES.map((m, i) => `
+        <tr class="hover:bg-[#faf7f2]">
+          <td class="py-2.5 px-4 text-center font-mono text-slate-400">${i + 1}</td>
+          <td class="py-2.5 px-4"><div class="font-semibold text-[#1b2e47]">${m.name}</div><div class="text-[11px] text-slate-500">${m.desc}</div></td>
+          <td class="py-2.5 px-4 text-center font-mono">${m.count}</td>
+          <td class="py-2.5 px-4 text-center font-mono">${m.id === 'reasoning' ? '0.6~0.8' : m.point}</td>
+          <td class="py-2.5 px-4 text-center font-mono font-semibold">${m.maxScore.toFixed(1)}</td>
+          <td class="py-2.5 px-4 text-center text-xs">${m.timeLabel}</td>
+          <td class="py-2.5 px-4 text-right"><button data-mod="${m.id}" class="btn-single-mod px-3 py-1 rounded border border-[#d8cbb8] hover:border-[#962925] hover:text-[#962925] text-xs font-medium">开始练习</button></td>
+        </tr>`).join('');
+      tbody.querySelectorAll('.btn-single-mod').forEach(btn => btn.addEventListener('click', () => startExamFlow([btn.dataset.mod])));
+    }
+
+    function renderMistakesPane() {
+      const list = state.mistakeTab === 'wrong' ? state.mistakes : state.favorites;
+      document.getElementById('btn-mtab-wrong').className = state.mistakeTab === 'wrong' ? 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-[#962925] text-white' : 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-white border border-[#d8cbb8] text-[#1b2e47]';
+      document.getElementById('btn-mtab-fav').className = state.mistakeTab === 'fav' ? 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-[#962925] text-white' : 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-white border border-[#d8cbb8] text-[#1b2e47]';
+      const box = document.getElementById('mistakes-list-box');
+      if (!list.length) { box.innerHTML = `<div class="bg-white rounded-xl border border-[#e3d9ca] p-8 text-center text-sm text-slate-400">${state.mistakeTab === 'wrong' ? '暂无错题' : '暂无收藏'}</div>`; return; }
+      box.innerHTML = list.map((q, i) => `<div class="bg-white rounded-xl border border-[#e3d9ca] p-4 space-y-2 text-sm"><div class="flex justify-between text-xs text-slate-500"><span>#${i+1} · ${MOD_MAP[q.module]?.name || q.module}${q.subType ? ' / ' + q.subType : ''}</span><button data-rm="${q.id}" class="btn-rm-m text-red-700 hover:underline">移除</button></div><div class="font-medium">${renderRich(q.stem)}</div><div class="text-xs bg-[#faf7f2] rounded p-2.5"><strong class="text-emerald-700">答案：${LETTERS[q.answer]}</strong><div class="mt-1">${renderRich(q.explanation)}</div></div></div>`).join('');
+      box.querySelectorAll('.btn-rm-m').forEach(b => b.addEventListener('click', async () => {
+        const id = b.dataset.rm;
+        if (state.mistakeTab === 'wrong') { state.mistakes = state.mistakes.filter(x => x.id !== id); await dbSet('mistakes', state.mistakes); }
+        else { state.favorites = state.favorites.filter(x => x.id !== id); await dbSet('favorites', state.favorites); }
+        renderMistakesPane(); renderLobby();
+      }));
+    }
+    document.getElementById('btn-mtab-wrong').addEventListener('click', () => { state.mistakeTab = 'wrong'; renderMistakesPane(); });
+    document.getElementById('btn-mtab-fav').addEventListener('click', () => { state.mistakeTab = 'fav'; renderMistakesPane(); });
+    document.getElementById('btn-redo-mistake-list').addEventListener('click', () => {
+      const list = state.mistakeTab === 'wrong' ? state.mistakes : state.favorites;
+      if (!list.length) return showToast('当前列表为空', 'warning');
+      beginRealExam([{ id: 'custom', name: state.mistakeTab === 'wrong' ? '错题重练' : '收藏重练', count: list.length, point: 1, maxScore: list.length, examSec: Math.max(600, list.length * 60), partIndex: 1, questions: list.map((q, i) => ({ ...q, examNo: i + 1 })), status: 'pending', timeUsedSec: 0 }]);
+    });
+
+    function renderHistoryPane() {
+      const box = document.getElementById('history-list-box');
+      if (!state.history.length) { box.innerHTML = '<div class="bg-white rounded-xl border border-[#e3d9ca] p-8 text-center text-sm text-slate-400">暂无成绩记录</div>'; return; }
+      box.innerHTML = state.history.slice().reverse().map((h, i) => {
+        const realIdx = state.history.length - 1 - i;
+        return `<div class="bg-white rounded-xl border border-[#e3d9ca] p-4 flex items-center justify-between gap-3"><div><div class="font-bold text-sm text-[#1b2e47]">${h.title}</div><div class="text-xs text-slate-500 mt-0.5">${h.date} · 正确率 ${h.accuracy}% · 耗时 ${fmtCN(h.totalSec)}</div></div><div class="flex items-center gap-3"><span class="font-mono font-bold text-lg text-[#962925]">${h.score.toFixed(2)}</span><button data-hi="${realIdx}" class="btn-open-hist px-3 py-1 rounded border border-[#d8cbb8] hover:border-[#962925] text-xs">查看报告</button></div></div>`;
+      }).join('');
+      box.querySelectorAll('.btn-open-hist').forEach(b => b.addEventListener('click', () => {
+        const item = state.history[Number(b.dataset.hi)];
+        if (item?.snapshot) { state.report = item.snapshot; renderReport(); showTopView('report'); }
+      }));
+    }
+    document.getElementById('btn-clear-history').addEventListener('click', async () => { state.history = []; await dbSet('history', []); renderHistoryPane(); });
+
+    // =========================================================================
+    // LAYER 5: EXAM STATE MACHINE (INSTANT T=0ms START + MASKED FUTURE + AUTO-SAVE)
+    // =========================================================================
+    const PREP_TABS = {
+      notice: `<p><strong>一、考试说明</strong></p><p>本次行政职业能力测验采取电子化分时作答方式。<strong>「知觉速度与准确性」</strong>固定为第一部分（2分钟阅读说明 + 8分钟作答，<strong>答对 +0.15 分、答错倒扣 -0.15 分、不答 0 分</strong>）；其余六个部分由系统<strong>随机分配顺序</strong>，进入前不预先公开；各部分独立计时，超时自动锁定，剩余时间不可累计。</p>`,
+      rules: `<p>1. 考试过程中答题卡仅开放当前作答模块，已提交或尚未开始的模块不可点击。</p><p>2. 系统自动实时保存作答进度，如遇意外退出可在首页一键恢复。</p>`,
+      guide: `<p>1. <strong>知觉速度：</strong>按 <code>A–E</code> 选答后焦点自动下移；为防手抖误删，再次点击已选项不取消，如需留空请点右侧「清空」或右键。</p><p>2. <strong>快捷键：</strong><code>F4</code> 上一题、<code>F5</code> 下一题；右键选项可排除划线；选中题干文字点击顶部「高亮」可做重点标注。</p>`
+    };
+
+    let pendingModules = null;
+
+    async function startExamFlow(targetModIds = null) {
+      if (shardsReadyPromise && state.livePool.length < 60) {
+        await Promise.race([shardsReadyPromise, new Promise(r => setTimeout(r, 2500))]);
+      }
+      pendingModules = assembleFullPaper(targetModIds);
+      showTopView('prep');
+      document.getElementById('prep-tab-content').innerHTML = PREP_TABS.notice;
+      document.querySelectorAll('.prep-tab').forEach(t => { t.className = t.dataset.ptab === 'notice' ? 'prep-tab px-5 py-3 border-b-2 border-[#1b4d89] text-[#1b4d89]' : 'prep-tab px-5 py-3 border-b-2 border-transparent text-slate-500'; });
+      document.getElementById('prep-load-label').innerHTML = '<strong>试卷加载：</strong>已加载完成（100%）';
+      document.getElementById('prep-progress-bar').style.width = '100%';
+      document.getElementById('prep-progress-txt').textContent = '100%';
+
+      if (state.prepTimer) clearInterval(state.prepTimer);
+      let sec = 5;
+      document.getElementById('prep-countdown').textContent = fmtHMS(sec);
+      state.prepTimer = setInterval(() => {
+        sec--; document.getElementById('prep-countdown').textContent = fmtHMS(Math.max(0, sec));
+        if (sec <= 0) { clearInterval(state.prepTimer); state.prepTimer = null; }
+      }, 1000);
+    }
+
+    document.querySelectorAll('.prep-tab').forEach(btn => btn.addEventListener('click', () => {
+      document.getElementById('prep-tab-content').innerHTML = PREP_TABS[btn.dataset.ptab];
+      document.querySelectorAll('.prep-tab').forEach(t => { t.className = t === btn ? 'prep-tab px-5 py-3 border-b-2 border-[#1b4d89] text-[#1b4d89]' : 'prep-tab px-5 py-3 border-b-2 border-transparent text-slate-500'; });
+    }));
+    document.getElementById('btn-prep-cancel').addEventListener('click', () => { if (state.prepTimer) clearInterval(state.prepTimer); showTopView('lobby'); });
+    document.getElementById('btn-prep-confirm').addEventListener('click', () => { if (state.prepTimer) clearInterval(state.prepTimer); beginRealExam(pendingModules); });
+    document.getElementById('btn-enter-prep').addEventListener('click', () => startExamFlow(null));
+    document.getElementById('btn-resume-saved').addEventListener('click', async () => {
+      const saved = await dbGet('active_session');
+      if (!saved) return;
+      state.exam = { ...saved, paused: false };
+      showTopView('exam'); renderExamUI(true); startExamTimer();
+      showToast('已恢复上次作答进度', 'success');
+    });
+
+    function beginRealExam(modules) {
+      clearExamTimer();
+      state.exam = { modules, modIdx: 0, qIdxInMod: 0, answers: {}, flags: {}, struck: {}, timePerQ: {}, remainingSec: 0, totalElapsedSec: 0, paused: false };
+      showTopView('exam'); enterCurrentModule();
+    }
+    function enterCurrentModule() {
+      const ex = state.exam, mod = ex.modules[ex.modIdx];
+      if (!mod) return finishWholeExam();
+      ex.qIdxInMod = 0;
+      if (mod.id === 'perceptual' && mod.introSec > 0) { mod.status = 'intro'; ex.remainingSec = mod.introSec; }
+      else { mod.status = 'active'; ex.remainingSec = mod.examSec; }
+      renderExamUI(true); startExamTimer(); dbSet('active_session', ex);
+    }
+    function clearExamTimer() { if (state.examTimer) { clearInterval(state.examTimer); state.examTimer = null; } }
+    function startExamTimer() {
+      clearExamTimer();
+      state.examTimer = setInterval(() => {
+        const ex = state.exam; if (!ex || ex.paused) return;
+        const mod = ex.modules[ex.modIdx];
+        ex.totalElapsedSec++;
+        if (mod.status === 'active') {
+          mod.timeUsedSec++;
+          const curQ = mod.questions[ex.qIdxInMod];
+          if (curQ) ex.timePerQ[curQ.id] = (ex.timePerQ[curQ.id] || 0) + 1;
+        }
+        if (ex.remainingSec > 0) ex.remainingSec--;
+        updateClockDisplay();
+        if (ex.totalElapsedSec % 5 === 0) dbSet('active_session', ex);
+        if (ex.remainingSec <= 0) {
+          if (mod.status === 'intro') { mod.status = 'active'; ex.remainingSec = mod.examSec; showToast('开始 8 分钟正式作答！'); renderExamUI(true); }
+          else { showToast(`「${mod.name}」时间到，已自动锁定！`, 'warning'); advanceToNextModule(); }
+        }
+      }, 1000);
+      updateClockDisplay();
+    }
+    function updateClockDisplay() {
+      const ex = state.exam; if (!ex) return;
+      const mod = ex.modules[ex.modIdx];
+      document.getElementById('exam-timer-label').textContent = mod.status === 'intro' ? '说明倒计时：' : '本模块剩余：';
+      const clk = document.getElementById('exam-timer-clock');
+      clk.textContent = fmtHMS(ex.remainingSec);
+      clk.className = ex.remainingSec <= 60 ? 'font-mono font-bold tracking-wider text-amber-300' : 'font-mono font-bold tracking-wider';
+    }
+    function advanceToNextModule() {
+      const ex = state.exam;
+      ex.modules[ex.modIdx].status = 'locked';
+      if (ex.modIdx + 1 < ex.modules.length) { ex.modIdx++; enterCurrentModule(); }
+      else finishWholeExam();
+    }
+
+    document.getElementById('btn-skip-perc-intro').addEventListener('click', () => {
+      const ex = state.exam; if (!ex) return;
+      const mod = ex.modules[ex.modIdx];
+      if (mod.status === 'intro') { mod.status = 'active'; ex.remainingSec = mod.examSec; renderExamUI(true); updateClockDisplay(); }
+    });
+    document.getElementById('btn-pause-exam').addEventListener('click', () => {
+      if (!state.exam) return;
+      state.exam.paused = !state.exam.paused;
+      document.getElementById('btn-pause-exam').textContent = state.exam.paused ? '▶' : '⏸';
+    });
+    document.getElementById('btn-exam-exit-save').addEventListener('click', async () => {
+      if (state.exam) await dbSet('active_session', state.exam);
+      clearExamTimer(); showTopView('lobby'); switchLobbyPane('home');
+      showToast('已暂存进度，可随时从首页恢复', 'success');
+    });
+
+    function renderExamUI(scrollTop = false) {
+      const ex = state.exam, mod = ex.modules[ex.modIdx];
+      document.getElementById('exam-part-banner').textContent = `第${mod.partIndex}部分  ${mod.name}${mod.status === 'intro' ? '（阅读说明）' : ''}`;
+      renderLeftSheet();
+
+      const introEl = document.getElementById('stage-perceptual-intro'), activeEl = document.getElementById('stage-active-exam');
+      if (mod.status === 'intro') { introEl.classList.remove('hidden'); activeEl.classList.add('hidden'); return; }
+      introEl.classList.add('hidden'); activeEl.classList.remove('hidden');
+
+      const curQ = mod.questions[ex.qIdxInMod];
+      const splitWrap = document.getElementById('exam-split-wrap'), topMat = document.getElementById('exam-top-material'), qArea = document.getElementById('exam-question-area');
+      const modDone = mod.questions.filter(q => ex.answers[q.id] !== undefined).length;
+      document.getElementById('footer-mod-progress').textContent = `本模块：${modDone}/${mod.questions.length}`;
+
+      const flagged = !!ex.flags[curQ.id];
+      document.getElementById('btn-flag-current').className = flagged ? 'px-2 sm:px-3 py-1.5 rounded bg-rose-500 text-white font-semibold' : 'px-2 sm:px-3 py-1.5 rounded border border-rose-300 text-rose-600 hover:bg-rose-50 font-medium';
+      const isFav = state.favorites.some(x => x.id === curQ.id);
+      const favBtn = document.getElementById('btn-fav-current');
+      favBtn.textContent = isFav ? '★' : '☆';
+      favBtn.className = isFav ? 'px-2 sm:px-2.5 py-1.5 rounded bg-amber-400 text-white font-bold' : 'px-2 sm:px-2.5 py-1.5 rounded border border-amber-300 text-amber-700 hover:bg-amber-50 font-medium';
+
+      const useSideSplit = mod.id === 'data' && curQ.materialHtml && state.dataSideSplit && window.innerWidth >= 1024;
+      document.getElementById('btn-split-toggle').classList.toggle('hidden', mod.id !== 'data');
+      splitWrap.className = useSideSplit ? 'flex-1 flex flex-row min-h-0 overflow-hidden' : 'flex-1 flex flex-col min-h-0 overflow-hidden';
+      topMat.className = useSideSplit ? 'w-1/2 bg-white border-r border-slate-300 p-4 overflow-y-auto custom-scroll shrink-0' : 'bg-white border-b border-slate-300 p-3 sm:p-4 max-h-[38vh] overflow-y-auto custom-scroll shrink-0';
+
+      if (mod.id === 'perceptual') {
+        topMat.classList.remove('hidden'); topMat.innerHTML = curQ.materialHtml;
+        const groupQs = mod.questions.map((q, i) => ({ q, i })).filter(x => x.q.groupId === curQ.groupId);
+        qArea.innerHTML = `<div class="divide-y cbt-green-border">${groupQs.map(({ q, i }, rIdx) => {
+          const chosen = ex.answers[q.id];
+          return `<div data-qi="${i}" class="px-3 sm:px-4 py-2.5 ${rIdx % 2 === 0 ? 'cbt-stripe-even' : 'cbt-stripe-odd'} ${i === ex.qIdxInMod ? 'ring-2 ring-inset ring-[#1d68b8]' : ''}">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <div class="flex items-center gap-2"><span class="px-1.5 py-0.5 rounded bg-[#1d68b8] text-white font-mono text-xs font-bold">${q.examNo}</span><span class="font-medium text-sm sm:text-base text-slate-900">${escapeHtml(q.stem)}</span></div>
+              ${chosen !== undefined ? `<button data-clear-qi="${i}" class="btn-perc-clear text-[11px] px-2 py-0.5 rounded border border-slate-300 bg-white text-slate-500 hover:text-red-600">清空</button>` : ''}
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 pl-0 sm:pl-7">${q.options.map((opt, oi) => `<div data-qi="${i}" data-oi="${oi}" class="perc-opt-cell cbt-radio-row py-1.5 px-2 bg-white/40 sm:bg-transparent ${chosen === oi ? 'selected' : ''}"><span class="cbt-radio-dot"></span><span class="text-xs sm:text-sm font-mono">${LETTERS[oi]}. ${escapeHtml(opt)}</span></div>`).join('')}</div>
+          </div>`;
+        }).join('')}</div>`;
+        qArea.querySelectorAll('.perc-opt-cell').forEach(el => {
+          el.addEventListener('click', () => { const qi = Number(el.dataset.qi), oi = Number(el.dataset.oi); ex.qIdxInMod = qi; ex.answers[mod.questions[qi].id] = oi; dbSet('active_session', ex); renderExamUI(false); });
+          el.addEventListener('contextmenu', e => { e.preventDefault(); delete ex.answers[mod.questions[Number(el.dataset.qi)].id]; renderExamUI(false); });
+        });
+        qArea.querySelectorAll('.btn-perc-clear').forEach(b => b.addEventListener('click', () => { delete ex.answers[mod.questions[Number(b.dataset.clearQi)].id]; renderExamUI(false); }));
+      } else {
+        if (curQ.materialHtml) { topMat.classList.remove('hidden'); topMat.innerHTML = `<div class="max-w-4xl mx-auto text-sm leading-relaxed select-text">${renderRich(curQ.materialHtml)}</div>`; }
+        else { topMat.classList.add('hidden'); topMat.innerHTML = ''; }
+        const chosen = ex.answers[curQ.id], struck = ex.struck[curQ.id] || {};
+        const isSvgGrid = !!curQ.pureSvg;
+
+        qArea.innerHTML = `
+          <div class="max-w-4xl mx-auto p-4 sm:p-6 space-y-4">
+            <div class="flex items-start gap-2.5">
+              <span class="px-2 py-0.5 rounded bg-[#1d68b8] text-white font-mono text-xs font-bold mt-1 shrink-0">${curQ.examNo}</span>
+              <div class="q-text text-slate-900 font-medium select-text">${renderRich(curQ.stem)}</div>
+            </div>
+            <div class="${isSvgGrid ? 'grid grid-cols-2 gap-3 pl-0 sm:pl-9' : 'pl-0 sm:pl-9 space-y-1.5'}">
+              ${curQ.options.map((opt, oi) => isSvgGrid
+                ? `<div data-oi="${oi}" class="std-opt-row graphic-tile ${chosen === oi ? 'selected' : ''} ${struck[oi] ? 'opacity-35' : ''}"><span class="font-bold text-sm text-[#1b4d89]">${LETTERS[oi]}</span><div class="flex-1 flex justify-center">${opt}</div></div>`
+                : `<div data-oi="${oi}" class="std-opt-row cbt-radio-row justify-between ${chosen === oi ? 'selected' : ''}"><div class="flex items-start gap-2 flex-1 min-w-0"><span class="cbt-radio-dot"></span><div class="q-text text-slate-800 ${struck[oi] ? 'opt-struck' : ''}"><strong class="mr-1">${LETTERS[oi]}.</strong>${renderRich(opt)}</div></div><button data-strike="${oi}" class="btn-opt-strike text-[11px] px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-700 shrink-0" title="排除">${struck[oi] ? '恢复' : '✕'}</button></div>`
+              ).join('')}
+            </div>
+          </div>`;
+
+        qArea.querySelectorAll('.std-opt-row').forEach(el => {
+          el.addEventListener('click', e => {
+            if (e.target.closest('.btn-opt-strike')) return;
+            ex.answers[curQ.id] = Number(el.dataset.oi); dbSet('active_session', ex);
+            if (document.getElementById('opt-auto-next').checked && ex.qIdxInMod + 1 < mod.questions.length) { ex.qIdxInMod++; renderExamUI(true); }
+            else renderExamUI(false);
+          });
+          el.addEventListener('contextmenu', e => { e.preventDefault(); const oi = Number(el.dataset.oi); if (!ex.struck[curQ.id]) ex.struck[curQ.id] = {}; ex.struck[curQ.id][oi] = !ex.struck[curQ.id][oi]; renderExamUI(false); });
+        });
+        qArea.querySelectorAll('.btn-opt-strike').forEach(b => b.addEventListener('click', e => {
+          e.stopPropagation(); const oi = Number(b.dataset.strike); if (!ex.struck[curQ.id]) ex.struck[curQ.id] = {}; ex.struck[curQ.id][oi] = !ex.struck[curQ.id][oi]; renderExamUI(false);
+        }));
+      }
+
+      document.getElementById('btn-prev-q').disabled = mod.id === 'perceptual' ? mod.questions.findIndex(q => q.groupId === curQ.groupId) === 0 : ex.qIdxInMod === 0;
+      if (scrollTop) qArea.scrollTop = 0;
+    }
+
+    function renderLeftSheet() {
+      const ex = state.exam, totalQ = ex.modules.reduce((s, m) => s + m.questions.length, 0);
+      document.getElementById('sheet-done-counter').textContent = `${Object.keys(ex.answers).length}/${totalQ}`;
+      const body = document.getElementById('left-sheet-body');
+      body.innerHTML = ex.modules.map((m, mi) => {
+        const isCurrent = mi === ex.modIdx && m.status === 'active';
+        if (mi > ex.modIdx && m.status === 'pending') return `<div class="p-2 rounded bg-slate-50 border border-dashed border-slate-200 text-[11px] text-slate-400">🔒 第${m.partIndex}部分 随机待抽模块</div>`;
+        return `<div><div class="text-[11px] font-bold mb-1.5 truncate ${isCurrent ? 'text-[#1b4d89]' : 'text-slate-400'}">${m.status === 'locked' ? '✓ ' : '▶ '}第${m.partIndex}部分 ${m.name}</div><div class="grid grid-cols-5 gap-1">${m.questions.map((q, qi) => `<button data-mi="${mi}" data-qi="${qi}" class="sheet-grid-btn ${!isCurrent ? 'locked' : ''} ${ex.answers[q.id] !== undefined ? 'answered' : ''} ${isCurrent && qi === ex.qIdxInMod ? 'current' : ''}">${q.examNo}${ex.flags[q.id] ? '<span class="sheet-flag-dot"></span>' : ''}</button>`).join('')}</div></div>`;
+      }).join('');
+      body.querySelectorAll('.sheet-grid-btn').forEach(btn => btn.addEventListener('click', () => {
+        const mi = Number(btn.dataset.mi), qi = Number(btn.dataset.qi);
+        if (mi !== ex.modIdx || ex.modules[mi].status !== 'active') return showToast('分模块独立限时，不可跨模块跳转', 'warning');
+        ex.qIdxInMod = qi; renderExamUI(true); closeLeftSheet();
+      }));
+    }
+
+    function moveQuestion(delta) {
+      const ex = state.exam; if (!ex) return;
+      const mod = ex.modules[ex.modIdx]; if (mod.status !== 'active') return;
+      if (mod.id === 'perceptual') {
+        const gids = [...new Set(mod.questions.map(q => q.groupId))];
+        const pos = gids.indexOf(mod.questions[ex.qIdxInMod].groupId) + delta;
+        if (pos >= 0 && pos < gids.length) { ex.qIdxInMod = mod.questions.findIndex(q => q.groupId === gids[pos]); renderExamUI(true); }
+        else if (delta > 0) confirmSubmitModule();
+      } else {
+        const next = ex.qIdxInMod + delta;
+        if (next >= 0 && next < mod.questions.length) { ex.qIdxInMod = next; renderExamUI(true); }
+        else if (delta > 0) confirmSubmitModule();
+      }
+    }
+
+    function confirmSubmitModule() {
+      const ex = state.exam, mod = ex.modules[ex.modIdx];
+      const done = mod.questions.filter(q => ex.answers[q.id] !== undefined).length;
+      const isLast = ex.modIdx + 1 >= ex.modules.length;
+      openModal(isLast ? '提交最后模块并交卷' : `提交「${mod.name}」`, `本模块已答 <strong>${done}/${mod.questions.length}</strong> 题。<br/><span class="text-amber-700">剩余时间不可累计，提交后无法返回修改。</span>`, [
+        { label: '继续作答' }, { label: isLast ? '确认交卷' : '进入下一部分', primary: true, onClick: advanceToNextModule }
+      ]);
+    }
+    document.getElementById('btn-prev-q').addEventListener('click', () => moveQuestion(-1));
+    document.getElementById('btn-next-q').addEventListener('click', () => moveQuestion(1));
+    document.getElementById('btn-finish-module').addEventListener('click', confirmSubmitModule);
+    document.getElementById('btn-flag-current').addEventListener('click', () => { const ex = state.exam, m = ex?.modules[ex.modIdx]; if (!m || m.status !== 'active') return; const q = m.questions[ex.qIdxInMod]; ex.flags[q.id] = !ex.flags[q.id]; renderExamUI(false); });
+    document.getElementById('btn-fav-current').addEventListener('click', async () => {
+      const ex = state.exam, m = ex?.modules[ex.modIdx]; if (!m || m.status !== 'active') return;
+      const q = m.questions[ex.qIdxInMod];
+      if (state.favorites.some(x => x.id === q.id)) { state.favorites = state.favorites.filter(x => x.id !== q.id); showToast('已取消收藏'); }
+      else { state.favorites.push(q); showToast('已加入收藏', 'success'); }
+      await dbSet('favorites', state.favorites); renderExamUI(false);
+    });
+    document.getElementById('btn-highlight-sel').addEventListener('click', () => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed) return showToast('请先拖选一段文字再点击高亮');
+      try { const span = document.createElement('span'); span.className = 'highlight-mark'; sel.getRangeAt(0).surroundContents(span); sel.removeAllRanges(); } catch (e) { showToast('请在同一段落内选字高亮', 'warning'); }
+    });
+    document.getElementById('btn-split-toggle').addEventListener('click', () => { state.dataSideSplit = !state.dataSideSplit; renderExamUI(false); });
+    document.getElementById('btn-exam-submit-all').addEventListener('click', () => {
+      openModal('提前交卷', '提前交卷后未作答模块将记 0 分，确认结束整场考试？', [{ label: '继续考试' }, { label: '确认交卷', danger: true, onClick: finishWholeExam }]);
+    });
+
+    // =========================================================================
+    // LAYER 6: SCORING & FULL 180Q PAGINATED REPORT
+    // =========================================================================
+    async function finishWholeExam() {
+      clearExamTimer();
+      const ex = state.exam; if (!ex) return;
+      await dbDel('active_session');
+      let totalScore = 0, maxScore = 0, totalQ = 0, totalCorrect = 0, slowCount = 0;
+      let perc = { net: 0, c: 0, w: 0, b: 0 };
+      const modSummaries = [], allItems = [], existingMistakeIds = new Set(state.mistakes.map(x => x.id));
+
+      ex.modules.forEach(m => {
+        let mc = 0, mw = 0, mb = 0, mScore = 0, mMax = 0;
+        m.questions.forEach(q => {
+          state.seenIds.add(q.id);
+          const pt = m.id === 'reasoning' ? (SUB_POINT_MAP[q.subType] || 0.7) : m.point;
+          mMax += pt;
+          const ua = ex.answers[q.id], ok = ua === q.answer, tSec = ex.timePerQ[q.id] || 0;
+          if (tSec > 90) slowCount++;
+          if (ua === undefined) mb++;
+          else if (ok) { mc++; mScore += pt; }
+          else { mw++; if (m.id !== 'perceptual' && !existingMistakeIds.has(q.id)) { state.mistakes.push(q); existingMistakeIds.add(q.id); } }
+          allItems.push({ q, modName: m.name, userAns: ua, isCorrect: ok, flagged: !!ex.flags[q.id], timeSec: tSec });
+        });
+        if (m.penalty) { mScore = Math.max(0, (mc - mw) * m.point); perc = { net: mScore, c: mc, w: mw, b: mb }; }
+        totalScore += mScore; maxScore += mMax; totalQ += m.questions.length; totalCorrect += mc;
+        modSummaries.push({ partIndex: m.partIndex, name: m.name, total: m.questions.length, correct: mc, wrong: mw, blank: mb, score: mScore, maxScore: mMax, timeUsedSec: m.timeUsedSec, planMin: Math.round(m.examSec / 60) });
+      });
+
+      const snapshot = {
+        title: `行测全真机考（${totalQ}题）`, date: new Date().toLocaleString('zh-CN', { hour12: false }),
+        score: totalScore, maxScore, totalQ, totalCorrect, slowCount,
+        accuracy: totalQ ? Math.round((totalCorrect / totalQ) * 100) : 0,
+        totalSec: ex.totalElapsedSec, perc, modules: modSummaries, items: allItems
+      };
+      state.report = snapshot;
+      state.history.push({ title: snapshot.title, date: snapshot.date, score: snapshot.score, accuracy: snapshot.accuracy, totalSec: snapshot.totalSec, snapshot });
+      if (state.history.length > 30) state.history = state.history.slice(-30);
+      await Promise.all([dbSet('history', state.history), dbSet('mistakes', state.mistakes), dbSet('seen_ids', [...state.seenIds])]);
+      state.exam = null;
+      renderReport(); showTopView('report');
+    }
+
+    function renderReport() {
+      const r = state.report; if (!r) return;
+      document.getElementById('report-header-title').textContent = `${r.title} · ${r.date}`;
+      document.getElementById('rep-score').textContent = r.score.toFixed(2);
+      document.getElementById('rep-max').textContent = `满分 ${r.maxScore.toFixed(1)}`;
+      document.getElementById('rep-acc').textContent = `${r.accuracy}%`;
+      document.getElementById('rep-cnt').textContent = `答对 ${r.totalCorrect} / ${r.totalQ}`;
+      document.getElementById('rep-perc-net').textContent = r.perc.net.toFixed(2);
+      document.getElementById('rep-perc-detail').textContent = `对${r.perc.c} 错${r.perc.w}(倒扣) 空${r.perc.b}`;
+      document.getElementById('rep-time').textContent = fmtCN(r.totalSec);
+      document.getElementById('rep-slow-cnt').textContent = `耗时>90s：${r.slowCount || 0} 题`;
+
+      document.getElementById('rep-mod-tbody').innerHTML = r.modules.map(m => {
+        const acc = m.total ? Math.round((m.correct / m.total) * 100) : 0;
+        return `<tr><td class="py-2.5 px-4 font-semibold text-[#1b2e47]">第${m.partIndex}部分 · ${m.name}</td><td class="py-2.5 px-4 text-center font-mono"><span class="text-emerald-700">${m.correct}</span> / <span class="text-red-600">${m.wrong}</span> / <span class="text-slate-400">${m.blank}</span></td><td class="py-2.5 px-4 text-center font-mono font-bold">${acc}%</td><td class="py-2.5 px-4 text-center font-mono font-bold text-[#962925]">${m.score.toFixed(2)} / ${m.maxScore.toFixed(1)}</td><td class="py-2.5 px-4 text-center font-mono">${fmtCN(m.timeUsedSec)} / ${m.planMin}分</td></tr>`;
+      }).join('');
+
+      if (typeof Chart !== 'undefined') {
+        if (state.radarChart) state.radarChart.destroy();
+        if (state.barChart) state.barChart.destroy();
+        const labels = r.modules.map(m => m.name);
+        state.radarChart = new Chart(document.getElementById('chart-radar'), { type: 'radar', data: { labels, datasets: [{ label: '正确率(%)', data: r.modules.map(m => m.total ? Math.round((m.correct / m.total) * 100) : 0), backgroundColor: 'rgba(150,41,37,0.16)', borderColor: '#962925', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100, ticks: { stepSize: 25 } } } } });
+        state.barChart = new Chart(document.getElementById('chart-bar'), { type: 'bar', data: { labels, datasets: [{ label: '实际(分)', data: r.modules.map(m => Number((m.timeUsedSec / 60).toFixed(1))), backgroundColor: '#1b2e47', borderRadius: 4 }, { label: '时限(分)', data: r.modules.map(m => m.planMin), backgroundColor: '#d8cbb8', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+      }
+      state.repFilter = 'all'; state.repPage = 1; renderReportReview();
+    }
+
+    function renderReportReview() {
+      const r = state.report; if (!r) return;
+      document.querySelectorAll('.rf-btn').forEach(b => { b.className = b.dataset.rf === state.repFilter ? 'rf-btn px-3 py-1 rounded bg-[#1b2e47] text-white' : 'rf-btn px-3 py-1 rounded bg-[#faf7f2] text-slate-700 border border-[#e3d9ca]'; });
+      const list = r.items.filter(it => state.repFilter === 'wrong' ? (!it.isCorrect && it.userAns !== undefined) : state.repFilter === 'unanswered' ? it.userAns === undefined : state.repFilter === 'slow' ? (it.timeSec > 90) : state.repFilter === 'flagged' ? it.flagged : true);
+      const pageSize = 20, totalPages = Math.max(1, Math.ceil(list.length / pageSize));
+      state.repPage = Math.min(state.repPage, totalPages);
+      const slice = list.slice((state.repPage - 1) * pageSize, state.repPage * pageSize);
+
+      document.getElementById('rep-review-list').innerHTML = slice.length ? slice.map(it => {
+        const q = it.q;
+        return `<div class="border border-[#eee6da] rounded-lg p-3.5 text-sm space-y-2"><div class="flex flex-wrap justify-between gap-2 text-xs text-slate-500"><span><strong class="text-[#1b2e47]">#${q.examNo}</strong> · ${it.modName}${q.subType ? ' / ' + q.subType : ''}</span><span class="font-mono">用时 ${it.timeSec || 0}s · ${it.isCorrect ? '<strong class="text-emerald-700">正确</strong>' : it.userAns === undefined ? '未答' : `<strong class="text-red-600">误选 ${LETTERS[it.userAns]}</strong>`} · 答案 <strong class="text-emerald-700">${LETTERS[q.answer]}</strong></span></div><div class="font-medium">${renderRich(q.stem)}</div><div class="text-xs bg-[#faf7f2] rounded p-2.5 text-slate-700 leading-relaxed">${renderRich(q.explanation)}</div></div>`;
+      }).join('') : '<div class="text-center text-xs text-slate-400 py-6">无匹配题目</div>';
+
+      const pag = document.getElementById('rep-pagination');
+      pag.innerHTML = totalPages > 1 ? `<button id="rep-prev-pg" class="px-3 py-1 rounded border border-[#d8cbb8] bg-white disabled:opacity-40" ${state.repPage <= 1 ? 'disabled' : ''}>上一页</button><span class="font-mono text-slate-600">第 ${state.repPage} / ${totalPages} 页（共 ${list.length} 题）</span><button id="rep-next-pg" class="px-3 py-1 rounded border border-[#d8cbb8] bg-white disabled:opacity-40" ${state.repPage >= totalPages ? 'disabled' : ''}>下一页</button>` : `<span class="text-slate-400">共 ${list.length} 题</span>`;
+      document.getElementById('rep-prev-pg')?.addEventListener('click', () => { state.repPage--; renderReportReview(); });
+      document.getElementById('rep-next-pg')?.addEventListener('click', () => { state.repPage++; renderReportReview(); });
+    }
+    document.querySelectorAll('.rf-btn').forEach(b => b.addEventListener('click', () => { state.repFilter = b.dataset.rf; state.repPage = 1; renderReportReview(); }));
+    document.getElementById('btn-report-home').addEventListener('click', () => { showTopView('lobby'); switchLobbyPane('home'); });
+    document.getElementById('btn-report-redo-wrong').addEventListener('click', () => {
+      const wrongQs = state.report?.items.filter(it => !it.isCorrect && it.userAns !== undefined).map(it => it.q) || [];
+      if (!wrongQs.length) return showToast('本次没有错题！', 'success');
+      beginRealExam([{ id: 'redo', name: '本次错题重做', count: wrongQs.length, point: 1, maxScore: wrongQs.length, examSec: Math.max(600, wrongQs.length * 60), partIndex: 1, questions: wrongQs.map((q, i) => ({ ...q, examNo: i + 1 })), status: 'pending', timeUsedSec: 0 }]);
+    });
+
+    // =========================================================================
+    // LAYER 7: TOOLS, KEYBOARD SHORTCUTS & BOOT
+    // =========================================================================
+    function openLeftSheet() { document.getElementById('left-sheet-panel').classList.remove('hidden'); document.getElementById('left-sheet-panel').classList.add('flex'); document.getElementById('left-sheet-backdrop').classList.remove('hidden'); }
+    function closeLeftSheet() { if (window.innerWidth < 1024) { document.getElementById('left-sheet-panel').classList.add('hidden'); document.getElementById('left-sheet-panel').classList.remove('flex'); } document.getElementById('left-sheet-backdrop').classList.add('hidden'); }
+    document.getElementById('btn-mobile-sheet').addEventListener('click', openLeftSheet);
+    document.getElementById('btn-close-left-sheet').addEventListener('click', closeLeftSheet);
+    document.getElementById('left-sheet-backdrop').addEventListener('click', closeLeftSheet);
+    document.getElementById('btn-font-dec').addEventListener('click', () => { state.fontSize = Math.max(13, state.fontSize - 1); document.documentElement.style.setProperty('--q-font-size', state.fontSize + 'px'); });
+    document.getElementById('btn-font-inc').addEventListener('click', () => { state.fontSize = Math.min(20, state.fontSize + 1); document.documentElement.style.setProperty('--q-font-size', state.fontSize + 'px'); });
+    document.getElementById('btn-bg-toggle').addEventListener('click', () => { state.whiteBg = !state.whiteBg; document.body.classList.toggle('mode-white', state.whiteBg); });
+
+    const sModal = document.getElementById('scratchpad-modal'), sCanvas = document.getElementById('scratch-canvas'), sctx = sCanvas.getContext('2d');
+    let drawing = false, penColor = '#1e293b', penW = 2.5;
+    function resizeScratch() { const r = sCanvas.parentElement.getBoundingClientRect(); if (!r.width) return; sCanvas.width = r.width; sCanvas.height = r.height; sctx.fillStyle = '#fff'; sctx.fillRect(0,0,r.width,r.height); }
+    function gPos(e) { const r = sCanvas.getBoundingClientRect(), p = e.touches ? e.touches[0] : e; return { x: p.clientX - r.left, y: p.clientY - r.top }; }
+    const sDown = e => { drawing = true; const { x, y } = gPos(e); sctx.beginPath(); sctx.moveTo(x, y); e.preventDefault(); };
+    const sMove = e => { if (!drawing) return; const { x, y } = gPos(e); sctx.lineTo(x, y); sctx.strokeStyle = penColor; sctx.lineWidth = penW; sctx.lineCap = 'round'; sctx.stroke(); e.preventDefault(); };
+    sCanvas.addEventListener('mousedown', sDown); sCanvas.addEventListener('mousemove', sMove); window.addEventListener('mouseup', () => drawing = false);
+    sCanvas.addEventListener('touchstart', sDown, { passive: false }); sCanvas.addEventListener('touchmove', sMove, { passive: false }); window.addEventListener('touchend', () => drawing = false);
+    document.querySelectorAll('.scratch-color').forEach(b => b.addEventListener('click', () => { penColor = b.dataset.pen; penW = 2.5; }));
+    document.getElementById('scratch-eraser-btn').addEventListener('click', () => { penColor = '#fff'; penW = 18; });
+    document.getElementById('scratch-clear-btn').addEventListener('click', resizeScratch);
+    document.getElementById('btn-open-scratch').addEventListener('click', () => { sModal.classList.remove('hidden'); setTimeout(resizeScratch, 20); });
+    document.getElementById('scratch-close-btn').addEventListener('click', () => sModal.classList.add('hidden'));
+
+    window.addEventListener('keydown', e => {
+      if (!state.exam || document.getElementById('view-exam').classList.contains('hidden')) return;
+      if (!document.getElementById('modal-overlay').classList.contains('hidden')) return;
+      const mod = state.exam.modules[state.exam.modIdx]; if (!mod || mod.status !== 'active') return;
+      if (e.key === 'F4') { e.preventDefault(); moveQuestion(-1); }
+      else if (e.key === 'F5') { e.preventDefault(); moveQuestion(1); }
+      else {
+        const idxMap = { a:0, b:1, c:2, d:3, e:4 }, k = e.key.toLowerCase();
+        if (k in idxMap && !e.ctrlKey && !e.metaKey) {
+          const q = mod.questions[state.exam.qIdxInMod];
+          if (idxMap[k] < q.options.length) {
+            state.exam.answers[q.id] = idxMap[k];
+            if (mod.id === 'perceptual' && state.exam.qIdxInMod + 1 < mod.questions.length) {
+              state.exam.qIdxInMod++; renderExamUI(false);
+              document.querySelector(`[data-qi="${state.exam.qIdxInMod}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else if (document.getElementById('opt-auto-next').checked && state.exam.qIdxInMod + 1 < mod.questions.length) {
+              state.exam.qIdxInMod++; renderExamUI(true);
+            } else renderExamUI(false);
+          }
+        }
+      }
+    });
+
+    function fmtHMS(sec) { const s = Math.max(0, Math.floor(sec)); return `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+    function fmtCN(sec) { const s = Math.max(0, Math.floor(sec)); return `${Math.floor(s/60)}分${s%60}秒`; }
+
+    let shardsReadyPromise = null;
+
+    async function loadStaticShards() {
+      try {
+        const res = await fetch('./data/manifest.json?t=' + Math.floor(Date.now() / 3600000), { cache: 'no-cache' });
+        if (!res.ok) return false;
+        const manifest = await res.json();
+        if (!manifest || !Array.isArray(manifest.shards) || !manifest.shards.length) return false;
+
+        const cachedVer = await dbGet('shard_build_id', '');
+        if (cachedVer === manifest.buildId && state.livePool.length >= 120) {
+          return true;
+        }
+
+        const loaded = [];
+        await Promise.all(manifest.shards.map(async sh => {
+          try {
+            const r = await fetch('./data/' + sh.file + '?v=' + encodeURIComponent(manifest.buildId));
+            if (!r.ok) return;
+            const arr = await r.json();
+            if (Array.isArray(arr)) loaded.push(...arr);
+          } catch (e) {}
+        }));
+
+        if (loaded.length >= 60) {
+          state.livePool = loaded;
+          await dbSet('live_pool', loaded);
+          await dbSet('shard_build_id', manifest.buildId);
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    (async () => {
+      const [live, hist, mist, favs, seen] = await Promise.all([
+        dbGet('live_pool', []), dbGet('history', []), dbGet('mistakes', []), dbGet('favorites', []), dbGet('seen_ids', [])
+      ]);
+      state.livePool = Array.isArray(live) ? live : [];
+      state.history = Array.isArray(hist) ? hist : [];
+      state.mistakes = Array.isArray(mist) ? mist : [];
+      state.favorites = Array.isArray(favs) ? favs : [];
+      state.seenIds = new Set(Array.isArray(seen) ? seen : []);
+      renderLobby();
+
+      shardsReadyPromise = loadStaticShards().then(ok => {
+        if (!ok && state.livePool.length < 120) silentBackgroundHydrate();
+      });
+    })();
+  })();
+  </script>
+</body>
+</html>

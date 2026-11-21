@@ -49,7 +49,7 @@ YEAR_RE = re.compile(r"(20[12]\d)")
 #   ### 第 1 题 <sub>qid 16069826 · 平均数</sub>
 #   ## 第1题
 Q_HEADER_RE = re.compile(
-    r"^#{2,4}\s*第\s*(\d{1,3})\s*题(?:\s*<sub>(.*?)</sub>)?\s*$"
+    r"^(#{2,4})\s*第\s*(\d{1,3})\s*题(?:\s*<sub>(.*?)</sub>)?\s*$"
 )
 
 # Matches: ## 材料 1  /  ## 材料一  /  ### 材料 2
@@ -256,11 +256,25 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
                 "explanation": exp_clean,
             }
 
-            if mod_id == "data" and cur_mat_lines:
+            has_mat = bool(cur_mat_lines) and (mod_id == "data" or cur_q["level"] >= 3)
+            # Hard rule: only Data Analysis (资料分析) uses shared materials;
+            # strictly exclude 篇章阅读 (verbal) and 一拖五 (reasoning) to match real exam blueprint.
+            if mod_id != "data":
+                if has_mat or re.search(r"一拖五|篇章阅读|文章阅读", cur_q["raw_tag"]):
+                    cur_q = None
+                    return
+                cn_len = len(re.findall(r"[\u4e00-\u9fff]", stem_clean))
+                if mod_id == "verbal" and cn_len < 45 and re.search(r"原文|文中|上文|这篇文章|作者认为|文章|第[一二三四五六七八九十\d]+段", stem_clean):
+                    cur_q = None
+                    return
+                if mod_id == "reasoning" and cn_len < 50 and re.search(r"根据上述材料|根据以上材料|根据所给材料|上述条件", stem_clean):
+                    cur_q = None
+                    return
+            elif has_mat:
                 mat_raw = "\n".join(cur_mat_lines).strip()
                 if mat_raw:
                     q_order_in_mat += 1
-                    q_obj["material"] = rewrite_images_in_text(mat_raw, rel_path)
+                    q_obj["materialHtml"] = rewrite_images_in_text(mat_raw, rel_path)
                     q_obj["groupId"] = cur_mat_id
                     q_obj["groupOrder"] = q_order_in_mat
 
@@ -272,7 +286,7 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
         s = ln.strip()
 
         mm = MAT_HEADER_RE.match(s)
-        if mod_id == "data" and mm:
+        if mm:
             flush_q()
             in_mat = True
             cur_mat_lines = []
@@ -284,12 +298,18 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
         if qm:
             flush_q()
             in_mat = False
-            sub_info = qm.group(2) or ""
+            q_level = len(qm.group(1))
+            if q_level <= 2 and mod_id != "data":
+                cur_mat_lines = []
+                cur_mat_id = ""
+                q_order_in_mat = 0
+            sub_info = qm.group(3) or ""
             qid_m = QID_RE.search(sub_info)
             qid = qid_m.group(1) if qid_m else ""
             raw_tag = sub_info.split("·")[-1].strip() if "·" in sub_info else sub_info.strip()
             cur_q = {
-                "qnum": int(qm.group(1)),
+                "level": q_level,
+                "qnum": int(qm.group(2)),
                 "qid": qid,
                 "raw_tag": raw_tag,
                 "lines": [],

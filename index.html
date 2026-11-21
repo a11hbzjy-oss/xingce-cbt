@@ -99,7 +99,7 @@
     .q-text { font-size: var(--q-font-size); line-height: 1.78; }
     .opt-struck { text-decoration: line-through; opacity: 0.36; }
     .highlight-mark { background-color: #fde047; color: #111827; padding: 0 2px; border-radius: 2px; }
-    .exam-rich p { margin-bottom: 0.45em; }
+    .exam-rich p { margin-bottom: 0.45em; } .exam-rich p:last-child { margin-bottom: 0; }
     .exam-rich img[flag="tex"], img.tex-formula { display: inline-block !important; vertical-align: middle !important; max-height: 2.6em !important; width: auto !important; border: none !important; padding: 0 2px !important; margin: 0 !important; background: transparent !important; }
     .exam-rich img:not([flag="tex"]):not(.tex-formula) { max-width: 100%; height: auto; border-radius: 6px; margin: 6px 0; border: 1px solid #cbd5e1; background: #fff; padding: 4px; display: block; }
     .blank-slot { display: inline-block; min-width: 4em; border-bottom: 1.5px solid #1f2937; margin: 0 3px; vertical-align: -2px; }
@@ -928,7 +928,7 @@
           picked = generateDynamicPerceptualBank();
         } else if (mod.id === 'verbal' || mod.id === 'reasoning') {
           mod.subQuotas.forEach(sq => {
-            picked.push(...pickSeamless(liveM.filter(q => q.subType === sq.subType), coreM.filter(q => q.subType === sq.subType), sq.count));
+            const subLive = liveM.filter(q => q.subType === sq.subType && !q.materialHtml && !q.material && !q.groupId); picked.push(...pickSeamless(subLive, coreM.filter(q => q.subType === sq.subType), sq.count));
           });
         } else if (mod.id === 'data') {
           const buildGroups = arr => { const mp = new Map(); arr.forEach(q => { const g = q.groupId || q.id; if (!mp.has(g)) mp.set(g, []); mp.get(g).push(q); }); return shuffle([...mp.values()]).filter(g => g.length >= 4).map(g => g.sort((a,b) => (a.groupOrder||0) - (b.groupOrder||0))); };
@@ -1206,7 +1206,7 @@
         });
         qArea.querySelectorAll('.btn-perc-clear').forEach(b => b.addEventListener('click', () => { delete ex.answers[mod.questions[Number(b.dataset.clearQi)].id]; renderExamUI(false); }));
       } else {
-        if (curQ.materialHtml) { topMat.classList.remove('hidden'); topMat.innerHTML = `<div class="max-w-4xl mx-auto text-sm leading-relaxed select-text">${renderRich(curQ.materialHtml)}</div>`; }
+        const _mat = curQ.materialHtml || curQ.material || ''; if (_mat) { topMat.classList.remove('hidden'); topMat.innerHTML = `<div class="max-w-4xl mx-auto text-sm leading-relaxed select-text">${renderRich(_mat)}</div>`; }
         else { topMat.classList.add('hidden'); topMat.innerHTML = ''; }
         const chosen = ex.answers[curQ.id], struck = ex.struck[curQ.id] || {};
         const isSvgGrid = !!curQ.pureSvg;
@@ -1220,7 +1220,7 @@
             <div class="${isSvgGrid ? 'grid grid-cols-2 gap-3 pl-0 sm:pl-9' : 'pl-0 sm:pl-9 space-y-1.5'}">
               ${curQ.options.map((opt, oi) => isSvgGrid
                 ? `<div data-oi="${oi}" class="std-opt-row graphic-tile ${chosen === oi ? 'selected' : ''} ${struck[oi] ? 'opacity-35' : ''}"><span class="font-bold text-sm text-[#1b4d89]">${LETTERS[oi]}</span><div class="flex-1 flex justify-center">${opt}</div></div>`
-                : `<div data-oi="${oi}" class="std-opt-row cbt-radio-row justify-between ${chosen === oi ? 'selected' : ''}"><div class="flex items-start gap-2 flex-1 min-w-0"><span class="cbt-radio-dot"></span><div class="q-text text-slate-800 ${struck[oi] ? 'opt-struck' : ''}"><strong class="mr-1">${LETTERS[oi]}.</strong>${renderRich(opt)}</div></div><button data-strike="${oi}" class="btn-opt-strike text-[11px] px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-700 shrink-0" title="排除">${struck[oi] ? '恢复' : '✕'}</button></div>`
+                : `<div data-oi="${oi}" class="std-opt-row cbt-radio-row justify-between ${chosen === oi ? 'selected' : ''}"><div class="flex items-start gap-2 flex-1 min-w-0"><span class="cbt-radio-dot"></span><div class="q-text text-slate-800 flex items-start gap-1.5 flex-1 min-w-0 ${struck[oi] ? 'opt-struck' : ''}"><strong class="shrink-0">${LETTERS[oi]}.</strong><div class="flex-1 min-w-0">${renderRich(opt)}</div></div></div><button data-strike="${oi}" class="btn-opt-strike text-[11px] px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-700 shrink-0" title="排除">${struck[oi] ? '恢复' : '✕'}</button></div>`
               ).join('')}
             </div>
           </div>`;

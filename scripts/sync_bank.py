@@ -412,8 +412,10 @@ def deduplicate_by_module(questions: list, max_per_module: int) -> dict:
     for q in non_data:
         if q.get("qid") and q["qid"] in seen_qids:
             continue
-        fp = hashlib.sha1(re.sub(r"[\s，。、；：！？\"'（）()【】]", "", re.sub(r"<[^>]+>", "", q["stem"][:160]) + "".join(q["options"])).encode("utf-8")).hexdigest()
-        use_fp = len(re.findall(r"[\u4e00-\u9fff]", q["stem"])) >= 12
+        img_sigs = "|".join(sorted(IMG_SRC_RE.findall(q["stem"] + "".join(q["options"]))))
+        plain_sig = re.sub(r"[\s，。、；：！？\"'（）()【】]", "", re.sub(r"<[^>]+>", "", q["stem"][:160]) + "".join(q["options"]))
+        fp = hashlib.sha1((plain_sig + "##" + img_sigs).encode("utf-8")).hexdigest()
+        use_fp = bool(img_sigs) or len(re.findall(r"[\u4e00-\u9fff]", plain_sig)) >= 12
         if use_fp and fp in seen_fp:
             continue
         if q.get("qid"):
@@ -557,6 +559,9 @@ def main():
 
         total += len(clean_arr)
         print(f"  - {MODULE_LABELS[mod_id]}: {len(clean_arr)} 题 ({len(buckets)} 桶) | 难度 基础:{diff_cnt[1]} 中等:{diff_cnt[2]} 偏难:{diff_cnt[3]} | 联考优先T1:{tier_cnt[1]}")
+        if mod_id in ("verbal", "reasoning"):
+            st_cnt = Counter(q["subType"] for q in clean_arr)
+            print("      子题型分布:", " | ".join(f"{k}:{v}" for k, v in sorted(st_cnt.items())))
 
     # CI Quality Gate Assertions
     if leak_count > 0:

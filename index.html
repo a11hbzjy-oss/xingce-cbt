@@ -1425,13 +1425,17 @@
         if (!mf || !Array.isArray(mf.shards)) return false;
         const toFetch = [];
         for (const modId of modIds) {
-          const existingCount = state.livePool.filter(q => q.module === modId).length;
+          const modMeta = EXAM_MODULES.find(m => m.id === modId);
+          const modPool = state.livePool.filter(q => q.module === modId);
           const modBuckets = mf.shards.filter(s => s.module === modId);
           if (!modBuckets.length) continue;
-          // Ensure at least 150 questions in memory per needed module (fetch 1-2 random unseen buckets)
-          if (existingCount >= 140) continue;
+          let quotaMet = modPool.length >= Math.max(60, (modMeta?.count || 20) * 2);
+          if (quotaMet && modMeta?.subQuotas) {
+            quotaMet = modMeta.subQuotas.every(sq => modPool.filter(q => q.subType === sq.subType && !q.materialHtml && !q.material && !q.groupId).length >= sq.count * 2);
+          }
+          if (quotaMet) continue;
           const unloaded = shuffle(modBuckets.filter(b => !loadedBucketFiles.has(b.file)));
-          const pickCount = modId === 'verbal' || modId === 'reasoning' ? 2 : 1;
+          const pickCount = modId === 'verbal' || modId === 'reasoning' ? 3 : 2;
           toFetch.push(...unloaded.slice(0, pickCount));
         }
         if (toFetch.length) {

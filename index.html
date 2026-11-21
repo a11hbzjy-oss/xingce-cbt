@@ -99,6 +99,9 @@
     .q-text { font-size: var(--q-font-size); line-height: 1.78; }
     .opt-struck { text-decoration: line-through; opacity: 0.36; }
     .highlight-mark { background-color: #fde047; color: #111827; padding: 0 2px; border-radius: 2px; }
+    .exam-rich p { margin-bottom: 0.45em; }
+    .exam-rich img[flag="tex"], img.tex-formula { display: inline-block !important; vertical-align: middle !important; max-height: 2.6em !important; width: auto !important; border: none !important; padding: 0 2px !important; margin: 0 !important; background: transparent !important; }
+    .exam-rich img:not([flag="tex"]):not(.tex-formula) { max-width: 100%; height: auto; border-radius: 6px; margin: 6px 0; border: 1px solid #cbd5e1; background: #fff; padding: 4px; display: block; }
     .blank-slot { display: inline-block; min-width: 4em; border-bottom: 1.5px solid #1f2937; margin: 0 3px; vertical-align: -2px; }
 
     .exam-std-table { width: 100%; border-collapse: collapse; background: #fff; color: #111827; margin: 0 auto; }
@@ -770,11 +773,22 @@
       const enc = c.split('/').map(x => encodeURIComponent(x)).join('/');
       return { p: REPO_CDN + enc, f: REPO_RAW + enc };
     }
+    function rewriteHtmlImgs(htmlStr) {
+      return String(htmlStr).replace(/<img([^>]*?)src=["']([^"']+)["']([^>]*)>/gi, (m, pre, src, post) => {
+        const { p, f } = resolveImg(src);
+        const onerr = f ? ` onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${f}';}"` : '';
+        return `<img${pre}src="${p}"${onerr} loading="lazy"${post}>`;
+      });
+    }
     function renderRich(text) {
       if (!text) return '';
-      if (text.includes('class="exam-std-table"') || text.includes('<svg')) return text;
-      const parts = String(text).split(/(\n?\|[^\n]+\|\n\|[\s:\-|]+\|\n(?:\|[^\n]+\|\n?)+)/g);
-      return parts.map(part => {
+      const raw = String(text);
+      if (/<(p|table|div|img|svg|br|strong|ul|ol|span)\b/i.test(raw)) {
+        const fixed = rewriteHtmlImgs(raw).replace(/_{4,}|\u00a0{4,}/g, '<span class="blank-slot"></span>');
+        return `<div class="exam-rich">${fixed}</div>`;
+      }
+      const parts = raw.split(/(\n?\|[^\n]+\|\n\|[\s:\-|]+\|\n(?:\|[^\n]+\|\n?)+)/g);
+      const rendered = parts.map(part => {
         if (part.trim().startsWith('|') && part.includes('\n|')) {
           const lines = part.trim().split('\n').filter(l => l.trim().startsWith('|'));
           if (lines.length >= 2) {
@@ -786,11 +800,13 @@
         s = s.replace(/!\[\[([^\]]+)\]\]|!\[([^\]]*)\]\(([^)]+)\)/g, (_, p1, alt, p2) => {
           const { p, f } = resolveImg(p1 || p2);
           const onerr = f ? `onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${f}';}"` : '';
-          return `<img src="${p}" ${onerr} alt="${alt || '配图'}" class="max-w-full max-h-64 rounded my-1.5 border border-slate-200 bg-white p-1 inline-block" loading="lazy" />`;
+          return `<img src="${p}" ${onerr} alt="${alt || '配图'}" class="max-w-full rounded my-1.5 border border-slate-200 bg-white p-1 block" loading="lazy" />`;
         });
-        s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/_{4,}/g, '<span class="blank-slot"></span>');
+        s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+             .replace(/_{4,}|\s{4,}/g, '<span class="blank-slot"></span>');
         return s.replace(/\n/g, '<br/>');
       }).join('');
+      return `<div class="exam-rich">${rendered}</div>`;
     }
 
     function inferVerbalSub(s) {
@@ -1045,7 +1061,7 @@
 
     async function startExamFlow(targetModIds = null) {
       if (shardsReadyPromise && state.livePool.length < 60) {
-        await Promise.race([shardsReadyPromise, new Promise(r => setTimeout(r, 2500))]);
+        await Promise.race([shardsReadyPromise, new Promise(r => setTimeout(r, 4000))]);
       }
       pendingModules = assembleFullPaper(targetModIds);
       showTopView('prep');
@@ -1439,7 +1455,7 @@
 
     async function loadStaticShards() {
       try {
-        const res = await fetch('./data/manifest.json?t=' + Math.floor(Date.now() / 3600000), { cache: 'no-cache' });
+        const res = await fetch('./data/manifest.json?t=' + Date.now(), { cache: 'no-cache' });
         if (!res.ok) return false;
         const manifest = await res.json();
         if (!manifest || !Array.isArray(manifest.shards) || !manifest.shards.length) return false;
@@ -1480,9 +1496,7 @@
       state.seenIds = new Set(Array.isArray(seen) ? seen : []);
       renderLobby();
 
-      shardsReadyPromise = loadStaticShards().then(ok => {
-        if (!ok && state.livePool.length < 120) silentBackgroundHydrate();
-      });
+      shardsReadyPromise = loadStaticShards();
     })();
   })();
   </script>

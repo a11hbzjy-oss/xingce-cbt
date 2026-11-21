@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Cloud ETL script for GitHub Actions:
-Parses real civil service past-paper Markdown files from ERRRC/xingcezhenti,
-deduplicates cross-province overlaps, preserves Data Analysis "一材多题" groups,
-and emits static sharded JSON files into <out-dir>/data/ alongside index.html.
+Precision-calibrated ETL script for ERRRC/xingcezhenti -> GitHub Pages static JSON shards.
+Exact format supported (verified against real repository Raw files):
+  - YAML frontmatter header
+  - ## 材料 1  (Data Analysis material blocks)
+  - ## 第 1 题 <sub>qid 16070152 · 逻辑填空</sub>  (or ### 第 1 题 <sub>...</sub>)
+  - - **A**. ... / - **B**. ... ✅  (automatically strips trailing ✅!)
+  - **答案**：B
+  - **官方解析**
+  - <p>...</p> and <img src="../90-图片/..." /> (including flag="tex" inline formulas)
 Uses Python 3 standard library only.
 """
 import argparse
 import hashlib
 import json
 import os
-import random
 import re
 import shutil
 import sys
@@ -39,74 +43,46 @@ MODULE_LABELS = {
 }
 
 YEAR_RE = re.compile(r"(20[12]\d)")
-HEADING_SUBTYPE_PATTERNS = [
-    ("逻辑填空", re.compile(r"逻辑填空|选词填空")),
-    ("语句表达", re.compile(r"语句表达|语句排序|语句衔接|下文推断")),
-    ("阅读理解", re.compile(r"阅读理解|片段阅读|中心理解|细节判断|标题填入")),
-    ("图形推理", re.compile(r"图形推理")),
-    ("定义判断", re.compile(r"定义判断")),
-    ("类比推理", re.compile(r"类比推理")),
-    ("逻辑判断", re.compile(r"逻辑判断|演绎推理|论证")),
-]
 
-Q_START_RE = re.compile(
-    r"^(?:#{1,6}\s*)?(?:\*\*)?(?:第\s*)?(\d{1,3})(?:\s*题)?[\.、．\)）](?:\*\*)?\s*(.*)$"
+# Matches:
+#   ## 第 1 题 <sub>qid 16070152 · 逻辑填空</sub>
+#   ### 第 1 题 <sub>qid 16069826 · 平均数</sub>
+#   ## 第1题
+Q_HEADER_RE = re.compile(
+    r"^#{2,4}\s*第\s*(\d{1,3})\s*题(?:\s*<sub>(.*?)</sub>)?\s*$"
 )
-MAT_START_RE = re.compile(
-    r"^(?:#{1,6}\s*)?(?:\*\*)?(?:【?\s*材料[一二三四五六七八九十\d]*\s*】?|资料[一二三四五六七八九十\d]*|根据以下资料|所给出的图、表、文字|根据下列资料|阅读以下材料|请根据下面)"
-)
-ANSWER_SECTION_RE = re.compile(
-    r"^#{1,4}\s*(?:参考答案|答案与解析|答案及解析|试题解析|参考答案及解析)\s*$"
-)
+
+# Matches: ## 材料 1  /  ## 材料一  /  ### 材料 2
+MAT_HEADER_RE = re.compile(r"^#{2,4}\s*材料\s*([一二三四五六七八九十\d]+)\s*$")
+
+# Matches: - **A**. 黔驴技穷  /  - **B**. 山穷水尽 ✅  /  A. xxx
 OPT_LINE_RE = re.compile(
-    r"^(?:[-*+]\s*)?(?:\*\*)?([A-D])(?:\*\*)?\s*[\.、．\)）:：\s]\s*(.+)$"
+    r"^(?:[-*+]\s*)?(?:\*\*)?([A-D])(?:\*\*)?\s*[\.、．\)）:：]\s*(.*)$"
 )
-ANS_INLINE_RE = re.compile(
-    r"(?:^|\n)\s*(?:>\s*)?(?:\*\*)?(?:【\s*)?(?:参考答案|正确答案|答案)(?:\s*】)?(?:\*\*)?\s*[:：]?\s*(?:\*\*)?([A-D])(?:\*\*)?",
+
+# Matches: **答案**：B  /  **答案**: C
+ANS_LINE_RE = re.compile(
+    r"^(?:>\s*)?(?:\*\*)?(?:参考答案|正确答案|答案)(?:\*\*)?\s*[:：]\s*(?:\*\*)?([A-D])(?:\*\*)?\s*$",
     re.IGNORECASE,
 )
-EXP_INLINE_RE = re.compile(
-    r"(?:^|\n)\s*(?:>\s*)?(?:\*\*)?(?:【\s*)?(?:试题解析|答案解析|名师解析|解析|详解)(?:\s*】)?(?:\*\*)?\s*[:：]?\s*([\s\S]*)$"
+
+# Matches: **官方解析**  /  **解析**  /  **解析**：...
+EXP_HEADER_RE = re.compile(
+    r"^(?:>\s*)?(?:\*\*)?(?:官方解析|试题解析|答案解析|名师解析|解析)(?:\*\*)?\s*[:：]?\s*(.*)$"
 )
+
+QID_RE = re.compile(r"qid\s*(\d+)", re.I)
+IMG_SRC_RE = re.compile(r'src=["\']([^"\']+)["\']', re.I)
 IMG_MD_RE = re.compile(r"!\[\[([^\]]+)\]\]|!\[([^\]]*)\]\(([^)]+)\)")
+CHECKMARK_RE = re.compile(r"\s*[✅✔☑️]+\s*$")
 
 
-def extract_year(filename: str) -> int:
-    m = YEAR_RE.search(filename)
+def extract_year(text: str) -> int:
+    m = YEAR_RE.search(text)
     return int(m.group(1)) if m else 2024
 
 
-def infer_verbal_subtype(stem: str, heading_sub: str = "") -> str:
-    if heading_sub in ("逻辑填空", "语句表达", "阅读理解"):
-        return heading_sub
-    if re.search(r"填入画横线|依次填入|画横线部分最恰当|____|（\s*）", stem):
-        return "逻辑填空"
-    if re.search(r"重新排列|排序|衔接最恰当|接下来最可能|填入横线处最恰当的一句|语病|歧义", stem):
-        return "语句表达"
-    return "阅读理解"
-
-
-def infer_reasoning_subtype(stem: str, options: list, heading_sub: str = "") -> str:
-    if heading_sub in ("图形推理", "定义判断", "类比推理", "逻辑判断"):
-        return heading_sub
-    joined = stem + " " + " ".join(options)
-    if (
-        IMG_MD_RE.search(joined)
-        or re.search(r"从所给的四个选项中.*选择最合适的一个填入问号处|六个图形|立体图形|折叠|三视图|截面", stem)
-    ):
-        return "图形推理"
-    if re.search(r"是指|定义为|根据上述定义|下列属于.*的是|下列不属于.*的是|符合上述定义", stem):
-        return "定义判断"
-    if (
-        len(stem) <= 45
-        and re.search(r"[:：∶]|对于.*相当于", stem)
-        and all(len(o) <= 35 for o in options)
-    ):
-        return "类比推理"
-    return "逻辑判断"
-
-
-def resolve_rel_image_path(raw_target: str, md_rel_path: str) -> str:
+def normalize_img_path(raw_target: str, md_rel_path: str) -> str:
     target = raw_target.strip().split("|")[0].split()[0].strip("<>\"'")
     if re.match(r"^(https?:|data:)", target, re.I):
         return target
@@ -118,59 +94,58 @@ def resolve_rel_image_path(raw_target: str, md_rel_path: str) -> str:
     return os.path.normpath(os.path.join(md_dir, target)).replace("\\", "/").lstrip("./")
 
 
-def parse_end_answer_section(text: str) -> dict:
-    ans_map = {}
-    blocks = re.split(r"(?m)^(?=(?:\*\*)?(?:第\s*)?\d{1,3}[\.、．\)）])", text.strip())
-    for blk in blocks:
-        blk = blk.strip()
-        if not blk:
-            continue
-        m = re.match(r"^(?:\*\*)?(?:第\s*)?(\d{1,3})[\.、．\)）](?:\*\*)?\s*([\s\S]+)$", blk)
-        if not m:
-            continue
-        qno = int(m.group(1))
-        rest = m.group(2).strip()
-        am = re.search(r"(?:答案[:：\s]*)?(?:\*\*)?([A-D])(?:\*\*)?", rest[:40], re.I)
-        if not am:
-            continue
-        ans_idx = ord(am.group(1).upper()) - ord("A")
-        em = EXP_INLINE_RE.search(rest)
-        exp = em.group(1).strip() if em else rest[am.end() :].strip(" ：:。;；\n")
-        ans_map[qno] = (ans_idx, exp)
-    return ans_map
+def rewrite_images_in_text(text: str, md_rel_path: str) -> str:
+    if not text:
+        return text
+    # Rewrite HTML <img src="../90-图片/...">
+    text = IMG_SRC_RE.sub(
+        lambda m: f'src="{normalize_img_path(m.group(1), md_rel_path)}"',
+        text,
+    )
+    # Rewrite Markdown ![](...)
+    text = IMG_MD_RE.sub(
+        lambda m: f"![{m.group(2) or '配图'}]({normalize_img_path(m.group(1) or m.group(3), md_rel_path)})",
+        text,
+    )
+    return text
 
 
-def parse_options_from_lines(lines: list) -> tuple:
-    stem_lines = []
-    opts = {}
-    cur_letter = None
-    for ln in lines:
-        s = ln.strip()
-        if not s:
-            if cur_letter is None:
-                stem_lines.append("")
-            continue
-        found_inline = list(re.finditer(r"(?:^|\s{2,}|\t)(?:\*\*)?([A-D])(?:\*\*)?\s*[\.、．\)）]\s*", s))
-        if len(found_inline) >= 2 and found_inline[0].group(1) in ("A", "C"):
-            for i, match in enumerate(found_inline):
-                letter = match.group(1)
-                start = match.end()
-                end = found_inline[i + 1].start() if i + 1 < len(found_inline) else len(s)
-                opts[letter] = s[start:end].strip()
-                cur_letter = letter
-            continue
-        m = OPT_LINE_RE.match(s)
-        if m:
-            letter = m.group(1).upper()
-            opts[letter] = m.group(2).strip()
-            cur_letter = letter
-            continue
-        if cur_letter is not None:
-            opts[cur_letter] = (opts[cur_letter] + "\n" + s).strip()
-        else:
-            stem_lines.append(ln)
-    ordered_opts = [opts.get(c, "").strip() for c in ("A", "B", "C", "D")]
-    return "\n".join(stem_lines).strip(), ordered_opts
+def map_subtype(mod_id: str, raw_tag: str, stem: str, options: list) -> str:
+    tag = raw_tag.strip()
+    if mod_id == "verbal":
+        if re.search(r"逻辑填空|选词填空", tag):
+            return "逻辑填空"
+        if re.search(r"语句|排序|接语|下文|填空|衔接|病句|歧义", tag) and "逻辑填空" not in tag:
+            return "语句表达"
+        if re.search(r"片段阅读|中心理解|细节|标题|意图|词句理解|主旨|阅读", tag):
+            return "阅读理解"
+        # Stem fallback
+        if re.search(r"填入画横线|依次填入|画横线部分最恰当|____|\s{4,}", stem):
+            return "逻辑填空"
+        if re.search(r"重新排列|排序|衔接最恰当|接下来最可能|填入横线处最恰当的一句", stem):
+            return "语句表达"
+        return "阅读理解"
+
+    if mod_id == "reasoning":
+        if "图形" in tag:
+            return "图形推理"
+        if "定义" in tag:
+            return "定义判断"
+        if "类比" in tag:
+            return "类比推理"
+        if re.search(r"逻辑|削弱|加强|翻译|真假|组合|排列|论证|推理", tag):
+            return "逻辑判断"
+        # Stem fallback
+        joined = stem + " " + " ".join(options)
+        if "<img" in joined or "90-图片/" in joined or "填入问号处" in stem:
+            return "图形推理"
+        if re.search(r"是指|根据上述定义|下列属于.*的是|下列不属于.*的是", stem):
+            return "定义判断"
+        if len(stem) <= 45 and re.search(r"[:：∶]|对于.*相当于", stem):
+            return "类比推理"
+        return "逻辑判断"
+
+    return MODULE_LABELS[mod_id]
 
 
 def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
@@ -178,79 +153,99 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
     paper_name = Path(rel_path).stem
     year = extract_year(paper_name)
 
-    end_answers = {}
-    body_lines = md_text.split("\n")
-    for idx, ln in enumerate(body_lines):
-        if ANSWER_SECTION_RE.match(ln.strip()):
-            end_answers = parse_end_answer_section("\n".join(body_lines[idx + 1 :]))
-            body_lines = body_lines[:idx]
-            break
+    lines = md_text.split("\n")
+    # Strip YAML frontmatter if present (either --- delimited or key: "val" header lines before # Title)
+    start_idx = 0
+    if lines and lines[0].strip() == "---":
+        for i in range(1, min(len(lines), 30)):
+            if lines[i].strip() == "---":
+                start_idx = i + 1
+                break
+    else:
+        for i in range(min(len(lines), 20)):
+            if lines[i].startswith("# "):
+                start_idx = i + 1
+                break
 
     questions = []
-    cur_heading_sub = ""
-    cur_material_lines = []
-    cur_material_id = ""
-    mat_counter = 0
-    in_material = False
-    cur_qno = None
-    cur_q_lines = []
+    cur_mat_lines = []
+    cur_mat_id = ""
+    in_mat = False
     q_order_in_mat = 0
 
-    def norm_imgs(txt: str) -> str:
-        def _repl(m):
-            raw_p = m.group(1) or m.group(3)
-            alt = m.group(2) or "配图"
-            return f"![{alt}]({resolve_rel_image_path(raw_p, rel_path)})"
-        return IMG_MD_RE.sub(_repl, txt)
+    cur_q = None  # dict holding lines, qnum, qid, raw_tag
 
-    def flush_question():
-        nonlocal cur_qno, cur_q_lines, q_order_in_mat
-        if cur_qno is None or not cur_q_lines:
-            cur_qno = None
-            cur_q_lines = []
+    def flush_q():
+        nonlocal cur_q, q_order_in_mat
+        if not cur_q:
             return
-        raw_block = "\n".join(cur_q_lines).strip()
-        exp = ""
+
+        q_lines = cur_q["lines"]
+        stem_lines = []
+        opts = {}
+        cur_opt = None
         ans_idx = -1
-        exp_m = EXP_INLINE_RE.search(raw_block)
-        if exp_m:
-            exp = exp_m.group(1).strip()
-            before_exp = raw_block[: exp_m.start()].strip()
-        else:
-            before_exp = raw_block
-        ans_m = ANS_INLINE_RE.search(before_exp)
-        if ans_m:
-            ans_idx = ord(ans_m.group(1).upper()) - ord("A")
-            qa_part = before_exp[: ans_m.start()].strip()
-        else:
-            qa_part = before_exp
-        if ans_idx < 0 and cur_qno in end_answers:
-            ans_idx, end_exp = end_answers[cur_qno]
-            if not exp:
-                exp = end_exp
+        in_exp = False
+        exp_lines = []
 
-        stem, options = parse_options_from_lines(qa_part.split("\n"))
-        if len(stem) >= 4 and all(options) and 0 <= ans_idx <= 3:
-            if mod_id == "verbal":
-                sub_type = infer_verbal_subtype(stem, cur_heading_sub)
-            elif mod_id == "reasoning":
-                sub_type = infer_reasoning_subtype(stem, options, cur_heading_sub)
+        for ln in q_lines:
+            s = ln.strip()
+            if in_exp:
+                exp_lines.append(ln)
+                continue
+
+            em = EXP_HEADER_RE.match(s)
+            if em and (ans_idx >= 0 or len(opts) == 4):
+                in_exp = True
+                if em.group(1).strip():
+                    exp_lines.append(em.group(1).strip())
+                continue
+
+            am = ANS_LINE_RE.match(s)
+            if am:
+                ans_idx = ord(am.group(1).upper()) - ord("A")
+                cur_opt = None
+                continue
+
+            om = OPT_LINE_RE.match(s)
+            if om and (cur_opt is not None or om.group(1).upper() == "A"):
+                letter = om.group(1).upper()
+                val = om.group(2).strip()
+                # If this option carries ✅ and answer wasn't set yet, record it and strip ✅!
+                if CHECKMARK_RE.search(val):
+                    if ans_idx < 0:
+                        ans_idx = ord(letter) - ord("A")
+                    val = CHECKMARK_RE.sub("", val).strip()
+                opts[letter] = val
+                cur_opt = letter
+                continue
+
+            if cur_opt is not None:
+                if s:
+                    extra = CHECKMARK_RE.sub("", s).strip()
+                    if CHECKMARK_RE.search(s) and ans_idx < 0:
+                        ans_idx = ord(cur_opt) - ord("A")
+                    opts[cur_opt] = (opts[cur_opt] + "\n" + extra).strip()
             else:
-                sub_type = MODULE_LABELS[mod_id]
+                stem_lines.append(ln)
 
-            mat_text = "\n".join(cur_material_lines).strip() if mod_id == "data" else ""
-            if mod_id == "data" and mat_text:
-                q_order_in_mat += 1
-                grp_id, grp_ord = cur_material_id, q_order_in_mat
-            else:
-                grp_id, grp_ord = "", 0
+        stem_raw = "\n".join(stem_lines).strip()
+        ordered_opts = [CHECKMARK_RE.sub("", opts.get(c, "")).strip() for c in ("A", "B", "C", "D")]
+        exp_raw = "\n".join(exp_lines).strip()
 
-            stem_clean = norm_imgs(stem)
-            opts_clean = [norm_imgs(o) for o in options]
-            fp_src = re.sub(r"\s+", "", stem_clean + "".join(opts_clean))[:200]
-            qid = f"r_{mod_id}_{hashlib.sha1((paper_name + ':' + str(cur_qno) + ':' + fp_src).encode('utf-8')).hexdigest()[:10]}"
+        if len(stem_raw) >= 4 and all(ordered_opts) and 0 <= ans_idx <= 3:
+            stem_clean = rewrite_images_in_text(stem_raw, rel_path)
+            opts_clean = [rewrite_images_in_text(o, rel_path) for o in ordered_opts]
+            exp_clean = rewrite_images_in_text(exp_raw, rel_path) if exp_raw else "详见真题解析。"
+            sub_type = map_subtype(mod_id, cur_q["raw_tag"], stem_clean, opts_clean)
+
+            qid_str = cur_q["qid"] or hashlib.sha1(
+                (paper_name + ":" + str(cur_q["qnum"]) + ":" + stem_clean[:80]).encode("utf-8")
+            ).hexdigest()[:10]
+
             q_obj = {
-                "id": qid,
+                "id": f"q_{mod_id}_{qid_str}",
+                "qid": cur_q["qid"],
                 "module": mod_id,
                 "subType": sub_type,
                 "year": year,
@@ -258,105 +253,114 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
                 "stem": stem_clean,
                 "options": opts_clean,
                 "answer": ans_idx,
-                "explanation": norm_imgs(exp) if exp else "详见真题解析。",
+                "explanation": exp_clean,
             }
-            if mat_text:
-                q_obj["material"] = norm_imgs(mat_text)
-                q_obj["groupId"] = grp_id
-                q_obj["groupOrder"] = grp_ord
+
+            if mod_id == "data" and cur_mat_lines:
+                mat_raw = "\n".join(cur_mat_lines).strip()
+                if mat_raw:
+                    q_order_in_mat += 1
+                    q_obj["material"] = rewrite_images_in_text(mat_raw, rel_path)
+                    q_obj["groupId"] = cur_mat_id
+                    q_obj["groupOrder"] = q_order_in_mat
+
             questions.append(q_obj)
-        cur_qno = None
-        cur_q_lines = []
 
-    for ln in body_lines:
-        stripped = ln.strip()
-        if stripped.startswith("#"):
-            for sub_name, pat in HEADING_SUBTYPE_PATTERNS:
-                if pat.search(stripped):
-                    cur_heading_sub = sub_name
-                    break
-        if mod_id == "data" and MAT_START_RE.match(stripped):
-            flush_question()
-            mat_counter += 1
-            cur_material_id = f"mat_{hashlib.sha1(f'{paper_name}_{mat_counter}'.encode('utf-8')).hexdigest()[:8]}"
-            cur_material_lines = [] if stripped.startswith("#") else [ln]
+        cur_q = None
+
+    for ln in lines[start_idx:]:
+        s = ln.strip()
+
+        mm = MAT_HEADER_RE.match(s)
+        if mod_id == "data" and mm:
+            flush_q()
+            in_mat = True
+            cur_mat_lines = []
             q_order_in_mat = 0
-            in_material = True
+            cur_mat_id = f"mat_{hashlib.sha1((paper_name + '_' + mm.group(1)).encode('utf-8')).hexdigest()[:8]}"
             continue
-        qm = Q_START_RE.match(stripped)
-        if qm:
-            qnum = int(qm.group(1))
-            rest = qm.group(2).strip()
-            if 1 <= qnum <= 160 and not (in_material and len(cur_material_lines) == 0 and qnum > 25):
-                flush_question()
-                in_material = False
-                cur_qno = qnum
-                cur_q_lines = [rest] if rest else []
-                continue
-        if in_material:
-            cur_material_lines.append(ln)
-        elif cur_qno is not None:
-            cur_q_lines.append(ln)
-        elif mod_id == "data" and stripped and not stripped.startswith("#"):
-            if not cur_material_id:
-                mat_counter += 1
-                cur_material_id = f"mat_{hashlib.sha1(f'{paper_name}_{mat_counter}'.encode('utf-8')).hexdigest()[:8]}"
-            cur_material_lines.append(ln)
 
-    flush_question()
+        qm = Q_HEADER_RE.match(s)
+        if qm:
+            flush_q()
+            in_mat = False
+            sub_info = qm.group(2) or ""
+            qid_m = QID_RE.search(sub_info)
+            qid = qid_m.group(1) if qid_m else ""
+            raw_tag = sub_info.split("·")[-1].strip() if "·" in sub_info else sub_info.strip()
+            cur_q = {
+                "qnum": int(qm.group(1)),
+                "qid": qid,
+                "raw_tag": raw_tag,
+                "lines": [],
+            }
+            continue
+
+        if in_mat:
+            cur_mat_lines.append(ln)
+        elif cur_q is not None:
+            cur_q["lines"].append(ln)
+
+    flush_q()
     return questions
 
 
 def deduplicate_by_module(questions: list, max_per_module: int) -> dict:
     by_mod = defaultdict(list)
+    seen_qids = set()
     seen_fp = set()
 
-    # Non-data modules
+    # Non-data modules: newest years first
     non_data = [q for q in questions if q["module"] != "data"]
     non_data.sort(key=lambda q: q.get("year", 0), reverse=True)
     for q in non_data:
-        fp = hashlib.sha1(
-            re.sub(r"[\s，。、；：！？\"'（）()【】]", "", q["stem"] + "".join(q["options"])).encode("utf-8")
-        ).hexdigest()
-        if fp in seen_fp:
+        if q.get("qid") and q["qid"] in seen_qids:
             continue
-        seen_fp.add(fp)
+        fp = hashlib.sha1(
+            re.sub(r"[\s，。、；：！？\"'（）()【】<>/a-zA-Z0-9=_-]", "", q["stem"][:120] + "".join(q["options"])).encode("utf-8")
+        ).hexdigest()
+        # Only use text fingerprint when text has enough Chinese chars (skip image-only graphic reasoning)
+        use_fp = len(re.findall(r"[\u4e00-\u9fff]", q["stem"])) >= 12
+        if use_fp and fp in seen_fp:
+            continue
+        if q.get("qid"):
+            seen_qids.add(q["qid"])
+        if use_fp:
+            seen_fp.add(fp)
         by_mod[q["module"]].append(q)
 
     # Data Analysis: keep intact 4-5 question material groups
     groups = defaultdict(list)
     for q in questions:
-        if q["module"] == "data":
-            groups[q.get("groupId") or q["id"]].append(q)
+        if q["module"] == "data" and q.get("groupId"):
+            groups[q["groupId"]].append(q)
     sorted_groups = sorted(groups.values(), key=lambda g: max(x.get("year", 0) for x in g), reverse=True)
     for grp in sorted_groups:
         if len(grp) < 4:
             continue
         grp.sort(key=lambda x: x.get("groupOrder", 0))
-        mat_fp = hashlib.sha1(
-            re.sub(r"\s+", "", grp[0].get("material", "")[:200] + grp[0]["stem"]).encode("utf-8")
-        ).hexdigest()
-        if mat_fp in seen_fp:
+        first_qid = grp[0].get("qid", "")
+        if first_qid and first_qid in seen_qids:
             continue
-        seen_fp.add(mat_fp)
+        if first_qid:
+            seen_qids.add(first_qid)
         by_mod["data"].extend(grp[:5])
 
-    # Cap per module while keeping balanced subtypes if max_per_module > 0
+    # Cap per module with balanced subtypes
     if max_per_module > 0:
         for mod_id, arr in list(by_mod.items()):
             if len(arr) <= max_per_module:
                 continue
             if mod_id in ("verbal", "reasoning"):
-                sub_buckets = defaultdict(list)
+                buckets = defaultdict(list)
                 for q in arr:
-                    sub_buckets[q["subType"]].append(q)
+                    buckets[q["subType"]].append(q)
                 kept = []
-                quota = max(80, max_per_module // max(1, len(sub_buckets)))
-                for st, bucket in sub_buckets.items():
+                quota = max(120, max_per_module // max(1, len(buckets)))
+                for st, bucket in buckets.items():
                     kept.extend(bucket[:quota])
                 by_mod[mod_id] = kept[:max_per_module]
             elif mod_id == "data":
-                # Keep whole groups up to max_per_module
                 kept = []
                 cur_g = None
                 for q in arr:
@@ -376,6 +380,7 @@ def main():
     parser.add_argument("--out-dir", default="dist", help="Output static site directory")
     parser.add_argument("--min-year", type=int, default=2020, help="Minimum exam year to include (default 2020)")
     parser.add_argument("--max-per-module", type=int, default=1200, help="Max deduplicated questions per module shard")
+    parser.add_argument("--min-total", type=int, default=100, help="Fail build if fewer than this many questions parsed")
     args = parser.parse_args()
 
     repo_dir = Path(args.repo_dir).resolve()
@@ -407,20 +412,28 @@ def main():
     for mod_id in ("politics", "common", "verbal", "quant", "reasoning", "data"):
         arr = by_mod.get(mod_id, [])
         fname = f"{mod_id}.json"
-        (data_dir / fname).write_text(json.dumps(arr, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-        shards.append({"module": mod_id, "file": fname, "count": len(arr)})
-        total += len(arr)
-        print(f"  - {MODULE_LABELS[mod_id]} ({fname}): {len(arr)} questions")
+        # Drop internal qid key to keep payload lean
+        clean_arr = [{k: v for k, v in q.items() if k != "qid"} for q in arr]
+        (data_dir / fname).write_text(json.dumps(clean_arr, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        shards.append({"module": mod_id, "file": fname, "count": len(clean_arr)})
+        total += len(clean_arr)
+        print(f"  - {MODULE_LABELS[mod_id]} ({fname}): {len(clean_arr)} questions")
+        if mod_id in ("verbal", "reasoning"):
+            sub_cnt = Counter(q["subType"] for q in clean_arr)
+            for st, c in sorted(sub_cnt.items()):
+                print(f"      · {st}: {c}")
+
+    if total < args.min_total:
+        sys.exit(f"[ERROR] Only parsed {total} questions (< min-total {args.min_total}). Aborting deploy!")
 
     build_id = time.strftime("%Y%m%d%H%M%S")
     manifest = {"buildId": build_id, "totalQuestions": total, "shards": shards}
     (data_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # Copy frontend index.html into dist/
     root_index = Path("index.html")
     if root_index.is_file():
         shutil.copy2(root_index, out_dir / "index.html")
-    print(f"[ETL] Done! Build {build_id}, total {total} deduplicated real questions in {out_dir}")
+    print(f"[ETL] Success! Build {build_id}, total {total} deduplicated real questions in {out_dir}")
 
 
 if __name__ == "__main__":

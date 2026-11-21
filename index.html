@@ -99,9 +99,15 @@
     .q-text { font-size: var(--q-font-size); line-height: 1.78; }
     .opt-struck { text-decoration: line-through; opacity: 0.36; }
     .highlight-mark { background-color: #fde047; color: #111827; padding: 0 2px; border-radius: 2px; }
-    .exam-rich p { margin-bottom: 0.45em; } .exam-rich p:last-child { margin-bottom: 0; }
-    .exam-rich img[flag="tex"], img.tex-formula { display: inline-block !important; vertical-align: middle !important; max-height: 2.6em !important; width: auto !important; border: none !important; padding: 0 2px !important; margin: 0 !important; background: transparent !important; }
-    .exam-rich img:not([flag="tex"]):not(.tex-formula) { max-width: 100%; height: auto; border-radius: 6px; margin: 6px 0; border: 1px solid #cbd5e1; background: #fff; padding: 4px; display: block; }
+    .exam-rich p { margin-bottom: 0.45em; }
+    .exam-rich p:last-child { margin-bottom: 0; }
+    .exam-rich img[flag="tex"], img.tex-formula { display: inline-block !important; vertical-align: middle !important; max-height: 2.6em !important; width: auto !important; border: none !important; padding: 0 2px !important; margin: 0 !important; background: transparent !important; cursor: default !important; }
+    .exam-rich img:not([flag="tex"]):not(.tex-formula) { max-width: 100%; height: auto; border-radius: 6px; margin: 6px 0; border: 1px solid #cbd5e1; background: #fff; padding: 4px; display: block; cursor: zoom-in; transition: box-shadow .15s; }
+    .exam-rich img:not([flag="tex"]):not(.tex-formula):hover { box-shadow: 0 2px 10px rgba(27,46,71,.18); }
+    .highlight-mark { background: #fde68a; border-radius: 2px; padding: 0 1px; cursor: pointer; }
+    #img-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(15,23,42,.88); display: none; align-items: center; justify-content: center; flex-direction: column; padding: 16px; backdrop-filter: blur(2px); }
+    #img-lightbox.open { display: flex; }
+    #img-lightbox img { max-width: 94vw; max-height: 82vh; background: #fff; border-radius: 8px; padding: 6px; transition: transform .15s ease; }
     .blank-slot { display: inline-block; min-width: 4em; border-bottom: 1.5px solid #1f2937; margin: 0 3px; vertical-align: -2px; }
 
     .exam-std-table { width: 100%; border-collapse: collapse; background: #fff; color: #111827; margin: 0 auto; }
@@ -261,10 +267,20 @@
       <section class="bg-white rounded-xl border border-[#e3d9ca] overflow-hidden shadow-xs">
         <div class="px-4 py-3 border-b border-[#e3d9ca] flex flex-wrap items-center justify-between gap-2 bg-[#faf7f2]">
           <span class="font-bold text-sm text-[#1b2e47]">考试结构与单科限时专项（180 题 / 100 分 / 120 分钟）</span>
-          <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-slate-600">
-            <input id="opt-random-order" type="checkbox" checked class="rounded accent-[#962925]" />
-            <span>全真模考随机模块顺序</span>
-          </label>
+          <div class="flex flex-wrap items-center gap-3">
+            <label class="inline-flex items-center gap-1.5 text-xs text-slate-600">
+              <span>模考难度</span>
+              <select id="opt-diff-profile" class="px-2 py-1 rounded border border-[#d8cbb8] bg-white text-[#1b2e47] text-xs font-medium">
+                <option value="standard" selected>标准联考（3:5:2）</option>
+                <option value="foundation">基础巩固（5:4:1）</option>
+                <option value="sprint">冲刺拔高（1:5:4）</option>
+              </select>
+            </label>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-slate-600">
+              <input id="opt-random-order" type="checkbox" checked class="rounded accent-[#962925]" />
+              <span>全真模考随机模块顺序</span>
+            </label>
+          </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-xs sm:text-sm text-left border-collapse">
@@ -292,7 +308,11 @@
           <button id="btn-mtab-wrong" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-[#962925] text-white">错题本</button>
           <button id="btn-mtab-fav" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-white border border-[#d8cbb8] text-[#1b2e47]">收藏夹</button>
         </div>
-        <button id="btn-redo-mistake-list" class="px-4 py-1.5 rounded-lg bg-[#1b2e47] hover:bg-[#243d5e] text-white text-xs sm:text-sm font-semibold">重做全部</button>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btn-export-backup-m" class="px-3 py-1.5 rounded-lg bg-white border border-[#d8cbb8] text-[#1b2e47] hover:bg-[#faf7f2] text-xs font-medium">导出备份</button>
+          <button id="btn-import-backup-m" class="px-3 py-1.5 rounded-lg bg-white border border-[#d8cbb8] text-[#1b2e47] hover:bg-[#faf7f2] text-xs font-medium">恢复备份</button>
+          <button id="btn-redo-mistake-list" class="px-4 py-1.5 rounded-lg bg-[#1b2e47] hover:bg-[#243d5e] text-white text-xs sm:text-sm font-semibold">重做全部</button>
+        </div>
       </div>
       <div id="mistakes-list-box" class="space-y-3"></div>
     </main>
@@ -301,7 +321,11 @@
     <main id="lobby-history-pane" class="hidden flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="font-bold text-base text-[#1b2e47]">成绩档案</h2>
-        <button id="btn-clear-history" class="px-3 py-1 rounded border border-red-300 text-red-700 bg-white text-xs">清空记录</button>
+        <div class="flex items-center gap-2">
+          <button id="btn-export-backup-h" class="px-3 py-1 rounded border border-[#d8cbb8] text-[#1b2e47] bg-white hover:bg-[#faf7f2] text-xs">导出备份</button>
+          <button id="btn-import-backup-h" class="px-3 py-1 rounded border border-[#d8cbb8] text-[#1b2e47] bg-white hover:bg-[#faf7f2] text-xs">恢复备份</button>
+          <button id="btn-clear-history" class="px-3 py-1 rounded border border-red-300 text-red-700 bg-white text-xs">清空记录</button>
+        </div>
       </div>
       <div id="history-list-box" class="space-y-2.5"></div>
     </main>
@@ -485,6 +509,19 @@
     </main>
   </div>
 
+  <input id="input-backup-file" type="file" accept=".json,application/json" class="hidden" />
+  <div id="img-lightbox" role="dialog" aria-modal="true">
+    <div class="flex items-center gap-2 mb-3">
+      <button id="lb-zoom-in" class="px-3 py-1 rounded bg-white/15 hover:bg-white/25 text-white text-xs">放大 +</button>
+      <button id="lb-zoom-out" class="px-3 py-1 rounded bg-white/15 hover:bg-white/25 text-white text-xs">缩小 -</button>
+      <button id="lb-zoom-reset" class="px-3 py-1 rounded bg-white/15 hover:bg-white/25 text-white text-xs">重置</button>
+      <button id="lb-close" class="px-3 py-1 rounded bg-red-600/80 hover:bg-red-600 text-white text-xs">关闭 (Esc)</button>
+    </div>
+    <div class="overflow-auto max-w-[96vw] max-h-[84vh] flex items-center justify-center">
+      <img id="lb-img" src="" alt="放大预览" />
+    </div>
+  </div>
+
   <script>
   (function() {
     'use strict';
@@ -575,156 +612,7 @@
       return qs;
     }
 
-    function mkSvg(inner, cls = 'w-20 h-20') { return `<svg viewBox="0 0 100 100" class="${cls} border border-slate-300 rounded bg-white shrink-0">${inner}</svg>`; }
-    function mkSeries(list) { return `<div class="flex flex-wrap items-center gap-2 my-2">${list.map(x => mkSvg(x, 'w-16 h-16 sm:w-20 sm:h-20')).join('')}<div class="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-blue-400 rounded bg-blue-50/40 flex items-center justify-center text-xl font-bold text-blue-600">?</div></div>`; }
-
-    function buildEmbeddedCoreBank() {
-      const m1 = `<p>2024年，我国软件和信息技术服务业完成软件业务收入 <strong>137276亿元</strong>（+10.0%）；利润总额 <strong>16953亿元</strong>（+8.7%）；软件业务出口 <strong>569.5亿美元</strong>（+3.5%）。分领域：软件产品 30417亿元（+6.6%）；信息技术服务 92190亿元（+11.0%），其中云计算、大数据服务 14088亿元（+9.9%）；信息安全 2290亿元（+5.1%）；嵌入式系统软件 12379亿元（+11.8%）。</p><table class="exam-std-table text-xs mt-2"><thead><tr><th>分领域</th><th>2024年收入(亿元)</th><th>增速</th></tr></thead><tbody><tr><td>软件产品</td><td class="font-mono">30417</td><td class="font-mono">+6.6%</td></tr><tr><td>信息技术服务</td><td class="font-mono">92190</td><td class="font-mono">+11.0%</td></tr><tr><td>信息安全</td><td class="font-mono">2290</td><td class="font-mono">+5.1%</td></tr><tr><td>嵌入式系统软件</td><td class="font-mono">12379</td><td class="font-mono">+11.8%</td></tr></tbody></table>`;
-      const m2 = `<div class="font-semibold text-xs mb-1">2018—2022年全国新能源汽车产销量（万辆）</div><table class="exam-std-table text-xs"><thead><tr><th>年份</th><th>产量</th><th>销量</th></tr></thead><tbody><tr><td>2018</td><td class="font-mono">127.0</td><td class="font-mono">125.6</td></tr><tr><td>2019</td><td class="font-mono">124.2</td><td class="font-mono">120.6</td></tr><tr><td>2020</td><td class="font-mono">136.6</td><td class="font-mono">136.7</td></tr><tr><td>2021</td><td class="font-mono">354.5</td><td class="font-mono">352.1</td></tr><tr><td>2022</td><td class="font-mono">705.8</td><td class="font-mono">688.7</td></tr></tbody></table>`;
-      const m3 = `<p>2020年，全国快递服务企业业务量 <strong>833.6亿件</strong>（+31.2%），业务收入 <strong>8795.4亿元</strong>（+17.3%）。东、中、西部业务量占比分别为 79.4%、13.3%、7.3%；收入占比分别为 79.6%、11.9%、8.5%。</p>`;
-      const m4 = `<p>2017年，全国社会物流总额 <strong>252.8万亿元</strong>（+6.7%），其中工业品 234.5万亿元（+6.6%）、进口货物 12.5万亿元（+8.7%）、农产品 3.7万亿元（+3.9%）、再生资源 1.1万亿元（+9.8%）、单位与居民物品 1.0万亿元（+29.9%）。全国社会物流总费用 <strong>12.1万亿元</strong>（+9.2%），其中运输 6.6万亿元（+10.9%）、保管 3.9万亿元（+6.7%）、管理 1.6万亿元（+8.3%）。</p>`;
-
-      return [
-        // 政治理论 (15)
-        { id:'c_pol_1', module:'politics', subType:'政治理论', year:2025, stem:'习近平总书记指出，人民的创造性实践是马克思主义理论创新的不竭源泉。下列说法与这一论述相符的是：\n①人民不仅是物质财富的创造者，也是精神财富的创造者\n②要坚持以理论工作者的首创精神为引领\n③党的创新理论无不源自人民的智慧、探索与创造\n④各级领导干部身处实践最前沿，也是最聪慧', options:['①②','①③','②④','③④'], answer:1, explanation:'人民群众是历史创造者与首创精神主体，①③正确，选 B。' },
-        { id:'c_pol_2', module:'politics', subType:'政治理论', year:2025, stem:'关于矛盾的普遍性、客观性，下列说法正确的是：', options:['矛盾的普遍性是有条件的，随条件变化而变化','矛盾的客观性从属于主观性','矛盾的普遍性是矛盾的共性，特殊性是矛盾的个性','矛盾只存在于人类社会领域'], answer:2, explanation:'普遍性是共性、特殊性是个性，选 C。' },
-        { id:'c_pol_3', module:'politics', subType:'政治理论', year:2025, stem:'关于加快发展新质生产力，下列表述不正确的是：', options:['以全要素生产率大幅提升为核心标志','科技创新是发展新质生产力的核心要素','发展新质生产力就是要全面淘汰所有传统产业','新质生产力本身就是绿色生产力'], answer:2, explanation:'应用新技术改造提升传统产业，而非淘汰放弃，选 C。' },
-        { id:'c_pol_4', module:'politics', subType:'政治理论', year:2024, stem:'下列不属于中国式现代化五大特征的是：', options:['人口规模巨大的现代化','全体人民共同富裕的现代化','物质文明和精神文明相协调的现代化','以资本扩张为主导的现代化'], answer:3, explanation:'D 项不属于中国式现代化特征。' },
-        { id:'c_pol_5', module:'politics', subType:'政治理论', year:2024, stem:'“两个结合”是指把马克思主义基本原理同______相结合、同______相结合。', options:['中国具体实际  中华优秀传统文化','改革开放实践  世界文明成果','市场经济  科技革命','革命历史  基层治理'], answer:0, explanation:'同中国具体实际相结合、同中华优秀传统文化相结合，选 A。' },
-        { id:'c_pol_6', module:'politics', subType:'政治理论', year:2023, stem:'“六个必须坚持”中集中体现马克思主义根本政治立场的是：', options:['必须坚持自信自立','必须坚持人民至上','必须坚持系统观念','必须坚持胸怀天下'], answer:1, explanation:'人民立场是根本政治立场，选 B。' },
-        { id:'c_pol_7', module:'politics', subType:'政治理论', year:2023, stem:'全面建设社会主义现代化国家的首要任务是：', options:['全面深化改革开放','推进乡村全面振兴','高质量发展','建设文化强国'], answer:2, explanation:'高质量发展是首要任务，选 C。' },
-        { id:'c_pol_8', module:'politics', subType:'政治理论', year:2022, stem:'构建以国内大循环为主体、国内国际双循环相互促进的新发展格局，关键在于：', options:['扩大对外贸易顺差','经济循环的畅通无阻','降低国内消费比重','减少国际技术合作'], answer:1, explanation:'关键在于经济循环畅通无阻，选 B。' },
-        { id:'c_pol_9', module:'politics', subType:'政治理论', year:2022, stem:'实现我国全过程人民民主的重要制度载体和根本政治制度是：', options:['人民代表大会制度','基层群众自治制度','民族区域自治制度','政治协商制度'], answer:0, explanation:'人民代表大会制度是根本政治制度，选 A。' },
-        { id:'c_pol_10', module:'politics', subType:'政治理论', year:2021, stem:'伟大建党精神的内涵是：坚持真理、坚守理想，践行初心、担当使命，不怕牺牲、英勇斗争，______。', options:['实事求是、艰苦奋斗','对党忠诚、不负人民','谦虚谨慎、戒骄戒躁','解放思想、改革创新'], answer:1, explanation:'对党忠诚、不负人民，选 B。' },
-        { id:'c_pol_11', module:'politics', subType:'政治理论', year:2020, stem:'“纸上得来终觉浅，绝知此事要躬行”体现的认识论原理是：', options:['理性认识可脱离感性认识','实践是认识的来源和检验真理的唯一标准','间接经验更可靠','主观认识决定实践'], answer:1, explanation:'实践是认识的来源和基础，选 B。' },
-        { id:'c_pol_12', module:'politics', subType:'政治理论', year:2019, stem:'新时代我国社会主要矛盾已经转化为：', options:['物质文化需要同落后社会生产之间的矛盾','人民日益增长的美好生活需要和不平衡不充分的发展之间的矛盾','经济发展与生态保护之间的矛盾','城乡差距与共同富裕之间的矛盾'], answer:1, explanation:'选 B。' },
-        { id:'c_pol_13', module:'politics', subType:'政治理论', year:2018, stem:'“合抱之木，生于毫末；九层之台，起于累土”蕴含的唯物辩证法哲理是：', options:['矛盾双方相互转化','量变是质变的必要准备，质变是量变的必然结果','前进性与曲折性统一','主要矛盾决定事物性质'], answer:1, explanation:'质量互变规律，选 B。' },
-        { id:'c_pol_14', module:'politics', subType:'政治理论', year:2017, stem:'五大新发展理念中，注重解决发展动力问题的是______，注重解决社会公平正义问题的是______。', options:['创新  共享','协调  绿色','开放  协调','绿色  共享'], answer:0, explanation:'创新解决动力、共享解决公平正义，选 A。' },
-        { id:'c_pol_15', module:'politics', subType:'政治理论', year:2016, stem:'在“四个全面”战略布局中，作为战略目标的是：', options:['全面深化改革','全面依法治国','全面建设社会主义现代化国家','全面从严治党'], answer:2, explanation:'全面建设社会主义现代化国家是战略目标，选 C。' },
-
-        // 常识判断 (15)
-        { id:'c_com_1', module:'common', subType:'常识判断', year:2025, stem:'关于所有权的取得，下列说法正确的是：', options:['甲捡到金项链寻失主未果即取得所有权','乙以合理市价善意购买卖家借来的自行车并交付，可获得所有权','丙继承房产未办理登记前未取得所有权','丁承包集体田地同时取得土地所有权'], answer:1, explanation:'B 符合善意取得构成要件，选 B。' },
-        { id:'c_com_2', module:'common', subType:'常识判断', year:2025, stem:'下列与经济有关的说法正确的是：', options:['定期储蓄存款计入M1','人民币汇率降低，留美学费变便宜','营业税相比增值税能避免重复征税','外资企业在华产值计入中国GDP'], answer:3, explanation:'GDP 遵循国土原则，选 D。' },
-        { id:'c_com_3', module:'common', subType:'常识判断', year:2025, stem:'下列情境中两个物理量成正比例的是：①定值电阻电流与电压 ②浮力与物体总体积 ③弹性限度内弹簧伸长量与拉力 ④匀加速加速度与速度', options:['①②','②④','①③','③④'], answer:2, explanation:'欧姆定律与胡克定律成正比，选 C。' },
-        { id:'c_com_4', module:'common', subType:'常识判断', year:2024, stem:'房屋在租赁期内发生所有权变动的，根据《民法典》：', options:['新房东有权立即收回房屋','不影响原租赁合同的效力','原租赁合同自动解除','承租人必须重新签约'], answer:1, explanation:'买卖不破租赁原则，选 B。' },
-        { id:'c_com_5', module:'common', subType:'常识判断', year:2024, stem:'下列我国航天工程与任务对应不正确的是：', options:['嫦娥六号——月球背面采样返回','天问一号——火星探测','天宫空间站——载人空间站','北斗三号——深空小行星采样探测'], answer:3, explanation:'北斗三号为卫星导航系统，选 D。' },
-        { id:'c_com_6', module:'common', subType:'常识判断', year:2023, stem:'根据《行政处罚法》，下列不属于行政处罚种类的是：', options:['通报批评','暂扣许可证件','记过处分','没收违法所得'], answer:2, explanation:'记过属内部行政处分，选 C。' },
-        { id:'c_com_7', module:'common', subType:'常识判断', year:2023, stem:'下列二十四节气按时间先后排序正确的是：', options:['惊蛰—清明—谷雨—立夏','立秋—白露—处暑—秋分','小雪—冬至—大雪—小寒','立春—惊蛰—雨水—春分'], answer:0, explanation:'A 项顺序正确。' },
-        { id:'c_com_8', module:'common', subType:'常识判断', year:2022, stem:'按时间先后排序：①商鞅变法 ②安史之乱 ③王安石变法 ④张骞出使西域', options:['①④②③','①②④③','④①②③','①④③②'], answer:0, explanation:'战国→西汉→唐→北宋，选 A。' },
-        { id:'c_com_9', module:'common', subType:'常识判断', year:2021, stem:'关于我国地理国情，说法错误的是：', options:['塔里木盆地是最大内陆盆地','鄱阳湖是最大淡水湖','长江最终注入渤海','秦岭—淮河是南北分界线'], answer:2, explanation:'长江注入东海，选 C。' },
-        { id:'c_com_10', module:'common', subType:'常识判断', year:2020, stem:'营养素与缺乏症对应错误的是：', options:['维生素A——夜盲症','维生素C——坏血病','维生素D——佝偻病','铁元素——地方性甲状腺肿'], answer:3, explanation:'缺碘致甲状腺肿，选 D。' },
-        { id:'c_com_11', module:'common', subType:'常识判断', year:2019, stem:'根据《宪法》，行使国家立法权的机关是：', options:['国务院','全国人大及其常委会','最高法与最高检','国家监察委员会'], answer:1, explanation:'宪法第 58 条，选 B。' },
-        { id:'c_com_12', module:'common', subType:'常识判断', year:2018, stem:'生活化学常识说法不正确的是：', options:['食醋可除水垢','小苏打是碳酸氢钠','铁锅炒菜可补铁','干冰是固态的水'], answer:3, explanation:'干冰是固态二氧化碳，选 D。' },
-        { id:'c_com_13', module:'common', subType:'常识判断', year:2017, stem:'作品与作者对应错误的是：', options:['《资治通鉴》——司马光','《天工开物》——宋应星','《梦溪笔谈》——沈括','《齐民要术》——徐光启'], answer:3, explanation:'《齐民要术》作者为贾思勰，选 D。' },
-        { id:'c_com_14', module:'common', subType:'常识判断', year:2016, stem:'通胀严重时，央行通常采取的紧缩性货币政策是：', options:['降低存款准备金率','提高基准利率和存款准备金率','公开市场买入国债','增加财政补贴和减税'], answer:1, explanation:'提高利率与准备金率回收流动性，选 B。' },
-        { id:'c_com_15', module:'common', subType:'常识判断', year:2016, stem:'主要由光的折射原理引起的是：', options:['小孔成像','水中倒影','海市蜃楼','立竿见影'], answer:2, explanation:'海市蜃楼为光的折射与全反射，选 C。' },
-
-        // 言语理解与表达 (25 = 15 逻辑填空 + 7 阅读理解 + 3 语句表达)
-        { id:'c_vf_1', module:'verbal', subType:'逻辑填空', year:2025, stem:'文化遗产保护应通过数字化活化与创意转化，让古老技艺与现代生活______，在代际传承中焕发持久生命力。', options:['水乳交融','相得益彰','休戚与共','息息相通'], answer:0, explanation:'水乳交融形容深度融合为一体，选 A。' },
-        { id:'c_vf_2', module:'verbal', subType:'逻辑填空', year:2025, stem:'面对复杂多变的外部环境，既不能因为一时困难而______，也不能因为阶段性成绩而______，必须保持战略定力。', options:['畏葸不前  盲目乐观','妄自菲薄  趾高气扬','怨天尤人  得意忘形','自暴自弃  傲慢无礼'], answer:0, explanation:'畏葸不前与盲目乐观语义最贴切，选 A。' },
-        { id:'c_vf_3', module:'verbal', subType:'逻辑填空', year:2024, stem:'科普创作要求在保持严谨性的前提下，将晦涩的专业术语______，真正架起前沿科技与公众之间的桥梁。', options:['深入浅出','化繁为简','抽丝剥茧','娓娓道来'], answer:1, explanation:'将术语化繁为简，动宾搭配准确，选 B。' },
-        { id:'c_vf_4', module:'verbal', subType:'逻辑填空', year:2024, stem:'城市更新不是大拆大建，而是像“绣花”一样精细的______，既补齐短板又留住街巷肌理与城市记忆。', options:['精雕细琢','循序渐进','精益求精','因地制宜'], answer:0, explanation:'呼应“绣花”，选 A。' },
-        { id:'c_vf_5', module:'verbal', subType:'逻辑填空', year:2023, stem:'数据要素的价值在于流通共享。如果各部门各自为政形成“数据孤岛”，再庞大的数据资产也会______。', options:['束手无策','黯然失色','付诸东流','形同虚设'], answer:3, explanation:'形式上存在却不起作用即形同虚设，选 D。' },
-        { id:'c_vf_6', module:'verbal', subType:'逻辑填空', year:2023, stem:'重大科学发现往往始于科学家对习以为常现象的______追问，而非______地沿袭既有定论。', options:['刨根问底  墨守成规','吹毛求疵  循规蹈矩','求全责备  按部就班','浅尝辄止  故步自封'], answer:0, explanation:'第一空褒义选刨根问底，第二空选墨守成规，选 A。' },
-        { id:'c_vf_7', module:'verbal', subType:'逻辑填空', year:2022, stem:'好的政策既要有顶层设计的______，也要有基层执行的灵活性，切忌脱离实际搞“一刀切”。', options:['前瞻性','随机性','排他性','局限性'], answer:0, explanation:'顶层设计搭配前瞻性，选 A。' },
-        { id:'c_vf_8', module:'verbal', subType:'逻辑填空', year:2022, stem:'突发事件中权威信息发布越透明，谣言空间越狭小；反之若遮遮掩掩、______，只会引发公众猜测焦虑。', options:['语焉不详','直言不讳','侃侃而谈','言简意赅'], answer:0, explanation:'与遮遮掩掩并列选语焉不详，选 A。' },
-        { id:'c_vf_9', module:'verbal', subType:'逻辑填空', year:2021, stem:'博物馆文创之所以频频出圈，在于设计师深挖文物故事，将审美趣味与实用功能______。', options:['融会贯通','有机融合','相提并论','混为一谈'], answer:1, explanation:'有机融合搭配精准，选 B。' },
-        { id:'c_vf_10', module:'verbal', subType:'逻辑填空', year:2021, stem:'法治建设非一日之功，需要立法、执法、司法、守法各环节______，形成尊法学法守法用法风尚。', options:['齐头并进','协同发力','各显神通','单打独斗'], answer:1, explanation:'协同发力体现系统合力，选 B。' },
-        { id:'c_vf_11', module:'verbal', subType:'逻辑填空', year:2020, stem:'科研评价若唯论文数量，容易诱导追逐热门课题，而对周期长、风险高的基础研究______。', options:['趋之若鹜','望而却步','津津乐道','乐此不疲'], answer:1, explanation:'望而却步形容畏难退缩，选 B。' },
-        { id:'c_vf_12', module:'verbal', subType:'逻辑填空', year:2019, stem:'回望来路，我们之所以能在风雨考验中化危为机，靠的正是逢山开路、遇水架桥的______与韧劲。', options:['魄力','巧合','侥幸','妥协'], answer:0, explanation:'魄力与韧劲褒义并列，选 A。' },
-        { id:'c_vf_13', module:'verbal', subType:'逻辑填空', year:2018, stem:'制度的生命力在于执行。再完善的规章制度，如果落实不到位，最终也会沦为______的一纸空文。', options:['名副其实','高高挂起','无足轻重','流于形式'], answer:3, explanation:'流于形式搭配精准，选 D。' },
-        { id:'c_vf_14', module:'verbal', subType:'逻辑填空', year:2017, stem:'乡村治理不能照搬城市社区模板，而应充分尊重乡土社会公序良俗，做到______、分类施策。', options:['因地制宜','一视同仁','照本宣科','按图索骥'], answer:0, explanation:'因地制宜呼应分类施策，选 A。' },
-        { id:'c_vf_15', module:'verbal', subType:'逻辑填空', year:2016, stem:'在信息爆炸时代，真正稀缺的不是资讯本身，而是去伪存真、______的独立判断力。', options:['去粗取精','随波逐流','人云亦云','亦步亦趋'], answer:0, explanation:'去粗取精与去伪存真工整并列，选 A。' },
-        { id:'c_vr_1', module:'verbal', subType:'阅读理解', year:2025, stem:'一些地方基层治理过度依赖微信群“留痕”打卡。唯有把考核指挥棒从“重痕迹”转向“重实绩”，基层干部才能腾出精力深入一线。\n这段文字意在强调：', options:['微信群留痕加重了基层日常负担','基层治理考核应坚持实绩导向破除形式主义','群众满意度是衡量政府工作的唯一标准','基层干部应减少会议多深入调研'], answer:1, explanation:'唯有……才能……引出实绩导向对策，选 B。' },
-        { id:'c_vr_2', module:'verbal', subType:'阅读理解', year:2024, stem:'人工智能大模型偶尔会出现看似合理实则虚构的“幻觉”。若不加核验直接引用会导致虚假信息扩散。因此，建立人机协同事实核查机制刻不容缓。\n这段文字主要说明：', options:['AI大模型存在无法克服缺陷','应尽快建立人机协同事实核查机制应对AI幻觉','科研人员应禁止使用AI工具','虚假信息主要源于媒体失职'], answer:1, explanation:'因果结构“因此”引出核心对策，选 B。' },
-        { id:'c_vr_3', module:'verbal', subType:'阅读理解', year:2023, stem:'睡眠不足会干扰大脑“类淋巴系统”在深度睡眠期间清除代谢废物，长期睡眠少于6小时认知衰退风险显著高于7—8小时规律睡眠人群。\n下列说法正确的是：', options:['睡够8小时就能完全避免认知衰退','类淋巴系统仅在浅度睡眠起作用','长期睡眠不足会增加大脑代谢废物清除受阻风险','注意力下降是睡眠不足唯一短期表现'], answer:2, explanation:'C 项与原文一致，选 C。' },
-        { id:'c_vr_4', module:'verbal', subType:'阅读理解', year:2022, stem:'湿地被誉为“地球之肾”，在涵养水源、净化水质等方面作用不可替代。近年来我国通过退耕还湿、生态补水使大批候鸟重返栖息地。\n最适合做标题的是：', options:['濒危候鸟的跨洲迁徙之路','守护“地球之肾”，绘就生态画卷','退耕还湿的经济效益分析','气候变化对湿地生态的冲击'], answer:1, explanation:'B 项全面且贴合主旨，选 B。' },
-        { id:'c_vr_5', module:'verbal', subType:'阅读理解', year:2020, stem:'事实上，无论技术如何迭代升级，从精密仪器校准到航天发动机质检，都需要一线技术人员精益求精的坚守。技术越先进，对工匠精神的要求反而越高。\n这段文字旨在说明：', options:['传统手工业仍有存在价值','自动化生产已取代人工操作','现代高科技产业同样离不开工匠精神支撑','航天发动机质检是工匠精神最高体现'], answer:2, explanation:'转折后与尾句均强调高科技需要工匠精神，选 C。' },
-        { id:'c_vr_6', module:'verbal', subType:'阅读理解', year:2018, stem:'海洋吸收约四分之一二氧化碳缓解了全球变暖，但导致海水酸性增强即“海洋酸化”，削弱珊瑚礁和贝类骨骼形成能力，威胁海洋食物链稳定。\n与原文不符的是：', options:['吸收大量二氧化碳导致海洋酸化','海洋酸化影响珊瑚礁与贝类生长','海洋酸化有助于增强食物链长期稳定','海洋吸收二氧化碳缓解了全球变暖'], answer:2, explanation:'原文为“威胁稳定”，C 项相反，选 C。' },
-        { id:'c_vr_7', module:'verbal', subType:'阅读理解', year:2016, stem:'在乡村振兴中不能把农村简单改造成“微缩版城市”，千村一面只会让乡村失去独特乡土韵味。\n文中“微缩版城市”指的是：', options:['规模较小的现代化卫星城镇','盲目照搬城市建设模式、丧失乡村特色的改造方式','基础设施完善的新农村','城乡交通一体化示范镇'], answer:1, explanation:'贬义指代盲目照搬城市模板，选 B。' },
-        { id:'c_ve_1', module:'verbal', subType:'语句表达', year:2024, stem:'将以下5句重新排列，语序最连贯的是：\n①然而长期过度开采地下水会导致地面沉降\n②水是城市可持续发展的关键制约因素\n③因此统筹地上与地下水资源势在必行\n④缺水地区曾靠开采地下水缓解用水紧张\n⑤一旦地下水位下降，修复生态往往需数十年', options:['②④①⑤③','②①④⑤③','④①⑤②③','②④⑤①③'], answer:0, explanation:'②总起→④开采→①转折→⑤递进→③总结，选 A。' },
-        { id:'c_ve_2', module:'verbal', subType:'语句表达', year:2022, stem:'中小企业转型面临资金技术门槛。近年来工业互联网平台探索“轻量化、模块化”云端订阅服务，大幅降低了数字化改造成本。\n接下来最可能讲述：', options:['传统制造业面临的国际贸易摩擦','工业互联网“轻量化”服务的具体落地案例与成效','大型国企自主研发芯片历程','中小企业融资难历史成因'], answer:1, explanation:'承接尾句话题，选 B。' },
-        { id:'c_ve_3', module:'verbal', subType:'语句表达', year:2021, stem:'在信息碎片化、短视频盛行的当下，深度思考能力正在退化。______。唯有沉下心来品读经典，才能守住精神定力。\n填入最恰当的一句是：', options:['因此短视频平台应被全面取缔','经典著作往往篇幅冗长晦涩','这种快餐式阅读虽便捷，却难以滋养人的精神世界','纸质书销量近年出现一定波动'], answer:2, explanation:'承上启下衔接最紧，选 C。' },
-
-        // 判断推理 - 图形推理 (10 纯SVG无剧透)
-        { id:'c_gr_1', module:'reasoning', subType:'图形推理', year:2025, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="50" y2="16" stroke="#1e293b" stroke-width="3.5"/><circle cx="50" cy="16" r="5" fill="#1e293b"/>','<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="84" y2="50" stroke="#1e293b" stroke-width="3.5"/><circle cx="84" cy="50" r="5" fill="#1e293b"/>','<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="50" y2="84" stroke="#1e293b" stroke-width="3.5"/><circle cx="50" cy="84" r="5" fill="#1e293b"/>']), options:[mkSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="16" y2="50" stroke="#1e293b" stroke-width="3.5"/><circle cx="16" cy="50" r="5" fill="#1e293b"/>'),mkSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="50" y2="16" stroke="#1e293b" stroke-width="3.5"/><circle cx="50" cy="16" r="5" fill="#1e293b"/>'),mkSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="74" y2="26" stroke="#1e293b" stroke-width="3.5"/><circle cx="74" cy="26" r="5" fill="#1e293b"/>'),mkSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="50" x2="26" y2="74" stroke="#1e293b" stroke-width="3.5"/><circle cx="26" cy="74" r="5" fill="#1e293b"/>')], answer:0, explanation:'指针顺时针每次旋转 90°（12→3→6→9点），选 A。' },
-        { id:'c_gr_2', module:'reasoning', subType:'图形推理', year:2024, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="18" x2="50" y2="82" stroke="#1e293b" stroke-width="2.5"/>','<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="39" y1="18" x2="39" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="61" y1="18" x2="61" y2="82" stroke="#1e293b" stroke-width="2.5"/>']), options:[mkSvg('<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="50" x2="82" y2="50" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="18" x2="50" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="50" x2="82" y2="50" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<circle cx="50" cy="50" r="32" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="18" x2="82" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="82" y1="18" x2="18" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="18" x2="50" y2="82" stroke="#1e293b" stroke-width="2.5"/>')], answer:1, explanation:'封闭区域数依次为 1、2、3、4，B 项田字格为 4 个面，选 B。' },
-        { id:'c_gr_3', module:'reasoning', subType:'图形推理', year:2023, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<polygon points="50,18 82,78 18,78" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<rect x="20" y="20" width="60" height="60" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<polygon points="50,16 83,40 70,80 30,80 17,40" fill="none" stroke="#1e293b" stroke-width="2.5"/>']), options:[mkSvg('<circle cx="50" cy="50" r="32" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<polygon points="50,18 82,78 18,78" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<polygon points="50,16 80,33 80,67 50,84 20,67 20,33" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="18" y="30" width="64" height="40" fill="none" stroke="#1e293b" stroke-width="2.5"/>')], answer:2, explanation:'边数依次为 3、4、5、6，选 C。' },
-        { id:'c_gr_4', module:'reasoning', subType:'图形推理', year:2022, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="32" cy="32" r="10" fill="#1e293b"/>','<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="68" cy="32" r="10" fill="#1e293b"/>','<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="68" cy="68" r="10" fill="#1e293b"/>']), options:[mkSvg('<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="32" cy="32" r="10" fill="#1e293b"/>'),mkSvg('<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="32" cy="68" r="10" fill="#1e293b"/>'),mkSvg('<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="68" cy="32" r="10" fill="#1e293b"/>'),mkSvg('<rect x="14" y="14" width="72" height="72" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="50" y1="14" x2="50" y2="86" stroke="#94a3b8" stroke-width="2"/><line x1="14" y1="50" x2="86" y2="50" stroke="#94a3b8" stroke-width="2"/><circle cx="50" cy="50" r="10" fill="#1e293b"/>')], answer:1, explanation:'黑球每次顺时针平移一格：左上→右上→右下→左下，选 B。' },
-        { id:'c_gr_5', module:'reasoning', subType:'图形推理', year:2021, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<rect x="22" y="22" width="56" height="56" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<circle cx="50" cy="50" r="30" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<polygon points="50,16 80,50 50,84 20,50" fill="none" stroke="#1e293b" stroke-width="2.5"/>']), options:[mkSvg('<polygon points="50,18 82,78 18,78" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<polygon points="50,16 83,40 70,80 30,80 17,40" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<path d="M22,22 L78,22 L78,36 L36,36 L36,78 L22,78 Z" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<ellipse cx="50" cy="50" rx="34" ry="20" fill="none" stroke="#1e293b" stroke-width="2.5"/>')], answer:3, explanation:'均同时为轴对称与中心对称图形，仅 D 项椭圆满足，选 D。' },
-        { id:'c_gr_6', module:'reasoning', subType:'图形推理', year:2020, pureSvg: true, stem:'前两图按“同色变白、异色变黑”叠加，问号处应选择：' + mkSeries(['<rect x="18" y="18" width="32" height="64" fill="#1e293b"/><rect x="50" y="18" width="32" height="64" fill="none" stroke="#1e293b" stroke-width="2"/>','<rect x="18" y="18" width="64" height="32" fill="#1e293b"/><rect x="18" y="50" width="64" height="32" fill="none" stroke="#1e293b" stroke-width="2"/>']), options:[mkSvg('<rect x="50" y="18" width="32" height="32" fill="#1e293b"/><rect x="18" y="50" width="32" height="32" fill="#1e293b"/><rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2"/>'),mkSvg('<rect x="18" y="18" width="32" height="32" fill="#1e293b"/><rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2"/>'),mkSvg('<rect x="18" y="18" width="64" height="64" fill="#1e293b"/>'),mkSvg('<rect x="50" y="50" width="32" height="32" fill="#1e293b"/><rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2"/>')], answer:0, explanation:'黑白运算得右上黑+左下黑，选 A。' },
-        { id:'c_gr_7', module:'reasoning', subType:'图形推理', year:2019, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<circle cx="50" cy="50" r="8" fill="#1e293b"/>','<circle cx="34" cy="50" r="8" fill="#1e293b"/><circle cx="66" cy="50" r="8" fill="#1e293b"/>','<circle cx="50" cy="30" r="8" fill="#1e293b"/><circle cx="32" cy="65" r="8" fill="#1e293b"/><circle cx="68" cy="65" r="8" fill="#1e293b"/>']), options:[mkSvg('<circle cx="34" cy="34" r="8" fill="#1e293b"/><circle cx="66" cy="34" r="8" fill="#1e293b"/><circle cx="34" cy="66" r="8" fill="#1e293b"/><circle cx="66" cy="66" r="8" fill="#1e293b"/>'),mkSvg('<circle cx="50" cy="50" r="8" fill="#1e293b"/><circle cx="25" cy="50" r="8" fill="#1e293b"/><circle cx="75" cy="50" r="8" fill="#1e293b"/>'),mkSvg('<circle cx="34" cy="50" r="8" fill="none" stroke="#1e293b" stroke-width="2.5"/><circle cx="66" cy="50" r="8" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<circle cx="50" cy="24" r="7" fill="#1e293b"/><circle cx="24" cy="50" r="7" fill="#1e293b"/><circle cx="76" cy="50" r="7" fill="#1e293b"/><circle cx="35" cy="76" r="7" fill="#1e293b"/><circle cx="65" cy="76" r="7" fill="#1e293b"/>')], answer:0, explanation:'实心黑点数依次为 1、2、3、4，选 A。' },
-        { id:'c_gr_8', module:'reasoning', subType:'图形推理', year:2018, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<rect x="20" y="20" width="60" height="60" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<circle cx="50" cy="50" r="30" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<polygon points="50,18 82,78 18,78" fill="none" stroke="#1e293b" stroke-width="2.5"/>']), options:[mkSvg('<polygon points="50,16 80,50 50,84 20,50" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="20" y="30" width="60" height="40" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<path d="M20,50 C20,20 80,20 80,50 C80,80 20,80 20,50 Z" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<polygon points="20,25 80,25 65,75 35,75" fill="none" stroke="#1e293b" stroke-width="2.5"/>')], answer:2, explanation:'曲直性周期交替（直→曲→直→曲），选 C。' },
-        { id:'c_gr_9', module:'reasoning', subType:'图形推理', year:2017, pureSvg: true, stem:'从所给的四个选项中，选择最合适的一个填入问号处：' + mkSeries(['<rect x="16" y="16" width="68" height="68" fill="none" stroke="#1e293b" stroke-width="2.5"/><circle cx="50" cy="50" r="18" fill="none" stroke="#1e293b" stroke-width="2.5"/>','<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><polygon points="50,30 68,64 32,64" fill="none" stroke="#1e293b" stroke-width="2.5"/>']), options:[mkSvg('<polygon points="50,14 86,80 14,80" fill="none" stroke="#1e293b" stroke-width="2.5"/><rect x="38" y="46" width="24" height="24" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="16" y="16" width="68" height="68" fill="none" stroke="#1e293b" stroke-width="2.5"/><polygon points="50,30 68,64 32,64" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="#1e293b" stroke-width="2.5"/><circle cx="50" cy="50" r="16" fill="none" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="16" y="16" width="68" height="68" fill="none" stroke="#1e293b" stroke-width="2.5"/><rect x="34" y="34" width="32" height="32" fill="none" stroke="#1e293b" stroke-width="2.5"/>')], answer:0, explanation:'前一图内部图形变为后一图外部图形，选 A。' },
-        { id:'c_gr_10', module:'reasoning', subType:'图形推理', year:2016, pureSvg: true, stem:'下列四个图形中，能够“一笔画成”的是：', options:[mkSvg('<rect x="18" y="18" width="64" height="64" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="18" x2="50" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="50" x2="82" y2="50" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<circle cx="50" cy="50" r="32" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="50" x2="82" y2="50" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<line x1="50" y1="18" x2="50" y2="82" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="36" x2="82" y2="36" stroke="#1e293b" stroke-width="2.5"/><line x1="18" y1="64" x2="82" y2="64" stroke="#1e293b" stroke-width="2.5"/>'),mkSvg('<rect x="16" y="16" width="30" height="30" fill="none" stroke="#1e293b" stroke-width="2.5"/><rect x="54" y="54" width="30" height="30" fill="none" stroke="#1e293b" stroke-width="2.5"/>')], answer:1, explanation:'B 项连通且仅 2 奇点，可一笔画成，选 B。' },
-
-        // 判断推理 - 定义判断 (10)
-        { id:'c_df_1', module:'reasoning', subType:'定义判断', year:2025, stem:'沉没成本指已发生且不可收回的支出。下列最符合“被沉没成本左右”的是：', options:['买50元电影票觉得无聊，想着钱已花便硬着头皮看完','研发投入100万前景极差后立即止损','比价后选择更便宜超市采购','餐厅推出满500送100活动'], answer:0, explanation:'选 A。' },
-        { id:'c_df_2', module:'reasoning', subType:'定义判断', year:2024, stem:'破窗效应指一处破损未及时修复诱发更多人效仿破坏导致秩序恶化。下列体现的是：', options:['张贴垃圾分类指南提升准确率','墙面出现第一张小广告无人清理，很快整面墙被贴满','业绩突出发放奖金','图书馆禁止喧哗'], answer:1, explanation:'选 B。' },
-        { id:'c_df_3', module:'reasoning', subType:'定义判断', year:2023, stem:'鲶鱼效应指引入富有活力的外部个体激发原有群体竞争效能。下列属于的是：', options:['精简冗余岗位降低成本','销售团队停滞，空降金牌销售后全队业绩大幅提升','按成绩分班授课','升级自动化流水线'], answer:1, explanation:'选 B。' },
-        { id:'c_df_4', module:'reasoning', subType:'定义判断', year:2022, stem:'信息茧房指只关注认同领域导致视野越来越窄。下列最符合的是：', options:['系统梳理十年真题','算法根据点赞不断推送同类立场文章使其看不到不同声音','深耕量子计算发论文','新闻联播播报多领域要闻'], answer:1, explanation:'选 B。' },
-        { id:'c_df_5', module:'reasoning', subType:'定义判断', year:2021, stem:'析数指利用数学上相加或相乘关系将数拆分的修辞手法。下列使用了“析数”的是：', options:['飞流直下三千尺','三五之夜，明月半墙','桃花潭水深千尺','白发三千丈'], answer:1, explanation:'三五=15，选 B。' },
-        { id:'c_df_6', module:'reasoning', subType:'定义判断', year:2020, stem:'机会成本指为了得到某种东西而放弃的另一些东西的最大价值。下列属于的是：', options:['辞去月薪1万工作全职备考放弃的每月1万薪资','花3000元买电脑','每月支付5万租金','超速被罚200元'], answer:0, explanation:'选 A。' },
-        { id:'c_df_7', module:'reasoning', subType:'定义判断', year:2019, stem:'生物入侵指外来物种在新生态区迅速繁殖并危害本地生态。下列属于的是：', options:['稻田同时养鱼','外来福寿螺在南方水系迅速繁殖啃食秧苗','动物园引进长颈鹿','荒山种本地松树'], answer:1, explanation:'选 B。' },
-        { id:'c_df_8', module:'reasoning', subType:'定义判断', year:2018, stem:'正当防卫指为免受正在进行的不法侵害而制止侵害的行为。下列属于的是：', options:['遭持刀抢劫夺木棍打伤抢劫者并制止抢劫','口角互殴致伤','三天后偶遇小偷将其打伤','破门救邻居家火灾儿童'], answer:0, explanation:'选 A。' },
-        { id:'c_df_9', module:'reasoning', subType:'定义判断', year:2017, stem:'首因效应指第一印象对后续交往关系的影响。下列体现的是：', options:['面试官因进门谈吐得体在后续问答中一直评价颇高','最后一场哭戏扭转平庸印象','长期共事发现同事热心','连续三年获金奖赢得信赖'], answer:0, explanation:'选 A。' },
-        { id:'c_df_10', module:'reasoning', subType:'定义判断', year:2016, stem:'口红效应指经济不景气时转向购买低价非必需品以获心理慰藉。下列符合的是：', options:['经济繁荣期奢侈品创新高','经济下行期平价甜品和迷你彩妆销量逆势大涨','寒潮羽绒服翻倍','开学季文具热销'], answer:1, explanation:'选 B。' },
-
-        // 判断推理 - 类比推理 (5)
-        { id:'c_an_1', module:'reasoning', subType:'类比推理', year:2025, stem:'易拉罐：拉环', options:['金库：黄金','燃气灶：点火器','书架：图书','水杯：开水'], answer:1, explanation:'必然组成关系，选 B。' },
-        { id:'c_an_2', module:'reasoning', subType:'类比推理', year:2024, stem:'绿豆：豌豆', options:['杯具：餐具','杨树：柳树','电脑：键盘','蔬菜：白菜'], answer:1, explanation:'并列关系，选 B。' },
-        { id:'c_an_3', module:'reasoning', subType:'类比推理', year:2022, stem:'指南针：辨别方向', options:['体温计：测量温度','显微镜：细菌病毒','照相机：风景名胜','收音机：广播电台'], answer:0, explanation:'功能对应，选 A。' },
-        { id:'c_an_4', module:'reasoning', subType:'类比推理', year:2019, stem:'小麦：面粉：馒头', options:['棉花：棉纱：棉布','铁矿：钢铁：大桥','葡萄：红酒：酒杯','木材：森林：家具'], answer:0, explanation:'单一原料加工链条，选 A。' },
-        { id:'c_an_5', module:'reasoning', subType:'类比推理', year:2016, stem:'雪中送炭：锦上添花', options:['落井下石：助人为乐','画蛇添足：多此一举','精雕细琢：粗制滥造','门庭若市：车水马龙'], answer:2, explanation:'结构工整语义对比，选 C。' },
-
-        // 判断推理 - 逻辑判断 (10)
-        { id:'c_lg_1', module:'reasoning', subType:'逻辑判断', year:2025, stem:'“只有通过业务考核，才能获得年度评优资格。”据此一定正确的是：', options:['通过考核一定获评优','获得评优一定通过了业务考核','未获评优一定未通过考核','只要通过考核就能获评优'], answer:1, explanation:'评优→考核，肯前必肯后，选 B。' },
-        { id:'c_lg_2', module:'reasoning', subType:'逻辑判断', year:2024, stem:'每天喝两杯黑咖啡者心血管发病率低15%，结论认为黑咖啡可预防心血管病。最能削弱的是：', options:['部分人爱吃甜点','喝黑咖啡者大多经济较好且保持规律运动习惯','黑咖啡含绿原酸','过量饮用导致失眠'], answer:1, explanation:'另有他因削弱，选 B。' },
-        { id:'c_lg_3', module:'reasoning', subType:'逻辑判断', year:2023, stem:'火星河床发现液态水环境形成的黏土矿物，推断曾存在大量液态水。最能支持的是：', options:['目前地表低于-60℃','地球河床也有类似矿物','除液态水长期浸泡外无任何已知地质作用能形成此类矿物','火星大气稀薄'], answer:2, explanation:'排除他因唯一因果，选 C。' },
-        { id:'c_lg_4', module:'reasoning', subType:'逻辑判断', year:2022, stem:'甲乙丙丁仅一人做好事、仅一人说真话：甲“不是我”，乙“是丁”，丙“是乙”，丁“不是我”。做好事的是：', options:['甲','乙','丙','丁'], answer:0, explanation:'乙丁矛盾，甲丙皆假，由甲假推知是甲，选 A。' },
-        { id:'c_lg_5', module:'reasoning', subType:'逻辑判断', year:2021, stem:'甲乙丙分别是教师、医生、工程师：①丙比医生大；②甲和工程师不同岁；③工程师比乙小。可推出：', options:['甲医生，乙教师，丙工程师','甲教师，乙医生，丙工程师','甲医生，乙工程师，丙教师','甲工程师，乙教师，丙医生'], answer:0, explanation:'丙为工程师，乙>丙>医生(甲)，选 A。' },
-        { id:'c_lg_6', module:'reasoning', subType:'逻辑判断', year:2020, stem:'提高市中心停车费以减少早高峰私家车驶入，必须基于的假设是：', options:['地铁未全覆盖','车位利用率95%','多数私家车主对停车费上涨较敏感','新能源车半价'], answer:2, explanation:'建立必要联系，选 C。' },
-        { id:'c_lg_7', module:'reasoning', subType:'逻辑判断', year:2019, stem:'超过七成受访者表示间隙拉伸10分钟后下午专注度提升。可合乎逻辑推出的是：', options:['所有人拉伸都能提升','不拉伸专注度必大降','对于相当一部分职场人士而言，适度拉伸有助于改善专注度','拉伸越长提升越明显'], answer:2, explanation:'从弱原则，选 C。' },
-        { id:'c_lg_8', module:'reasoning', subType:'逻辑判断', year:2018, stem:'成绩优异学生书桌更整齐，有人认为整理书桌能提高成绩。最能反驳的是：', options:['一般学生书桌也整齐','自律性强、规划能力好的学生既成绩好又习惯整理书桌','家长代劳影响独立性','书桌大小与成绩无关'], answer:1, explanation:'同源他因，选 B。' },
-        { id:'c_lg_9', module:'reasoning', subType:'逻辑判断', year:2017, stem:'如果不下雨就去郊游；如果去郊游就带帐篷。已知明天没带帐篷，必然推出：', options:['明天一定下雨了','没下雨但没去郊游','去了但忘带帐篷','可能下雨也可能没下'], answer:0, explanation:'连续逆否等价，选 A。' },
-        { id:'c_lg_10', module:'reasoning', subType:'逻辑判断', year:2016, stem:'某电动牙刷定价高于均价30%，市占率却逆势上升8个百分点。最能解释的是：', options:['缩减线上广告','凭借超长续航与护龈专利赢得中高端用户青睐','普通牙刷涨价5%','推出儿童漱口水'], answer:1, explanation:'产品力契合升级需求，选 B。' },
-
-        // 资料分析 (20 = 4组材料×5)
-        { id:'c_da_1', module:'data', subType:'资料分析', groupId:'c_m1', year:2025, materialHtml:m1, stem:'2023年我国软件业务收入约为多少万亿元？', options:['11.82','12.48','13.05','15.10'], answer:1, explanation:'137276÷1.10≈12.48万亿元，选 B。' },
-        { id:'c_da_2', module:'data', subType:'资料分析', groupId:'c_m1', year:2025, materialHtml:m1, stem:'2024年信息技术服务收入占软件业务总收入的比重约为：', options:['62.4%','65.1%','67.2%','71.5%'], answer:2, explanation:'92190÷137276≈67.2%，选 C。' },
-        { id:'c_da_3', module:'data', subType:'资料分析', groupId:'c_m1', year:2025, materialHtml:m1, stem:'与2023年相比，2024年我国软件业利润率：', options:['上升不到0.5个百分点','上升0.5个百分点以上','下降不到0.5个百分点','下降0.5个百分点以上'], answer:2, explanation:'8.7%<10.0%，下降约0.15个百分点，选 C。' },
-        { id:'c_da_4', module:'data', subType:'资料分析', groupId:'c_m1', year:2025, materialHtml:m1, stem:'2024年四个分领域中，收入同比增量最大的是：', options:['软件产品','信息技术服务','信息安全','嵌入式系统软件'], answer:1, explanation:'信息技术服务基数与增速占优，选 B。' },
-        { id:'c_da_5', module:'data', subType:'资料分析', groupId:'c_m1', year:2025, materialHtml:m1, stem:'能够从上述资料中推出的是：', options:['云计算、大数据服务占信息技术服务比重超15%','软件产品增速高于总体增速','信息安全增量高于嵌入式','出口额同比下降'], answer:0, explanation:'14088÷92190≈15.28%>15%，选 A。' },
-        { id:'c_da_6', module:'data', subType:'资料分析', groupId:'c_m2', year:2023, materialHtml:m2, stem:'2022年全国新能源汽车销量同比增长约：', options:['86.4%','95.6%','102.3%','114.8%'], answer:1, explanation:'(688.7-352.1)÷352.1≈95.6%，选 B。' },
-        { id:'c_da_7', module:'data', subType:'资料分析', groupId:'c_m2', year:2023, materialHtml:m2, stem:'2018—2022年产销率超过100%的年份有几个？', options:['1个','2个','3个','4个'], answer:0, explanation:'仅2020年销量>产量，选 A。' },
-        { id:'c_da_8', module:'data', subType:'资料分析', groupId:'c_m2', year:2023, materialHtml:m2, stem:'2019—2022年全国新能源汽车年均产量约为多少万辆？', options:['289.6','312.4','330.3','355.8'], answer:2, explanation:'1321.1÷4≈330.3万辆，选 C。' },
-        { id:'c_da_9', module:'data', subType:'资料分析', groupId:'c_m2', year:2023, materialHtml:m2, stem:'2022年产量约是2018年的多少倍？', options:['4.56倍','5.12倍','5.56倍','6.08倍'], answer:2, explanation:'705.8÷127.0≈5.56倍，选 C。' },
-        { id:'c_da_10', module:'data', subType:'资料分析', groupId:'c_m2', year:2023, materialHtml:m2, stem:'下列说法正确的是：', options:['五年产量逐年递增','2018—2022年累计销量超过1400万辆','2021年销量增量高于2022年','2019年产销差额小于2018年'], answer:1, explanation:'五年累计销量1423.7万辆>1400万辆，选 B。' },
-        { id:'c_da_11', module:'data', subType:'资料分析', groupId:'c_m3', year:2021, materialHtml:m3, stem:'2020年全国快递平均单价约为多少元/件？', options:['9.48','10.55','11.42','12.16'], answer:1, explanation:'8795.4÷833.6≈10.55元/件，选 B。' },
-        { id:'c_da_12', module:'data', subType:'资料分析', groupId:'c_m3', year:2021, materialHtml:m3, stem:'2020年中部地区快递业务量约为多少亿件？', options:['98.4','110.9','121.6','133.2'], answer:1, explanation:'833.6×13.3%≈110.9亿件，选 B。' },
-        { id:'c_da_13', module:'data', subType:'资料分析', groupId:'c_m3', year:2021, materialHtml:m3, stem:'东、中、西部快递平均单价从高到低排序为：', options:['东 > 中 > 西','西 > 东 > 中','东 > 西 > 中','西 > 中 > 东'], answer:1, explanation:'西部8.5/7.3最高，中部最低，选 B。' },
-        { id:'c_da_14', module:'data', subType:'资料分析', groupId:'c_m3', year:2021, materialHtml:m3, stem:'2019年全国快递业务收入约为多少亿元？', options:['7120','7498','7865','8120'], answer:1, explanation:'8795.4÷1.173≈7498亿元，选 B。' },
-        { id:'c_da_15', module:'data', subType:'资料分析', groupId:'c_m3', year:2021, materialHtml:m3, stem:'2020年全国快递平均单价同比约：', options:['下降10.6%','下降13.9%','上升10.6%','上升13.9%'], answer:0, explanation:'(17.3%-31.2%)÷1.312≈-10.6%，选 A。' },
-        { id:'c_da_16', module:'data', subType:'资料分析', groupId:'c_m4', year:2018, materialHtml:m4, stem:'2017年工业品物流总额占全国社会物流总额比重约为：', options:['88.5%','90.4%','92.8%','95.1%'], answer:2, explanation:'234.5÷252.8≈92.8%，选 C。' },
-        { id:'c_da_17', module:'data', subType:'资料分析', groupId:'c_m4', year:2018, materialHtml:m4, stem:'2017年运输费用占物流总费用比重同比：', options:['上升不到1个百分点','上升1个百分点以上','下降不到1个百分点','下降1个百分点以上'], answer:0, explanation:'上升约0.84个百分点，选 A。' },
-        { id:'c_da_18', module:'data', subType:'资料分析', groupId:'c_m4', year:2018, materialHtml:m4, stem:'2017年保管费用比管理费用多多少万亿元？', options:['1.9','2.1','2.3','2.7'], answer:2, explanation:'3.9-1.6=2.3万亿元，选 C。' },
-        { id:'c_da_19', module:'data', subType:'资料分析', groupId:'c_m4', year:2018, materialHtml:m4, stem:'2016年全国社会物流总费用约为多少万亿元？', options:['10.52','11.08','11.46','11.82'], answer:1, explanation:'12.1÷1.092≈11.08万亿元，选 B。' },
-        { id:'c_da_20', module:'data', subType:'资料分析', groupId:'c_m4', year:2018, materialHtml:m4, stem:'2017年下列分项中同比增速最快的是：', options:['进口货物','农产品','再生资源','单位与居民物品'], answer:3, explanation:'单位与居民物品增速29.9%最快，选 D。' },
-
-        // 数量关系 (10)
-        { id:'c_qn_1', module:'quant', subType:'数量关系', year:2025, stem:'一项工程甲独做需12天，乙需18天。甲先做3天，剩余甲乙合作还需几天？', options:['4.8天','5.0天','5.4天','6.0天'], answer:2, explanation:'(36-9)÷(3+2)=5.4天，选 C。' },
-        { id:'c_qn_2', module:'quant', subType:'数量关系', year:2024, stem:'两地相距360公里，甲60km/h、乙90km/h同时相向而行，多久相遇？', options:['2小时12分','2小时24分','2小时30分','2小时40分'], answer:1, explanation:'360÷150=2.4小时=2小时24分，选 B。' },
-        { id:'c_qn_3', module:'quant', subType:'数量关系', year:2023, stem:'商品进价200元，按50%利润定价后打八折出售，每件实际盈利多少元？', options:['30元','40元','50元','60元'], answer:1, explanation:'200×1.5×0.8-200=40元，选 B。' },
-        { id:'c_qn_4', module:'quant', subType:'数量关系', year:2022, stem:'60人中会英语38人、会日语25人、都不会8人，两种都会多少人？', options:['9人','11人','13人','15人'], answer:1, explanation:'38+25-(60-8)=11人，选 B。' },
-        { id:'c_qn_5', module:'quant', subType:'数量关系', year:2021, stem:'5男4女选3人组成巡查组，要求至少有1名女生，共有多少种选法？', options:['64种','70种','74种','80种'], answer:2, explanation:'C(9,3)-C(5,3)=74种，选 C。' },
-        { id:'c_qn_6', module:'quant', subType:'数量关系', year:2020, stem:'袋中3红5白，随机摸2球，恰好一红一白的概率为：', options:['15/56','15/28','3/8','5/14'], answer:1, explanation:'(3×5)÷C(8,2)=15/28，选 B。' },
-        { id:'c_qn_7', module:'quant', subType:'数量关系', year:2019, stem:'200克15%盐水加多少克水可稀释为10%？', options:['80克','100克','120克','150克'], answer:1, explanation:'30÷0.1-200=100克，选 B。' },
-        { id:'c_qn_8', module:'quant', subType:'数量关系', year:2018, stem:'今年父子年龄和56岁，4年前父亲是儿子3倍，今年儿子几岁？', options:['14岁','16岁','18岁','20岁'], answer:1, explanation:'(56-8)÷4+4=16岁，选 B。' },
-        { id:'c_qn_9', module:'quant', subType:'数量关系', year:2017, stem:'长方形周长40米，长比宽多4米，面积是多少平方米？', options:['84','92','96','100'], answer:2, explanation:'长12、宽8，面积96，选 C。' },
-        { id:'c_qn_10', module:'quant', subType:'数量关系', year:2016, stem:'等差数列首项5，公差3，前10项之和为：', options:['165','175','185','195'], answer:2, explanation:'(5+32)×10÷2=185，选 C。' }
-      ];
-    }
-    const EMBEDDED_CORE_BANK = buildEmbeddedCoreBank();
+    // Core bank removed: 100% real past papers loaded from static sharded buckets
 
     // =========================================================================
     // LAYER 3: INVISIBLE STORAGE + SILENT BACKGROUND POOL EXPANSION
@@ -766,26 +654,72 @@
     };
 
     function escapeHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-    function resolveImg(rawP) {
+    const IMG_MIRRORS = [
+      'https://fastly.jsdelivr.net/gh/ERRRC/xingcezhenti@main/',
+      'https://cdn.jsdelivr.net/gh/ERRRC/xingcezhenti@main/',
+      'https://raw.githubusercontent.com/ERRRC/xingcezhenti/main/'
+    ];
+    function resolveImgUrls(rawP) {
       let c = String(rawP || '').trim().split('|')[0].replace(/^\.\.\//, '').replace(/^\.\//, '');
-      if (/^(https?:|data:)/i.test(c)) return { p: c, f: '' };
+      if (/^(https?:|data:)/i.test(c)) return [c];
       if (c.includes('90-图片/')) c = c.slice(c.indexOf('90-图片/')); else c = '90-图片/' + c;
       const enc = c.split('/').map(x => encodeURIComponent(x)).join('/');
-      return { p: REPO_CDN + enc, f: REPO_RAW + enc };
+      return IMG_MIRRORS.map(b => b + enc);
     }
-    function rewriteHtmlImgs(htmlStr) {
-      return String(htmlStr).replace(/<img([^>]*?)src=["']([^"']+)["']([^>]*)>/gi, (m, pre, src, post) => {
-        const { p, f } = resolveImg(src);
-        const onerr = f ? ` onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${f}';}"` : '';
-        return `<img${pre}src="${p}"${onerr} loading="lazy"${post}>`;
-      });
+    window.__imgFailover = function(img) {
+      const urls = (img.dataset.urls || '').split('||').filter(Boolean);
+      const next = Number(img.dataset.idx || 0) + 1;
+      if (next < urls.length) {
+        img.dataset.idx = String(next);
+        img.src = urls[next];
+      } else {
+        img.alt = '图片加载失败（点击重试）';
+        img.style.minHeight = '36px';
+        img.style.padding = '8px 12px';
+        img.dataset.failed = '1';
+      }
+    };
+    const SAFE_TAGS = new Set(['P','BR','TABLE','THEAD','TBODY','TFOOT','TR','TH','TD','IMG','STRONG','B','EM','I','U','SUB','SUP','SPAN','DIV','UL','OL','LI']);
+    const SAFE_ATTRS = new Set(['src','alt','width','height','flag','class','colspan','rowspan','loading','data-urls','data-idx','onerror']);
+    function sanitizeExamHtml(rawHtml) {
+      const tpl = document.createElement('template');
+      tpl.innerHTML = rawHtml;
+      const walk = node => {
+        for (let i = node.childNodes.length - 1; i >= 0; i--) {
+          const ch = node.childNodes[i];
+          if (ch.nodeType === 1) {
+            if (!SAFE_TAGS.has(ch.tagName)) {
+              ch.replaceWith(...ch.childNodes);
+              continue;
+            }
+            for (const attr of [...ch.attributes]) {
+              const name = attr.name.toLowerCase();
+              const val = attr.value || '';
+              if (!SAFE_ATTRS.has(name) || (/^(javascript:|vbscript:)/i.test(val.trim()))) {
+                ch.removeAttribute(attr.name);
+              }
+            }
+            if (ch.tagName === 'IMG') {
+              const urls = resolveImgUrls(ch.getAttribute('src') || '');
+              ch.setAttribute('src', urls[0] || '');
+              ch.setAttribute('data-urls', urls.join('||'));
+              ch.setAttribute('data-idx', '0');
+              ch.setAttribute('loading', 'lazy');
+              ch.setAttribute('onerror', 'window.__imgFailover(this)');
+            }
+            walk(ch);
+          }
+        }
+      };
+      walk(tpl.content);
+      return tpl.innerHTML;
     }
     function renderRich(text) {
       if (!text) return '';
       const raw = String(text);
-      if (/<(p|table|div|img|svg|br|strong|ul|ol|span)\b/i.test(raw)) {
-        const fixed = rewriteHtmlImgs(raw).replace(/_{4,}|\u00a0{4,}/g, '<span class="blank-slot"></span>');
-        return `<div class="exam-rich">${fixed}</div>`;
+      if (/<(p|table|div|img|br|strong|ul|ol|span)\b/i.test(raw)) {
+        const clean = sanitizeExamHtml(raw).replace(/_{4,}|\u00a0{4,}/g, '<span class="blank-slot"></span>');
+        return `<div class="exam-rich">${clean}</div>`;
       }
       const parts = raw.split(/(\n?\|[^\n]+\|\n\|[\s:\-|]+\|\n(?:\|[^\n]+\|\n?)+)/g);
       const rendered = parts.map(part => {
@@ -798,9 +732,8 @@
         }
         let s = escapeHtml(part);
         s = s.replace(/!\[\[([^\]]+)\]\]|!\[([^\]]*)\]\(([^)]+)\)/g, (_, p1, alt, p2) => {
-          const { p, f } = resolveImg(p1 || p2);
-          const onerr = f ? `onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${f}';}"` : '';
-          return `<img src="${p}" ${onerr} alt="${alt || '配图'}" class="max-w-full rounded my-1.5 border border-slate-200 bg-white p-1 block" loading="lazy" />`;
+          const urls = resolveImgUrls(p1 || p2);
+          return `<img src="${urls[0]}" data-urls="${urls.join('||')}" data-idx="0" onerror="window.__imgFailover(this)" alt="${alt || '配图'}" loading="lazy" />`;
         });
         s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
              .replace(/_{4,}|\s{4,}/g, '<span class="blank-slot"></span>');
@@ -809,135 +742,113 @@
       return `<div class="exam-rich">${rendered}</div>`;
     }
 
-    function inferVerbalSub(s) {
-      if (/重新排列|语序最连贯|语序正确|接下来最可能|下文最可能|填入画横线部分最恰当的一句|衔接最恰当/.test(s)) return '语句表达';
-      if (/_{2,}|（\s*）|\(\s*\)|依次填入|填入画横线部分最恰当的(?:一项|词语)/.test(s)) return '逻辑填空';
-      return '阅读理解';
-    }
-    function inferReasoningSub(s, opts) {
-      const j = s + ' ' + opts.join(' ');
-      if (j.includes('![') || j.includes('90-图片') || /图形|问号处|折叠|立体|视图|填入问号/.test(s)) return '图形推理';
-      if (/是指|定义|根据上述定义|符合上述定义|属于上述|不属于上述/.test(s) && s.length > 42) return '定义判断';
-      if ((s.includes('：') || s.includes(':')) && s.length < 55 && !/以下哪项|下列哪项|由此可以推出/.test(s)) return '类比推理';
-      return '逻辑判断';
-    }
-    function fingerprint(q) { return `${q.module}|${String(q.stem || '').replace(/[\s\p{P}]/gu, '').slice(0, 48)}`; }
-    function qualityScore(q, seenFp) {
-      let sc = 0;
-      const opts = Array.isArray(q.options) ? q.options : [];
-      if (q.stem && opts.length === 4 && new Set(opts).size === 4 && q.answer >= 0 && q.answer < 4) sc += 35;
-      if (String(q.explanation || '').trim().length >= 12) sc += 25;
-      if (q.module !== 'data' || q.materialHtml) sc += 20;
-      const fp = fingerprint(q);
-      if (!seenFp.has(fp)) { sc += 20; seenFp.add(fp); } else return 0;
-      return sc;
+    const DIFF_PROFILES = {
+      standard:   { label: '标准联考', ratio: [0.30, 0.50, 0.20] },
+      foundation: { label: '基础巩固', ratio: [0.50, 0.40, 0.10] },
+      sprint:     { label: '冲刺拔高', ratio: [0.10, 0.50, 0.40] }
+    };
+
+    function getDiffProfile() {
+      const key = document.getElementById('opt-diff-profile')?.value || 'standard';
+      return DIFF_PROFILES[key] || DIFF_PROFILES.standard;
     }
 
-    function parseRepoMd(mdText, modId, fileName) {
-      const raw = String(mdText || '').replace(/\r\n/g, '\n').replace(/^---[\s\S]*?---\n/, '');
-      let blocks = raw.split(/(?=^#{2,4}\s+)/m).filter(b => b.trim().length > 8);
-      if (blocks.length <= 2) blocks = raw.split(/\n---+\n/).filter(b => b.trim().length > 8);
-      const out = []; let curMat = '', matIdx = 0;
-      blocks.forEach((blk, idx) => {
-        const hasA = /(?:^|\n)\s*(?:[-*]\s*)?(?:\*\*)?[AＡ][\.、．\s\)]/m.test(blk);
-        const hasB = /(?:^|\n)\s*(?:[-*]\s*)?(?:\*\*)?[BＢ][\.、．\s\)]/m.test(blk);
-        if (!hasA || !hasB) {
-          if (modId === 'data' || /^#{2,4}\s*.*材料|根据以下资料/.test(blk)) { const c = blk.replace(/^#{1,4}\s+.*\n?/, '').trim(); if (c.length > 20) { curMat = c; matIdx++; } }
-          return;
-        }
-        const ansM = blk.match(/(?:答案|正确答案|官方答案|参考答案)\**\s*[：:】\]]\s*\**\s*([A-D])/i);
-        if (!ansM) return;
-        const answer = LETTERS.indexOf(ansM[1].toUpperCase());
-        const expM = blk.match(/(?:解析|官方解析|答案解析)\**\s*[：:】\]]\s*([\s\S]*?)(?=\n#{2,4}\s|$)/i);
-        const explanation = expM ? expM[1].replace(/<\/?details>|<\/?summary>/gi, '').replace(/^>\s?/gm, '').trim() : `标准答案：${LETTERS[answer]}`;
-        const body = blk.split(/(?:\n|>\s*|\*\*)(?:【?答案|【?正确答案|【?官方答案|【?参考答案|【?解析|> \[!)/)[0];
-        const optRe = /(?:^|\n)\s*(?:[-*]\s*)?(?:\*\*)?([A-D])[\.、．\)]\s*([\s\S]*?)(?=(?:\n\s*(?:[-*]\s*)?(?:\*\*)?[A-D][\.、．\)]|$))/g;
-        const om = {}; let first = -1, m;
-        while ((m = optRe.exec(body)) !== null) { if (first === -1) first = m.index; om[m[1].toUpperCase()] = m[2].trim(); }
-        if (!om.A || !om.B || !om.C || !om.D) return;
-        const stem = (first > 0 ? body.slice(0, first) : body).replace(/^#{2,4}\s+.*\n?/, '').replace(/<!--[\s\S]*?-->/g, '').replace(/`?qid[：:\s]*[A-Za-z0-9_-]+`?/gi, '').trim();
-        if (!stem) return;
-        const options = [om.A, om.B, om.C, om.D];
-        const subType = modId === 'verbal' ? inferVerbalSub(stem) : modId === 'reasoning' ? inferReasoningSub(stem, options) : (MOD_MAP[modId]?.name || modId);
-        out.push({ id: `live_${modId}_${idx}_${fileName.slice(0,10)}`, module: modId, subType, groupId: modId === 'data' && curMat ? `lm_${fileName}_${matIdx}` : undefined, materialHtml: modId === 'data' && curMat ? curMat : undefined, stem, options, answer, explanation });
-      });
-      return out;
+    function weightedSort(candidates) {
+      // Unseen first, then higher exam-style alignment (tier 1 联考/司法/公安 > tier 2 国考执法 > tier 3 特色卷), randomized within same bucket
+      return [...candidates]
+        .map(q => ({
+          q,
+          score: (state.seenIds.has(q.id) ? 10 : 0) + ((q.tier || 2) * 1.6) + Math.random() * 2.2
+        }))
+        .sort((a, b) => a.score - b.score)
+        .map(x => x.q);
     }
 
-    // Completely silent background hydrator (zero UI noise, zero blocking)
-    async function silentBackgroundHydrate() {
-      try {
-        if (state.livePool.length >= 400) return;
-        const repoMods = EXAM_MODULES.filter(m => m.repoFolder);
-        const r = await fetch('https://data.jsdelivr.com/v1/packages/gh/ERRRC/xingcezhenti@main?structure=flat');
-        if (!r.ok) return;
-        const d = await r.json();
-        const files = [];
-        (d.files || []).forEach(f => {
-          const p = (f.name || '').replace(/^\//, '');
-          if (!p.endsWith('.md') || p.endsWith('README.md')) return;
-          const hit = repoMods.find(m => p.startsWith(m.repoFolder + '/'));
-          if (hit) files.push({ path: p, modId: hit.id, name: p.split('/').pop().replace(/\.md$/i, '') });
-        });
-        const targets = [];
-        repoMods.forEach(m => targets.push(...shuffle(files.filter(f => f.modId === m.id)).slice(0, 4)));
-        const seenFp = new Set(state.livePool.map(fingerprint));
-        for (let i = 0; i < targets.length; i += 6) {
-          await Promise.all(targets.slice(i, i + 6).map(async tf => {
-            const enc = tf.path.split('/').map(s => encodeURIComponent(s)).join('/');
-            for (const base of [REPO_CDN, REPO_RAW]) {
-              try {
-                const resp = await fetch(base + enc);
-                if (!resp.ok) continue;
-                parseRepoMd(await resp.text(), tf.modId, tf.name).forEach(q => {
-                  if (qualityScore(q, seenFp) >= 75) state.livePool.push(q);
-                });
-                break;
-              } catch (e) {}
-            }
-          }));
-        }
-        if (state.livePool.length) await dbSet('live_pool', state.livePool.slice(-1200));
-      } catch (e) {}
-    }
-
-    // Seamless Hybrid Paper Assembler: prefers unseen livePool, guarantees 100% full 180Q via EMBEDDED_CORE_BANK
-    function pickSeamless(liveCandidates, fallbackCandidates, count) {
-      const unseenLive = shuffle(liveCandidates.filter(q => !state.seenIds.has(q.id)));
-      const seenLive = shuffle(liveCandidates.filter(q => state.seenIds.has(q.id)));
-      const out = [...unseenLive, ...seenLive].slice(0, count);
-      if (out.length < count) {
-        const usedFp = new Set(out.map(fingerprint));
-        const fb = shuffle(fallbackCandidates).filter(q => !usedFp.has(fingerprint(q)));
-        out.push(...fb.slice(0, count - out.length));
+    function pickStratified(candidates, count, ratio) {
+      if (!candidates.length || count <= 0) return [];
+      const qEasy = Math.round(count * ratio[0]);
+      const qHard = Math.round(count * ratio[2]);
+      const qMed = Math.max(0, count - qEasy - qHard);
+      const targets = [
+        { d: 1, n: qEasy },
+        { d: 2, n: qMed },
+        { d: 3, n: qHard }
+      ];
+      const used = new Set();
+      const picked = [];
+      for (const t of targets) {
+        const bucket = weightedSort(candidates.filter(q => (q.diff || 2) === t.d && !used.has(q.id)));
+        const slice = bucket.slice(0, t.n);
+        slice.forEach(q => { used.add(q.id); picked.push(q); });
       }
-      return out.slice(0, count);
+      if (picked.length < count) {
+        const rest = weightedSort(candidates.filter(q => !used.has(q.id)));
+        picked.push(...rest.slice(0, count - picked.length));
+      }
+      // Smooth exam rhythm: easy -> medium -> hard within module/subtype
+      return picked.slice(0, count).sort((a, b) => (a.diff || 2) - (b.diff || 2));
+    }
+
+    function pickStratifiedDataGroups(candidates, targetCount, ratio) {
+      const mp = new Map();
+      candidates.forEach(q => {
+        const g = q.groupId || q.id;
+        if (!mp.has(g)) mp.set(g, []);
+        mp.get(g).push(q);
+      });
+      const validGroups = [...mp.values()]
+        .filter(g => g.length >= 4)
+        .map(g => {
+          g.sort((a, b) => (a.groupOrder || 0) - (b.groupOrder || 0));
+          const avgDiff = Math.round(g.reduce((s, x) => s + (x.diff || 2), 0) / g.length);
+          const unseenRatio = g.filter(x => !state.seenIds.has(x.id)).length / g.length;
+          const tier = g[0].tier || 2;
+          return { g, diff: avgDiff, score: (unseenRatio < 0.5 ? 10 : 0) + tier * 1.5 + Math.random() * 2.0 };
+        });
+
+      const numGroups = Math.max(1, Math.round(targetCount / 5));
+      const desiredDiffs = numGroups >= 4
+        ? (ratio[0] >= 0.45 ? [1, 1, 2, 2] : ratio[2] >= 0.35 ? [2, 2, 3, 3] : [1, 2, 2, 3])
+        : [2];
+
+      const usedG = new Set();
+      const chosen = [];
+      for (const wantD of desiredDiffs) {
+        const hit = validGroups.filter(x => !usedG.has(x) && x.diff === wantD).sort((a, b) => a.score - b.score)[0]
+                 || validGroups.filter(x => !usedG.has(x)).sort((a, b) => a.score - b.score)[0];
+        if (hit) { usedG.add(hit); chosen.push(hit); }
+      }
+      chosen.sort((a, b) => a.diff - b.diff);
+      const out = [];
+      for (const item of chosen) {
+        if (out.length + item.g.length <= targetCount) out.push(...item.g);
+        if (out.length >= targetCount) break;
+      }
+      return out;
     }
 
     function assembleFullPaper(targetModIds = null) {
       const randomOrder = document.getElementById('opt-random-order')?.checked ?? true;
+      const profile = getDiffProfile();
       let mods = targetModIds ? EXAM_MODULES.filter(m => targetModIds.includes(m.id)) : [...EXAM_MODULES];
       if (!targetModIds && randomOrder) mods = [...mods.filter(m => m.fixedFirst), ...shuffle(mods.filter(m => !m.fixedFirst))];
 
       let globalNo = 1;
       return mods.map((mod, idx) => {
         const liveM = state.livePool.filter(q => q.module === mod.id);
-        const coreM = EMBEDDED_CORE_BANK.filter(q => q.module === mod.id);
         let picked = [];
         if (mod.id === 'perceptual') {
           picked = generateDynamicPerceptualBank();
         } else if (mod.id === 'verbal' || mod.id === 'reasoning') {
           mod.subQuotas.forEach(sq => {
-            const subLive = liveM.filter(q => q.subType === sq.subType && !q.materialHtml && !q.material && !q.groupId); picked.push(...pickSeamless(subLive, coreM.filter(q => q.subType === sq.subType), sq.count));
+            const subLive = liveM.filter(q => q.subType === sq.subType && !q.materialHtml && !q.material && !q.groupId);
+            picked.push(...pickStratified(subLive, sq.count, profile.ratio));
           });
         } else if (mod.id === 'data') {
-          const buildGroups = arr => { const mp = new Map(); arr.forEach(q => { const g = q.groupId || q.id; if (!mp.has(g)) mp.set(g, []); mp.get(g).push(q); }); return shuffle([...mp.values()]).filter(g => g.length >= 4).map(g => g.sort((a,b) => (a.groupOrder||0) - (b.groupOrder||0))); };
-          for (const grp of [...buildGroups(liveM), ...buildGroups(coreM)]) {
-            if (picked.length + grp.length <= mod.count) picked.push(...grp);
-            if (picked.length >= mod.count) break;
-          }
+          picked = pickStratifiedDataGroups(liveM, mod.count, profile.ratio);
         } else {
-          picked = pickSeamless(liveM, coreM, mod.count);
+          const cleanM = liveM.filter(q => !q.materialHtml && !q.material && !q.groupId);
+          picked = pickStratified(cleanM, mod.count, profile.ratio);
         }
         return { ...mod, partIndex: idx + 1, questions: picked.map(q => ({ ...q, examNo: globalNo++ })), status: 'pending', timeUsedSec: 0 };
       });
@@ -1060,8 +971,17 @@
     let pendingModules = null;
 
     async function startExamFlow(targetModIds = null) {
-      if (shardsReadyPromise && state.livePool.length < 60) {
-        await Promise.race([shardsReadyPromise, new Promise(r => setTimeout(r, 4000))]);
+      const needMods = (targetModIds || EXAM_MODULES.map(m => m.id)).filter(id => id !== 'perceptual');
+      if (needMods.length) {
+        showToast('正在准备试卷…', 'info');
+        const ok = await ensureBucketsForModules(needMods);
+        if (!ok) {
+          openModal('试卷加载受阻', '当前网络波动，未能获取完整试题，请检查网络后重试。', [
+            { label: '返回' },
+            { label: '重新获取', primary: true, onClick: () => startExamFlow(targetModIds) }
+          ]);
+          return;
+        }
       }
       pendingModules = assembleFullPaper(targetModIds);
       showTopView('prep');
@@ -1293,10 +1213,39 @@
       else { state.favorites.push(q); showToast('已加入收藏', 'success'); }
       await dbSet('favorites', state.favorites); renderExamUI(false);
     });
-    document.getElementById('btn-highlight-sel').addEventListener('click', () => {
+    function applySelectionHighlight() {
       const sel = window.getSelection();
-      if (!sel || sel.isCollapsed) return showToast('请先拖选一段文字再点击高亮');
-      try { const span = document.createElement('span'); span.className = 'highlight-mark'; sel.getRangeAt(0).surroundContents(span); sel.removeAllRanges(); } catch (e) { showToast('请在同一段落内选字高亮', 'warning'); }
+      if (!sel || sel.isCollapsed || !sel.rangeCount) return showToast('请先拖选一段文字再点击高亮');
+      try {
+        const range = sel.getRangeAt(0);
+        const span = document.createElement('span');
+        span.className = 'highlight-mark';
+        span.title = '点击取消高亮';
+        span.appendChild(range.extractContents());
+        range.insertNode(span);
+        sel.removeAllRanges();
+      } catch (e) { showToast('请选择连续文字进行高亮', 'warning'); }
+    }
+    document.getElementById('btn-highlight-sel').addEventListener('click', applySelectionHighlight);
+    document.addEventListener('click', e => {
+      const mk = e.target.closest('.highlight-mark');
+      if (mk) {
+        const parent = mk.parentNode;
+        while (mk.firstChild) parent.insertBefore(mk.firstChild, mk);
+        parent.removeChild(mk);
+        parent.normalize();
+        return;
+      }
+      const img = e.target.closest('.exam-rich img:not([flag="tex"]):not(.tex-formula)');
+      if (img) {
+        if (img.dataset.failed === '1') {
+          img.dataset.failed = '0';
+          img.dataset.idx = '-1';
+          window.__imgFailover(img);
+          return;
+        }
+        openLightbox(img.src);
+      }
     });
     document.getElementById('btn-split-toggle').addEventListener('click', () => { state.dataSideSplit = !state.dataSideSplit; renderExamUI(false); });
     document.getElementById('btn-exam-submit-all').addEventListener('click', () => {
@@ -1451,52 +1400,137 @@
     function fmtHMS(sec) { const s = Math.max(0, Math.floor(sec)); return `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
     function fmtCN(sec) { const s = Math.max(0, Math.floor(sec)); return `${Math.floor(s/60)}分${s%60}秒`; }
 
-    let shardsReadyPromise = null;
+    let bankManifest = null;
+    const loadedBucketFiles = new Set();
 
-    async function loadStaticShards() {
-      try {
-        const res = await fetch('./data/manifest.json?t=' + Date.now(), { cache: 'no-cache' });
-        if (!res.ok) return false;
-        const manifest = await res.json();
-        if (!manifest || !Array.isArray(manifest.shards) || !manifest.shards.length) return false;
-
-        const cachedVer = await dbGet('shard_build_id', '');
-        if (cachedVer === manifest.buildId && state.livePool.length >= 120) {
-          return true;
-        }
-
-        const loaded = [];
-        await Promise.all(manifest.shards.map(async sh => {
-          try {
-            const r = await fetch('./data/' + sh.file + '?v=' + encodeURIComponent(manifest.buildId));
-            if (!r.ok) return;
-            const arr = await r.json();
-            if (Array.isArray(arr)) loaded.push(...arr);
-          } catch (e) {}
-        }));
-
-        if (loaded.length >= 60) {
-          state.livePool = loaded;
-          await dbSet('live_pool', loaded);
-          await dbSet('shard_build_id', manifest.buildId);
-          return true;
-        }
-      } catch (e) {}
-      return false;
+    async function fetchManifest() {
+      if (bankManifest) return bankManifest;
+      const res = await fetch('./data/manifest.json?t=' + Math.floor(Date.now() / 600000), { cache: 'no-cache' });
+      if (!res.ok) throw new Error('manifest_http_' + res.status);
+      bankManifest = await res.json();
+      const cachedVer = await dbGet('shard_build_id', '');
+      if (cachedVer !== bankManifest.buildId) {
+        state.livePool = [];
+        loadedBucketFiles.clear();
+        await dbSet('live_pool', []);
+        await dbSet('loaded_buckets', []);
+        await dbSet('shard_build_id', bankManifest.buildId);
+      }
+      return bankManifest;
     }
 
+    async function ensureBucketsForModules(modIds) {
+      try {
+        const mf = await fetchManifest();
+        if (!mf || !Array.isArray(mf.shards)) return false;
+        const toFetch = [];
+        for (const modId of modIds) {
+          const existingCount = state.livePool.filter(q => q.module === modId).length;
+          const modBuckets = mf.shards.filter(s => s.module === modId);
+          if (!modBuckets.length) continue;
+          // Ensure at least 150 questions in memory per needed module (fetch 1-2 random unseen buckets)
+          if (existingCount >= 140) continue;
+          const unloaded = shuffle(modBuckets.filter(b => !loadedBucketFiles.has(b.file)));
+          const pickCount = modId === 'verbal' || modId === 'reasoning' ? 2 : 1;
+          toFetch.push(...unloaded.slice(0, pickCount));
+        }
+        if (toFetch.length) {
+          const results = await Promise.all(toFetch.map(async b => {
+            const r = await fetch('./data/' + b.file + '?v=' + encodeURIComponent(mf.buildId));
+            if (!r.ok) throw new Error('bucket_http_' + r.status);
+            const arr = await r.json();
+            return { file: b.file, arr: Array.isArray(arr) ? arr : [] };
+          }));
+          const existingIds = new Set(state.livePool.map(q => q.id));
+          results.forEach(({ file, arr }) => {
+            loadedBucketFiles.add(file);
+            arr.forEach(q => { if (!existingIds.has(q.id)) { existingIds.add(q.id); state.livePool.push(q); } });
+          });
+          await dbSet('live_pool', state.livePool);
+          await dbSet('loaded_buckets', [...loadedBucketFiles]);
+        }
+        return modIds.every(id => state.livePool.some(q => q.module === id));
+      } catch (e) {
+        return modIds.every(id => state.livePool.some(q => q.module === id));
+      }
+    }
+
+    // Lightbox controller
+    let lbScale = 1;
+    const lbEl = document.getElementById('img-lightbox');
+    const lbImg = document.getElementById('lb-img');
+    function openLightbox(src) {
+      lbScale = 1;
+      lbImg.src = src;
+      lbImg.style.transform = 'scale(1)';
+      lbEl.classList.add('open');
+    }
+    function closeLightbox() { lbEl.classList.remove('open'); }
+    document.getElementById('lb-zoom-in').addEventListener('click', () => { lbScale = Math.min(3, lbScale + 0.35); lbImg.style.transform = `scale(${lbScale})`; });
+    document.getElementById('lb-zoom-out').addEventListener('click', () => { lbScale = Math.max(0.5, lbScale - 0.35); lbImg.style.transform = `scale(${lbScale})`; });
+    document.getElementById('lb-zoom-reset').addEventListener('click', () => { lbScale = 1; lbImg.style.transform = 'scale(1)'; });
+    document.getElementById('lb-close').addEventListener('click', closeLightbox);
+    lbEl.addEventListener('click', e => { if (e.target === lbEl) closeLightbox(); });
+    lbImg.addEventListener('wheel', e => { e.preventDefault(); lbScale = Math.max(0.5, Math.min(3, lbScale + (e.deltaY < 0 ? 0.2 : -0.2))); lbImg.style.transform = `scale(${lbScale})`; }, { passive: false });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && lbEl.classList.contains('open')) closeLightbox();
+      if ((e.key === 'h' || e.key === 'H') && !document.getElementById('view-exam').classList.contains('hidden') && window.getSelection()?.toString()) {
+        applySelectionHighlight();
+      }
+    });
+
+    // Cross-device Export / Import Backup (Mistakes + Favorites + History + Seen)
+    function exportUserBackup() {
+      const payload = {
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        history: state.history,
+        mistakes: state.mistakes,
+        favorites: state.favorites,
+        seenIds: [...state.seenIds]
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `行测刷题备份_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      showToast('已导出学习记录备份');
+    }
+    const backupFileInput = document.getElementById('input-backup-file');
+    backupFileInput.addEventListener('change', async () => {
+      const file = backupFileInput.files?.[0];
+      backupFileInput.value = '';
+      if (!file) return;
+      try {
+        const data = JSON.parse(await file.text());
+        if (Array.isArray(data.history)) { state.history = data.history; await dbSet('history', state.history); }
+        if (Array.isArray(data.mistakes)) { state.mistakes = data.mistakes; await dbSet('mistakes', state.mistakes); }
+        if (Array.isArray(data.favorites)) { state.favorites = data.favorites; await dbSet('favorites', state.favorites); }
+        if (Array.isArray(data.seenIds)) { state.seenIds = new Set(data.seenIds); await dbSet('seen_ids', [...state.seenIds]); }
+        renderMistakesPane();
+        renderHistoryPane();
+        showToast('备份已恢复，错题与成绩已同步');
+      } catch (e) {
+        showToast('备份文件格式无效，请检查后重试', 'error');
+      }
+    });
+    ['btn-export-backup-m', 'btn-export-backup-h'].forEach(id => document.getElementById(id)?.addEventListener('click', exportUserBackup));
+    ['btn-import-backup-m', 'btn-import-backup-h'].forEach(id => document.getElementById(id)?.addEventListener('click', () => backupFileInput.click()));
+
     (async () => {
-      const [live, hist, mist, favs, seen] = await Promise.all([
-        dbGet('live_pool', []), dbGet('history', []), dbGet('mistakes', []), dbGet('favorites', []), dbGet('seen_ids', [])
+      const [live, bkts, hist, mist, favs, seen] = await Promise.all([
+        dbGet('live_pool', []), dbGet('loaded_buckets', []), dbGet('history', []), dbGet('mistakes', []), dbGet('favorites', []), dbGet('seen_ids', [])
       ]);
       state.livePool = Array.isArray(live) ? live : [];
+      if (Array.isArray(bkts)) bkts.forEach(f => loadedBucketFiles.add(f));
       state.history = Array.isArray(hist) ? hist : [];
       state.mistakes = Array.isArray(mist) ? mist : [];
       state.favorites = Array.isArray(favs) ? favs : [];
       state.seenIds = new Set(Array.isArray(seen) ? seen : []);
       renderLobby();
-
-      shardsReadyPromise = loadStaticShards();
+      // Lightweight manifest check only (~2 KB); actual question buckets load lazily on exam start
+      fetchManifest().catch(() => {});
     })();
   })();
   </script>

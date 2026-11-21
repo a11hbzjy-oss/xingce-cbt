@@ -1,21 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Precision-calibrated ETL script for ERRRC/xingcezhenti -> GitHub Pages static JSON shards.
-Exact format supported (verified against real repository Raw files):
-  - YAML frontmatter header
-  - ## 材料 1  (Data Analysis material blocks)
-  - ## 第 1 题 <sub>qid 16070152 · 逻辑填空</sub>  (or ### 第 1 题 <sub>...</sub>)
-  - - **A**. ... / - **B**. ... ✅  (automatically strips trailing ✅!)
-  - **答案**：B
-  - **官方解析**
-  - <p>...</p> and <img src="../90-图片/..." /> (including flag="tex" inline formulas)
+V2 Production ETL + Difficulty Calibration + Bucket Sharding + CI Quality Gate
+for ERRRC/xingcezhenti -> GitHub Pages.
 Uses Python 3 standard library only.
 """
 import argparse
 import hashlib
 import json
 import os
+import random
 import re
 import shutil
 import sys
@@ -43,43 +37,45 @@ MODULE_LABELS = {
 }
 
 YEAR_RE = re.compile(r"(20[12]\d)")
-
-# Matches:
-#   ## 第 1 题 <sub>qid 16070152 · 逻辑填空</sub>
-#   ### 第 1 题 <sub>qid 16069826 · 平均数</sub>
-#   ## 第1题
-Q_HEADER_RE = re.compile(
-    r"^(#{2,4})\s*第\s*(\d{1,3})\s*题(?:\s*<sub>(.*?)</sub>)?\s*$"
-)
-
-# Matches: ## 材料 1  /  ## 材料一  /  ### 材料 2
+Q_HEADER_RE = re.compile(r"^(#{2,4})\s*第\s*(\d{1,3})\s*题(?:\s*<sub>(.*?)</sub>)?\s*$")
 MAT_HEADER_RE = re.compile(r"^#{2,4}\s*材料\s*([一二三四五六七八九十\d]+)\s*$")
-
-# Matches: - **A**. 黔驴技穷  /  - **B**. 山穷水尽 ✅  /  A. xxx
-OPT_LINE_RE = re.compile(
-    r"^(?:[-*+]\s*)?(?:\*\*)?([A-D])(?:\*\*)?\s*[\.、．\)）:：]\s*(.*)$"
-)
-
-# Matches: **答案**：B  /  **答案**: C
-ANS_LINE_RE = re.compile(
-    r"^(?:>\s*)?(?:\*\*)?(?:参考答案|正确答案|答案)(?:\*\*)?\s*[:：]\s*(?:\*\*)?([A-D])(?:\*\*)?\s*$",
-    re.IGNORECASE,
-)
-
-# Matches: **官方解析**  /  **解析**  /  **解析**：...
-EXP_HEADER_RE = re.compile(
-    r"^(?:>\s*)?(?:\*\*)?(?:官方解析|试题解析|答案解析|名师解析|解析)(?:\*\*)?\s*[:：]?\s*(.*)$"
-)
-
+OPT_LINE_RE = re.compile(r"^(?:[-*+]\s*)?(?:\*\*)?([A-D])(?:\*\*)?\s*[\.、．\)）:：]\s*(.*)$")
+ANS_LINE_RE = re.compile(r"^(?:>\s*)?(?:\*\*)?(?:参考答案|正确答案|答案)(?:\*\*)?\s*[:：]\s*(?:\*\*)?([A-D])(?:\*\*)?\s*$", re.IGNORECASE)
+EXP_HEADER_RE = re.compile(r"^(?:>\s*)?(?:\*\*)?(?:官方解析|试题解析|答案解析|名师解析|解析)(?:\*\*)?\s*[:：]?\s*(.*)$")
 QID_RE = re.compile(r"qid\s*(\d+)", re.I)
 IMG_SRC_RE = re.compile(r'src=["\']([^"\']+)["\']', re.I)
 IMG_MD_RE = re.compile(r"!\[\[([^\]]+)\]\]|!\[([^\]]*)\]\(([^)]+)\)")
 CHECKMARK_RE = re.compile(r"\s*[✅✔☑️]+\s*$")
+DANGEROUS_HTML_RE = re.compile(r"<\s*(?:script|iframe|object|embed|style)\b[^>]*>[\s\S]*?<\s*/\s*(?:script|iframe|object|embed|style)\s*>", re.I)
+EVENT_ATTR_RE = re.compile(r'\s+on[a-z]+\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>]+)', re.I)
+
+# Source Tier Calibration (1 = closest to Judicial/Police Joint Exam style, 2 = National Enforcement/City, 3 = Provincial/Deputy-Provincial harder outliers)
+TIER1_RE = re.compile(r"公安|司法|联考|甘肃|江西|湖北|湖南|广西|安徽|福建|河南|四川|陕西|云南|贵州|山西|河北|辽宁|吉林|黑龙江|内蒙古|宁夏|青海|新疆|海南|重庆|天津")
+TIER2_RE = re.compile(r"行政执法|地市|国家|国考")
+TIER3_RE = re.compile(r"副省|江苏|浙江|上海|广东|北京|山东")
+
+
+def classify_source_tier(paper_name: str) -> int:
+    if TIER1_RE.search(paper_name):
+        return 1
+    if TIER3_RE.search(paper_name):
+        return 3
+    if TIER2_RE.search(paper_name):
+        return 2
+    return 2
 
 
 def extract_year(text: str) -> int:
     m = YEAR_RE.search(text)
     return int(m.group(1)) if m else 2024
+
+
+def sanitize_html_str(text: str) -> str:
+    if not text:
+        return text
+    text = DANGEROUS_HTML_RE.sub("", text)
+    text = EVENT_ATTR_RE.sub("", text)
+    return text
 
 
 def normalize_img_path(raw_target: str, md_rel_path: str) -> str:
@@ -97,16 +93,9 @@ def normalize_img_path(raw_target: str, md_rel_path: str) -> str:
 def rewrite_images_in_text(text: str, md_rel_path: str) -> str:
     if not text:
         return text
-    # Rewrite HTML <img src="../90-图片/...">
-    text = IMG_SRC_RE.sub(
-        lambda m: f'src="{normalize_img_path(m.group(1), md_rel_path)}"',
-        text,
-    )
-    # Rewrite Markdown ![](...)
-    text = IMG_MD_RE.sub(
-        lambda m: f"![{m.group(2) or '配图'}]({normalize_img_path(m.group(1) or m.group(3), md_rel_path)})",
-        text,
-    )
+    text = sanitize_html_str(text)
+    text = IMG_SRC_RE.sub(lambda m: f'src="{normalize_img_path(m.group(1), md_rel_path)}"', text)
+    text = IMG_MD_RE.sub(lambda m: f"![{m.group(2) or '配图'}]({normalize_img_path(m.group(1) or m.group(3), md_rel_path)})", text)
     return text
 
 
@@ -119,7 +108,6 @@ def map_subtype(mod_id: str, raw_tag: str, stem: str, options: list) -> str:
             return "语句表达"
         if re.search(r"片段阅读|中心理解|细节|标题|意图|词句理解|主旨|阅读", tag):
             return "阅读理解"
-        # Stem fallback
         if re.search(r"填入画横线|依次填入|画横线部分最恰当|____|\s{4,}", stem):
             return "逻辑填空"
         if re.search(r"重新排列|排序|衔接最恰当|接下来最可能|填入横线处最恰当的一句", stem):
@@ -135,7 +123,6 @@ def map_subtype(mod_id: str, raw_tag: str, stem: str, options: list) -> str:
             return "类比推理"
         if re.search(r"逻辑|削弱|加强|翻译|真假|组合|排列|论证|推理", tag):
             return "逻辑判断"
-        # Stem fallback
         joined = stem + " " + " ".join(options)
         if "<img" in joined or "90-图片/" in joined or "填入问号处" in stem:
             return "图形推理"
@@ -148,13 +135,127 @@ def map_subtype(mod_id: str, raw_tag: str, stem: str, options: list) -> str:
     return MODULE_LABELS[mod_id]
 
 
+def compute_raw_difficulty(q: dict, raw_tag: str) -> float:
+    """
+    Deterministic multi-factor difficulty proxy score (higher = harder)
+    used to calibrate percentile-based 3-tier difficulty (1=基础, 2=中等, 3=偏难)
+    within each (module, subType).
+    """
+    mod = q["module"]
+    sub = q["subType"]
+    stem = q["stem"]
+    opts = q["options"]
+    exp = q.get("explanation", "")
+    tier = q.get("tier", 2)
+
+    plain_stem = re.sub(r"<[^>]+>", "", stem)
+    plain_exp = re.sub(r"<[^>]+>", "", exp)
+    stem_len = len(plain_stem)
+    exp_len = len(plain_exp)
+    tex_cnt = len(re.findall(r'flag="tex"', stem + exp))
+
+    # Base score from source tier (副省/江浙沪 slightly harder on average)
+    score = {1: 0.0, 2: 0.25, 3: 0.55}.get(tier, 0.25)
+
+    if mod in ("politics", "common"):
+        if re.search(r"①.*②.*③", stem):
+            score += 0.8
+        if re.search(r"错误|不正确|不准确|不属于|说法有误", stem):
+            score += 0.35
+        score += min(1.0, (stem_len + sum(len(o) for o in opts)) / 320.0)
+    elif mod == "verbal":
+        if sub == "逻辑填空":
+            blanks = max(1, len(re.findall(r"____|\s{4,}|（\s*）", plain_stem)))
+            score += blanks * 0.65
+            # Idiom density
+            if all(len(re.sub(r"\s+", "", o)) >= 8 for o in opts):
+                score += 0.55
+            score += min(0.8, exp_len / 500.0)
+        elif sub == "语句表达":
+            if re.search(r"①.*②.*③.*④", stem):
+                score += 0.9
+            score += min(0.9, stem_len / 360.0)
+        else:
+            if re.search(r"细节|相符|不相符|未提及", stem + raw_tag):
+                score += 0.5
+            score += min(1.2, stem_len / 300.0) + min(0.6, exp_len / 500.0)
+    elif mod == "quant":
+        if re.search(r"排列组合|概率|几何|行程|最值|极值|函数", raw_tag + exp):
+            score += 0.9
+        elif re.search(r"方程|工程|利润|溶液|和差倍比|年龄", raw_tag + exp):
+            score -= 0.3
+        score += min(1.5, tex_cnt * 0.28) + min(1.0, exp_len / 350.0)
+    elif mod == "reasoning":
+        if sub == "图形推理":
+            if re.search(r"立体|折叠|截面|三视图|六面体|拼合", raw_tag + stem + exp):
+                score += 0.9
+            elif re.search(r"数量|笔画|面数量|交点|对称", exp):
+                score += 0.35
+            score += min(0.8, exp_len / 320.0)
+        elif sub == "定义判断":
+            if re.search(r"不属于|不符合", stem):
+                score += 0.45
+            if len(re.findall(r"是指|定义为", stem)) >= 2:
+                score += 0.6
+            score += min(1.0, stem_len / 300.0)
+        elif sub == "类比推理":
+            if len(re.findall(r"[:：∶]", opts[0])) >= 2:
+                score += 0.55
+            score += min(0.8, exp_len / 300.0)
+        else:
+            if re.search(r"翻译|真假|组合|排列|前提|假设", raw_tag + exp):
+                score += 0.6
+            score += min(1.0, exp_len / 400.0) + min(0.6, stem_len / 280.0)
+    elif mod == "data":
+        if re.search(r"综合分析|能够推出|不能推出|两期|年均增长|拉动", raw_tag + stem + exp):
+            score += 0.75
+        score += min(1.4, tex_cnt * 0.25) + min(0.8, exp_len / 350.0)
+
+    return round(score, 3)
+
+
+def calibrate_difficulties(by_mod: dict):
+    """
+    Calibrate percentile-based difficulty (1=基础 30%, 2=中等 50%, 3=偏难 20%)
+    within every (module, subType) for standalone questions, and per material group for Data Analysis.
+    """
+    for mod_id, arr in by_mod.items():
+        if not arr:
+            continue
+        if mod_id == "data":
+            groups = defaultdict(list)
+            for q in arr:
+                groups[q.get("groupId") or q["id"]].append(q)
+            scored_groups = []
+            for gid, grp in groups.items():
+                avg_raw = sum(x.get("_rawDiff", 1.0) for x in grp) / len(grp)
+                scored_groups.append((avg_raw, grp))
+            scored_groups.sort(key=lambda x: x[0])
+            n = len(scored_groups)
+            for idx, (_, grp) in enumerate(scored_groups):
+                pct = idx / max(1, n - 1) if n > 1 else 0.5
+                d = 1 if pct < 0.30 else (2 if pct < 0.80 else 3)
+                for q in grp:
+                    q["diff"] = d
+        else:
+            buckets = defaultdict(list)
+            for q in arr:
+                buckets[q["subType"]].append(q)
+            for st, sub_arr in buckets.items():
+                sub_arr.sort(key=lambda x: x.get("_rawDiff", 1.0))
+                n = len(sub_arr)
+                for idx, q in enumerate(sub_arr):
+                    pct = idx / max(1, n - 1) if n > 1 else 0.5
+                    q["diff"] = 1 if pct < 0.30 else (2 if pct < 0.80 else 3)
+
+
 def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
     md_text = md_text.replace("\r\n", "\n").replace("\r", "\n")
     paper_name = Path(rel_path).stem
     year = extract_year(paper_name)
+    tier = classify_source_tier(paper_name)
 
     lines = md_text.split("\n")
-    # Strip YAML frontmatter if present (either --- delimited or key: "val" header lines before # Title)
     start_idx = 0
     if lines and lines[0].strip() == "---":
         for i in range(1, min(len(lines), 30)):
@@ -172,46 +273,36 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
     cur_mat_id = ""
     in_mat = False
     q_order_in_mat = 0
-
-    cur_q = None  # dict holding lines, qnum, qid, raw_tag
+    cur_q = None
 
     def flush_q():
         nonlocal cur_q, q_order_in_mat
         if not cur_q:
             return
-
         q_lines = cur_q["lines"]
-        stem_lines = []
-        opts = {}
-        cur_opt = None
-        ans_idx = -1
-        in_exp = False
-        exp_lines = []
+        stem_lines, opts, exp_lines = [], {}, []
+        cur_opt, ans_idx, in_exp = None, -1, False
 
         for ln in q_lines:
             s = ln.strip()
             if in_exp:
                 exp_lines.append(ln)
                 continue
-
             em = EXP_HEADER_RE.match(s)
             if em and (ans_idx >= 0 or len(opts) == 4):
                 in_exp = True
                 if em.group(1).strip():
                     exp_lines.append(em.group(1).strip())
                 continue
-
             am = ANS_LINE_RE.match(s)
             if am:
                 ans_idx = ord(am.group(1).upper()) - ord("A")
                 cur_opt = None
                 continue
-
             om = OPT_LINE_RE.match(s)
             if om and (cur_opt is not None or om.group(1).upper() == "A"):
                 letter = om.group(1).upper()
                 val = om.group(2).strip()
-                # If this option carries ✅ and answer wasn't set yet, record it and strip ✅!
                 if CHECKMARK_RE.search(val):
                     if ans_idx < 0:
                         ans_idx = ord(letter) - ord("A")
@@ -219,7 +310,6 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
                 opts[letter] = val
                 cur_opt = letter
                 continue
-
             if cur_opt is not None:
                 if s:
                     extra = CHECKMARK_RE.sub("", s).strip()
@@ -239,26 +329,8 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
             exp_clean = rewrite_images_in_text(exp_raw, rel_path) if exp_raw else "详见真题解析。"
             sub_type = map_subtype(mod_id, cur_q["raw_tag"], stem_clean, opts_clean)
 
-            qid_str = cur_q["qid"] or hashlib.sha1(
-                (paper_name + ":" + str(cur_q["qnum"]) + ":" + stem_clean[:80]).encode("utf-8")
-            ).hexdigest()[:10]
-
-            q_obj = {
-                "id": f"q_{mod_id}_{qid_str}",
-                "qid": cur_q["qid"],
-                "module": mod_id,
-                "subType": sub_type,
-                "year": year,
-                "source": paper_name,
-                "stem": stem_clean,
-                "options": opts_clean,
-                "answer": ans_idx,
-                "explanation": exp_clean,
-            }
-
             has_mat = bool(cur_mat_lines) and (mod_id == "data" or cur_q["level"] >= 3)
-            # Hard rule: only Data Analysis (资料分析) uses shared materials;
-            # strictly exclude 篇章阅读 (verbal) and 一拖五 (reasoning) to match real exam blueprint.
+            # Hard exclusion: only Data Analysis uses shared materials; exclude 篇章阅读 & 一拖五
             if mod_id != "data":
                 if has_mat or re.search(r"一拖五|篇章阅读|文章阅读", cur_q["raw_tag"]):
                     cur_q = None
@@ -270,21 +342,34 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
                 if mod_id == "reasoning" and cn_len < 50 and re.search(r"根据上述材料|根据以上材料|根据所给材料|上述条件", stem_clean):
                     cur_q = None
                     return
-            elif has_mat:
+
+            qid_str = cur_q["qid"] or hashlib.sha1((paper_name + ":" + str(cur_q["qnum"]) + ":" + stem_clean[:80]).encode("utf-8")).hexdigest()[:10]
+            q_obj = {
+                "id": f"q_{mod_id}_{qid_str}",
+                "qid": cur_q["qid"],
+                "module": mod_id,
+                "subType": sub_type,
+                "year": year,
+                "tier": tier,
+                "source": paper_name,
+                "stem": stem_clean,
+                "options": opts_clean,
+                "answer": ans_idx,
+                "explanation": exp_clean,
+            }
+            if mod_id == "data" and has_mat:
                 mat_raw = "\n".join(cur_mat_lines).strip()
                 if mat_raw:
                     q_order_in_mat += 1
                     q_obj["materialHtml"] = rewrite_images_in_text(mat_raw, rel_path)
                     q_obj["groupId"] = cur_mat_id
                     q_obj["groupOrder"] = q_order_in_mat
-
+            q_obj["_rawDiff"] = compute_raw_difficulty(q_obj, cur_q["raw_tag"])
             questions.append(q_obj)
-
         cur_q = None
 
     for ln in lines[start_idx:]:
         s = ln.strip()
-
         mm = MAT_HEADER_RE.match(s)
         if mm:
             flush_q()
@@ -293,7 +378,6 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
             q_order_in_mat = 0
             cur_mat_id = f"mat_{hashlib.sha1((paper_name + '_' + mm.group(1)).encode('utf-8')).hexdigest()[:8]}"
             continue
-
         qm = Q_HEADER_RE.match(s)
         if qm:
             flush_q()
@@ -307,15 +391,8 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
             qid_m = QID_RE.search(sub_info)
             qid = qid_m.group(1) if qid_m else ""
             raw_tag = sub_info.split("·")[-1].strip() if "·" in sub_info else sub_info.strip()
-            cur_q = {
-                "level": q_level,
-                "qnum": int(qm.group(2)),
-                "qid": qid,
-                "raw_tag": raw_tag,
-                "lines": [],
-            }
+            cur_q = {"level": q_level, "qnum": int(qm.group(2)), "qid": qid, "raw_tag": raw_tag, "lines": []}
             continue
-
         if in_mat:
             cur_mat_lines.append(ln)
         elif cur_q is not None:
@@ -327,19 +404,15 @@ def parse_repo_markdown(md_text: str, mod_id: str, rel_path: str) -> list:
 
 def deduplicate_by_module(questions: list, max_per_module: int) -> dict:
     by_mod = defaultdict(list)
-    seen_qids = set()
-    seen_fp = set()
+    seen_qids, seen_fp = set(), set()
 
-    # Non-data modules: newest years first
     non_data = [q for q in questions if q["module"] != "data"]
-    non_data.sort(key=lambda q: q.get("year", 0), reverse=True)
+    # Prefer tier 1 (联考/执法) and newest years when deduplicating
+    non_data.sort(key=lambda q: (q.get("tier", 2), -q.get("year", 0)))
     for q in non_data:
         if q.get("qid") and q["qid"] in seen_qids:
             continue
-        fp = hashlib.sha1(
-            re.sub(r"[\s，。、；：！？\"'（）()【】<>/a-zA-Z0-9=_-]", "", q["stem"][:120] + "".join(q["options"])).encode("utf-8")
-        ).hexdigest()
-        # Only use text fingerprint when text has enough Chinese chars (skip image-only graphic reasoning)
+        fp = hashlib.sha1(re.sub(r"[\s，。、；：！？\"'（）()【】]", "", re.sub(r"<[^>]+>", "", q["stem"][:160]) + "".join(q["options"])).encode("utf-8")).hexdigest()
         use_fp = len(re.findall(r"[\u4e00-\u9fff]", q["stem"])) >= 12
         if use_fp and fp in seen_fp:
             continue
@@ -349,12 +422,11 @@ def deduplicate_by_module(questions: list, max_per_module: int) -> dict:
             seen_fp.add(fp)
         by_mod[q["module"]].append(q)
 
-    # Data Analysis: keep intact 4-5 question material groups
     groups = defaultdict(list)
     for q in questions:
         if q["module"] == "data" and q.get("groupId"):
             groups[q["groupId"]].append(q)
-    sorted_groups = sorted(groups.values(), key=lambda g: max(x.get("year", 0) for x in g), reverse=True)
+    sorted_groups = sorted(groups.values(), key=lambda g: (g[0].get("tier", 2), -max(x.get("year", 0) for x in g)))
     for grp in sorted_groups:
         if len(grp) < 4:
             continue
@@ -366,7 +438,6 @@ def deduplicate_by_module(questions: list, max_per_module: int) -> dict:
             seen_qids.add(first_qid)
         by_mod["data"].extend(grp[:5])
 
-    # Cap per module with balanced subtypes
     if max_per_module > 0:
         for mod_id, arr in list(by_mod.items()):
             if len(arr) <= max_per_module:
@@ -376,13 +447,12 @@ def deduplicate_by_module(questions: list, max_per_module: int) -> dict:
                 for q in arr:
                     buckets[q["subType"]].append(q)
                 kept = []
-                quota = max(120, max_per_module // max(1, len(buckets)))
+                quota = max(150, max_per_module // max(1, len(buckets)))
                 for st, bucket in buckets.items():
                     kept.extend(bucket[:quota])
                 by_mod[mod_id] = kept[:max_per_module]
             elif mod_id == "data":
-                kept = []
-                cur_g = None
+                kept, cur_g = [], None
                 for q in arr:
                     if len(kept) >= max_per_module and q.get("groupId") != cur_g:
                         break
@@ -394,13 +464,49 @@ def deduplicate_by_module(questions: list, max_per_module: int) -> dict:
     return by_mod
 
 
+def shard_into_buckets(mod_id: str, arr: list, bucket_size: int) -> list:
+    """
+    Split a module array into balanced ~bucket_size buckets so each bucket contains
+    a representative mix of subtypes and difficulty levels (and intact Data Analysis groups).
+    """
+    if not arr:
+        return []
+    if mod_id == "data":
+        groups = defaultdict(list)
+        for q in arr:
+            groups[q.get("groupId") or q["id"]].append(q)
+        grp_list = list(groups.values())
+        random.Random(2026).shuffle(grp_list)
+        buckets, cur = [], []
+        for g in grp_list:
+            if cur and len(cur) + len(g) > bucket_size:
+                buckets.append(cur)
+                cur = []
+            cur.extend(g)
+        if cur:
+            buckets.append(cur)
+        return buckets
+
+    # Interleave by (subType, diff) so every single bucket has balanced 3:5:2 difficulty & all subtypes!
+    shuffled = list(arr)
+    random.Random(2026).shuffle(shuffled)
+    num_buckets = max(1, (len(shuffled) + bucket_size - 1) // bucket_size)
+    buckets = [[] for _ in range(num_buckets)]
+    # Sort by (subType, diff) then round-robin deal into buckets
+    shuffled.sort(key=lambda q: (q["subType"], q.get("diff", 2)))
+    for i, q in enumerate(shuffled):
+        buckets[i % num_buckets].append(q)
+    return [b for b in buckets if b]
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Build static sharded question bank for GitHub Pages")
-    parser.add_argument("--repo-dir", required=True, help="Local path to cloned ERRRC/xingcezhenti repo")
-    parser.add_argument("--out-dir", default="dist", help="Output static site directory")
-    parser.add_argument("--min-year", type=int, default=2020, help="Minimum exam year to include (default 2020)")
-    parser.add_argument("--max-per-module", type=int, default=1200, help="Max deduplicated questions per module shard")
-    parser.add_argument("--min-total", type=int, default=100, help="Fail build if fewer than this many questions parsed")
+    parser = argparse.ArgumentParser(description="V2 ETL: Difficulty Calibration + Bucket Sharding + CI Quality Gate")
+    parser.add_argument("--repo-dir", required=True)
+    parser.add_argument("--out-dir", default="dist")
+    parser.add_argument("--min-year", type=int, default=2020)
+    parser.add_argument("--max-per-module", type=int, default=1200)
+    parser.add_argument("--bucket-size", type=int, default=160)
+    parser.add_argument("--min-total", type=int, default=500)
     args = parser.parse_args()
 
     repo_dir = Path(args.repo_dir).resolve()
@@ -426,34 +532,55 @@ def main():
 
     print(f"[ETL] Parsed {file_count} papers -> {len(all_questions)} raw questions")
     by_mod = deduplicate_by_module(all_questions, args.max_per_module)
+    calibrate_difficulties(by_mod)
 
     shards = []
     total = 0
+    leak_count = 0
+    print("\n[CI 质量与难度分布审计]")
     for mod_id in ("politics", "common", "verbal", "quant", "reasoning", "data"):
         arr = by_mod.get(mod_id, [])
-        fname = f"{mod_id}.json"
-        # Drop internal qid key to keep payload lean
-        clean_arr = [{k: v for k, v in q.items() if k != "qid"} for q in arr]
-        (data_dir / fname).write_text(json.dumps(clean_arr, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-        shards.append({"module": mod_id, "file": fname, "count": len(clean_arr)})
-        total += len(clean_arr)
-        print(f"  - {MODULE_LABELS[mod_id]} ({fname}): {len(clean_arr)} questions")
-        if mod_id in ("verbal", "reasoning"):
-            sub_cnt = Counter(q["subType"] for q in clean_arr)
-            for st, c in sorted(sub_cnt.items()):
-                print(f"      · {st}: {c}")
+        clean_arr = []
+        for q in arr:
+            for o in q["options"]:
+                if "✅" in o:
+                    leak_count += 1
+            clean_arr.append({k: v for k, v in q.items() if k not in ("qid", "_rawDiff")})
 
+        diff_cnt = Counter(q.get("diff", 2) for q in clean_arr)
+        tier_cnt = Counter(q.get("tier", 2) for q in clean_arr)
+        buckets = shard_into_buckets(mod_id, clean_arr, args.bucket_size)
+        for bi, b in enumerate(buckets):
+            fname = f"{mod_id}_{bi}.json"
+            (data_dir / fname).write_text(json.dumps(b, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+            shards.append({"module": mod_id, "file": fname, "count": len(b)})
+
+        total += len(clean_arr)
+        print(f"  - {MODULE_LABELS[mod_id]}: {len(clean_arr)} 题 ({len(buckets)} 桶) | 难度 基础:{diff_cnt[1]} 中等:{diff_cnt[2]} 偏难:{diff_cnt[3]} | 联考优先T1:{tier_cnt[1]}")
+
+    # CI Quality Gate Assertions
+    if leak_count > 0:
+        sys.exit(f"[CI GATE FAIL] Detected {leak_count} unstripped ✅ answer leaks!")
     if total < args.min_total:
-        sys.exit(f"[ERROR] Only parsed {total} questions (< min-total {args.min_total}). Aborting deploy!")
+        sys.exit(f"[CI GATE FAIL] Only {total} questions parsed (< min-total {args.min_total}). Aborting deploy!")
 
     build_id = time.strftime("%Y%m%d%H%M%S")
     manifest = {"buildId": build_id, "totalQuestions": total, "shards": shards}
     (data_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    # Copy index.html into dist/ and swap runtime Tailwind CDN for pre-compiled static ./tailwind.css if present
     root_index = Path("index.html")
     if root_index.is_file():
-        shutil.copy2(root_index, out_dir / "index.html")
-    print(f"[ETL] Success! Build {build_id}, total {total} deduplicated real questions in {out_dir}")
+        idx_html = root_index.read_text(encoding="utf-8")
+        if (out_dir / "tailwind.css").is_file():
+            idx_html = idx_html.replace(
+                '<script src="https://cdn.tailwindcss.com/3.4.17"></script>',
+                '<link rel="stylesheet" href="./tailwind.css" />',
+            )
+            print("[Build] Swapped runtime Tailwind CDN -> static minified ./tailwind.css")
+        (out_dir / "index.html").write_text(idx_html, encoding="utf-8")
+
+    print(f"\n[ETL] PASS! Build {build_id}, {total} real questions across {len(shards)} lazy buckets.")
 
 
 if __name__ == "__main__":

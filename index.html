@@ -201,18 +201,40 @@
       70% { opacity: 0.95; filter: blur(0.4px); transform: translateY(2px) scale(1.02); }
       100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
     }
+    .cal-char { will-change: transform, opacity; }
     .cal-char.cal-revealed {
-      animation: inkFloat 5.6s ease-in-out infinite;
+      animation: inkBreath 6.4s ease-in-out infinite;
       opacity: 1;
       filter: blur(0);
+      transform: translate3d(0, 0, 0);
     }
-    @keyframes inkFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
+    @keyframes inkBreath {
+      0%, 100% {
+        opacity: 0.96;
+        text-shadow: 0 2px 10px rgba(255,255,255,0.85), 0 0 0 rgba(158,34,32,0);
+      }
+      50% {
+        opacity: 0.78;
+        text-shadow: 0 2px 16px rgba(255,255,255,0.98), 0 0 14px rgba(158,34,32,0.22);
+      }
+    }
+    .poem-col.poem-crimson .cal-char.cal-revealed {
+      animation-name: crimsonBreath;
+    }
+    @keyframes crimsonBreath {
+      0%, 100% {
+        opacity: 1;
+        text-shadow: 0 2px 14px rgba(255,255,255,0.92), 0 0 10px rgba(158,34,32,0.12);
+      }
+      50% {
+        opacity: 0.86;
+        text-shadow: 0 2px 18px rgba(255,245,235,1), 0 0 22px rgba(194,39,35,0.34);
+      }
     }
     .cal-char:hover {
       animation: none !important;
-      transform: translateY(-7px) scale(1.24) rotate(-3deg) !important;
+      opacity: 1 !important;
+      transform: translate3d(0, -6px, 0) scale(1.2) rotate(-2.5deg) !important;
       color: #9e2220 !important;
       text-shadow: 0 6px 18px rgba(158,34,32,0.34), 0 0 12px rgba(255,244,230,0.95) !important;
       z-index: 10;
@@ -625,6 +647,42 @@
               <button id="btn-export-backup-s" class="px-3.5 py-1.5 rounded-lg bg-white border border-[#d8cbb8] text-[#1b2e47] hover:bg-slate-50 text-xs font-medium">导出备份</button>
               <button id="btn-import-backup-s" class="px-3.5 py-1.5 rounded-lg bg-[#1b2e47] hover:bg-[#243d5e] text-white text-xs font-medium">恢复备份</button>
             </div>
+          </div>
+        </div>
+
+        <div id="admin-panel-box" class="hidden rounded-xl bg-white border-2 border-[#962925]/30 p-4 space-y-3 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#eee5d8] pb-2.5">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-[#962925] text-white text-[10px] font-bold">管理员</span>
+                <span class="font-bold text-sm text-[#1b2e47]">考生账号管理中心</span>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-0.5">管理已注册考生账号、新增账号、重置密码或启停权限</div>
+            </div>
+            <button id="btn-admin-add-user" class="px-3 py-1.5 rounded-lg bg-[#1b2e47] hover:bg-[#243d5e] text-white text-xs font-medium">+ 新增考生账号</button>
+          </div>
+          <div id="admin-add-form-wrap" class="hidden rounded-lg bg-[#faf7f2] border border-[#e9dfd0] p-3">
+            <form id="form-admin-add" class="grid sm:grid-cols-4 gap-2" autocomplete="off">
+              <input id="adm-new-acc" type="text" required minlength="3" placeholder="新账号" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-xs" />
+              <input id="adm-new-name" type="text" required maxlength="16" placeholder="考生姓名" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-xs" />
+              <input id="adm-new-pwd" type="text" required minlength="6" placeholder="初始密码（>=6位）" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-xs" />
+              <button type="submit" class="px-3 py-1.5 rounded bg-[#962925] text-white text-xs font-medium">确认创建</button>
+            </form>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left border-collapse">
+              <thead>
+                <tr class="bg-[#faf7f2] border-b border-[#e3d9ca] text-slate-500">
+                  <th class="py-2 px-2.5">账号</th>
+                  <th class="py-2 px-2.5">姓名</th>
+                  <th class="py-2 px-2.5 text-center">角色</th>
+                  <th class="py-2 px-2.5 text-center">模考次数</th>
+                  <th class="py-2 px-2.5 text-center">状态</th>
+                  <th class="py-2 px-2.5 text-right">管理操作</th>
+                </tr>
+              </thead>
+              <tbody id="admin-accounts-tbody" class="divide-y divide-[#f0e9dd]"></tbody>
+            </table>
           </div>
         </div>
 
@@ -1213,6 +1271,7 @@
       if (pane === 'home' || pane === 'blueprint') renderLobby();
       if (pane === 'mistakes') renderMistakesPane();
       if (pane === 'history') renderHistoryPane();
+      if (pane === 'settings') renderAdminPanel();
     }
     document.getElementById('btn-nav-lobby')?.addEventListener('click', () => switchLobbyPane('home'));
     document.getElementById('btn-nav-notice')?.addEventListener('click', () => switchLobbyPane('notice'));
@@ -2064,6 +2123,13 @@
       const dispName = currentUser.name || currentUser.account;
       document.getElementById('user-avatar-badge').textContent = dispName.slice(0, 1);
       document.getElementById('user-display-name').textContent = dispName;
+      const sp = document.getElementById('user-sync-pill');
+      if (sp) {
+        if (currentUser.role === 'admin') { sp.textContent = '管理员'; sp.className = 'px-1.5 py-0.5 rounded bg-red-50 text-[#962925] border border-[#962925]/30 text-[10px] font-semibold shrink-0'; }
+        else if (currentUser.guest) { sp.textContent = '游客'; sp.className = 'px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 text-[10px] shrink-0'; }
+        else { sp.textContent = '考生'; sp.className = 'px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] shrink-0'; }
+      }
+      renderAdminPanel();
       document.getElementById('user-account-sub').textContent = currentUser.guest ? '游客模式（数据保存在本机）' : `账号：${currentUser.account}`;
       document.getElementById('dash-exam-cnt').textContent = state.history.length;
       document.getElementById('dash-mistake-cnt').textContent = state.mistakes.length;
@@ -2099,14 +2165,17 @@
       const accounts = (await dbGet('accounts_registry', {})) || {};
       if (accounts[account]) return showToast('该账号已注册，请直接登录', 'warning');
       const salt = Math.random().toString(36).slice(2, 10);
+      const isFirstAdmin = Object.keys(accounts).length === 0;
       accounts[account] = {
         account, name, salt,
+        role: isFirstAdmin ? 'admin' : 'user',
+        disabled: false,
         pwdHash: await sha256Hex(salt + ':' + pwd),
         hintHash: await sha256Hex(salt + ':hint:' + hint),
         createdAt: new Date().toISOString()
       };
       await dbSet('accounts_registry', accounts);
-      currentUser = { account, name, guest: false };
+      currentUser = { account, name, role: accounts[account].role, guest: false };
       await dbSet('current_user', currentUser);
       await loadCurrentUserRecords();
       showToast(`欢迎 ${name}，注册并登录成功`);
@@ -2119,9 +2188,15 @@
       const accounts = (await dbGet('accounts_registry', {})) || {};
       const rec = accounts[account];
       if (!rec) return showToast('账号不存在，请先点击右下角「注册账号」', 'warning');
+      if (rec.disabled) return showToast('该账号已被管理员禁用，请联系管理员', 'error');
       const h = await sha256Hex(rec.salt + ':' + pwd);
       if (h !== rec.pwdHash) return showToast('密码错误，请重试或点击「忘记密码」', 'error');
-      currentUser = { account: rec.account, name: rec.name, guest: false };
+      // Auto-promote earliest account to admin if registry has no admin yet
+      if (!Object.values(accounts).some(a => a.role === 'admin')) {
+        rec.role = 'admin';
+        await dbSet('accounts_registry', accounts);
+      }
+      currentUser = { account: rec.account, name: rec.name, role: rec.role || 'user', guest: false };
       await dbSet('current_user', currentUser);
       await loadCurrentUserRecords();
       showToast(`欢迎回来，${rec.name}`);
@@ -2168,6 +2243,87 @@
       const st = document.getElementById('cloud-sync-status');
       if (st) { st.textContent = '本地账号模式'; st.className = 'px-2 py-0.5 rounded text-[11px] bg-slate-200 text-slate-600'; }
       showToast('已切换回本地账号模式');
+    });
+
+    async function renderAdminPanel() {
+      const box = document.getElementById('admin-panel-box');
+      if (!box) return;
+      const isAdmin = currentUser && !currentUser.guest && currentUser.role === 'admin';
+      box.classList.toggle('hidden', !isAdmin);
+      if (!isAdmin) return;
+      const accounts = (await dbGet('accounts_registry', {})) || {};
+      const list = Object.values(accounts).sort((a, b) => (a.role === 'admin' ? -1 : 1));
+      const tbody = document.getElementById('admin-accounts-tbody');
+      const rows = await Promise.all(list.map(async rec => {
+        const hist = await dbGet(`u_${rec.account}:history`, []);
+        const cnt = Array.isArray(hist) ? hist.length : 0;
+        const isSelf = rec.account === currentUser.account;
+        return `<tr class="hover:bg-[#faf7f2]">
+          <td class="py-2 px-2.5 font-mono text-slate-700">${escapeHtml(rec.account)}</td>
+          <td class="py-2 px-2.5 font-medium text-[#1b2e47]">${escapeHtml(rec.name)}</td>
+          <td class="py-2 px-2.5 text-center">${rec.role === 'admin' ? '<span class="px-1.5 py-0.5 rounded bg-red-50 text-[#962925] text-[10px] font-semibold">管理员</span>' : '<span class="text-slate-500">考生</span>'}</td>
+          <td class="py-2 px-2.5 text-center font-mono">${cnt}</td>
+          <td class="py-2 px-2.5 text-center">${rec.disabled ? '<span class="text-red-600">已禁用</span>' : '<span class="text-emerald-700">正常</span>'}</td>
+          <td class="py-2 px-2.5 text-right space-x-1.5 whitespace-nowrap">
+            <button data-adm-reset="${escapeHtml(rec.account)}" class="text-[#1b4d89] hover:underline">重置密码</button>
+            ${isSelf ? '<span class="text-slate-400">当前</span>' : `
+              <button data-adm-toggle="${escapeHtml(rec.account)}" class="text-amber-700 hover:underline">${rec.disabled ? '启用' : '禁用'}</button>
+              <button data-adm-del="${escapeHtml(rec.account)}" class="text-red-600 hover:underline">删除</button>
+            `}
+          </td>
+        </tr>`;
+      }));
+      tbody.innerHTML = rows.join('') || '<tr><td colspan="6" class="py-4 text-center text-slate-400">暂无注册账号</td></tr>';
+
+      tbody.querySelectorAll('[data-adm-reset]').forEach(b => b.addEventListener('click', () => {
+        const acc = b.dataset.admReset;
+        openModal(`重置密码 · ${acc}`, `<div class="space-y-2"><p class="text-xs text-slate-600">为账号 <strong>${escapeHtml(acc)}</strong> 设置新密码（至少 6 位）：</p><input id="adm-modal-pwd" type="text" placeholder="输入新密码" class="w-full px-3 py-2 rounded border border-slate-300 text-sm" /></div>`, [
+          { label: '取消' },
+          { label: '确认重置', primary: true, onClick: async () => {
+            const np = document.getElementById('adm-modal-pwd')?.value || '';
+            if (np.length < 6) return showToast('密码至少 6 位', 'warning');
+            const reg = (await dbGet('accounts_registry', {})) || {};
+            if (reg[acc]) { reg[acc].pwdHash = await sha256Hex(reg[acc].salt + ':' + np); await dbSet('accounts_registry', reg); showToast(`已重置 ${acc} 的密码`); }
+          }}
+        ]);
+      }));
+      tbody.querySelectorAll('[data-adm-toggle]').forEach(b => b.addEventListener('click', async () => {
+        const acc = b.dataset.admToggle;
+        const reg = (await dbGet('accounts_registry', {})) || {};
+        if (reg[acc]) { reg[acc].disabled = !reg[acc].disabled; await dbSet('accounts_registry', reg); renderAdminPanel(); showToast(reg[acc].disabled ? `已禁用 ${acc}` : `已启用 ${acc}`); }
+      }));
+      tbody.querySelectorAll('[data-adm-del]').forEach(b => b.addEventListener('click', () => {
+        const acc = b.dataset.admDel;
+        openModal('删除账号', `确认删除考生账号「${escapeHtml(acc)}」？删除后该账号将无法登录。`, [
+          { label: '取消' },
+          { label: '确认删除', primary: true, onClick: async () => {
+            const reg = (await dbGet('accounts_registry', {})) || {};
+            delete reg[acc];
+            await dbSet('accounts_registry', reg);
+            renderAdminPanel();
+            showToast(`已删除账号 ${acc}`);
+          }}
+        ]);
+      }));
+    }
+
+    document.getElementById('btn-admin-add-user')?.addEventListener('click', () => {
+      document.getElementById('admin-add-form-wrap')?.classList.toggle('hidden');
+    });
+    document.getElementById('form-admin-add')?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const acc = document.getElementById('adm-new-acc').value.trim();
+      const name = document.getElementById('adm-new-name').value.trim();
+      const pwd = document.getElementById('adm-new-pwd').value;
+      const reg = (await dbGet('accounts_registry', {})) || {};
+      if (reg[acc]) return showToast('该账号已存在', 'warning');
+      const salt = Math.random().toString(36).slice(2, 10);
+      reg[acc] = { account: acc, name, salt, role: 'user', disabled: false, pwdHash: await sha256Hex(salt + ':' + pwd), hintHash: await sha256Hex(salt + ':hint:admin'), createdAt: new Date().toISOString() };
+      await dbSet('accounts_registry', reg);
+      e.target.reset();
+      document.getElementById('admin-add-form-wrap')?.classList.add('hidden');
+      renderAdminPanel();
+      showToast(`已创建考生账号 ${acc}`);
     });
 
     (async () => {

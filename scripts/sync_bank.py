@@ -584,6 +584,10 @@ def main():
             )
             print("[Build] Swapped runtime Tailwind CDN -> static minified ./tailwind.css")
         (out_dir / "index.html").write_text(idx_html, encoding="utf-8")
+    root_assets = Path("assets")
+    if root_assets.is_dir():
+        shutil.copytree(root_assets, out_dir / "assets", dirs_exist_ok=True)
+        print("[Build] Copied assets/ -> dist/assets/")
 
     print(f"\n[ETL] PASS! Build {build_id}, {total} real questions across {len(shards)} lazy buckets.")
 

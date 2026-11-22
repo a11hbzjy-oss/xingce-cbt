@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;600;700;900&family=Zhi+Mang+Xing&display=swap" rel="stylesheet" />
   <style>
     :root {
       --navy-deep: #1b2e47;
@@ -137,6 +137,125 @@
     @media (max-width: 640px) {
       .exam-std-table th, .exam-std-table td { padding: 5px 3px; font-size: 12px; }
     }
+
+    /* === V3 Ink-Wash Calligraphy Homepage & Frosted Glass UI === */
+    .ink-hero {
+      position: relative;
+      min-height: 100vh;
+      background: #e9eff4 url('./assets/hero-bg.jpg') center center / cover no-repeat;
+      overflow: hidden;
+    }
+    .ink-hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 42% 48%, rgba(255,255,255,0.22) 0%, rgba(235,242,248,0.08) 58%, rgba(30,45,62,0.12) 100%);
+      pointer-events: none;
+    }
+    #petal-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .poem-stage {
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: flex-start;
+      justify-content: center;
+      gap: clamp(0.45rem, 1.5vw, 1.45rem);
+      font-family: 'Ma Shan Zheng', 'Zhi Mang Xing', 'STKaiti', 'KaiTi', 'FangSong', serif;
+      user-select: none;
+      position: relative;
+      z-index: 5;
+    }
+    .poem-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.12;
+      font-size: clamp(1.75rem, 3.1vw, 3.05rem);
+      color: #1f2429;
+      text-shadow: 0 2px 10px rgba(255,255,255,0.85);
+    }
+    .poem-col.poem-crimson {
+      color: #9e2220;
+      font-size: clamp(2.05rem, 3.65vw, 3.55rem);
+      text-shadow: 0 2px 14px rgba(255,255,255,0.92), 0 0 24px rgba(158,34,32,0.14);
+    }
+    .cal-char {
+      display: inline-block;
+      padding: 0.04em 0.06em;
+      opacity: 0;
+      filter: blur(6px);
+      transform: translateY(-16px) scale(0.92);
+      animation: inkReveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), color 0.25s ease, text-shadow 0.28s ease, filter 0.25s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    @keyframes inkReveal {
+      0% { opacity: 0; filter: blur(6px); transform: translateY(-16px) scale(0.92); }
+      70% { opacity: 0.95; filter: blur(0.4px); transform: translateY(2px) scale(1.02); }
+      100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+    }
+    .cal-char.cal-revealed {
+      animation: inkFloat 5.6s ease-in-out infinite;
+      opacity: 1;
+      filter: blur(0);
+    }
+    @keyframes inkFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    .cal-char:hover {
+      animation: none !important;
+      transform: translateY(-7px) scale(1.24) rotate(-3deg) !important;
+      color: #9e2220 !important;
+      text-shadow: 0 6px 18px rgba(158,34,32,0.34), 0 0 12px rgba(255,244,230,0.95) !important;
+      z-index: 10;
+    }
+    .poem-col.poem-crimson .cal-char:hover {
+      color: #c22723 !important;
+      text-shadow: 0 8px 22px rgba(194,39,35,0.42), 0 0 16px rgba(255,240,220,1) !important;
+    }
+    .cal-char.cal-neighbor {
+      transform: translateY(-3px) scale(1.08) !important;
+      text-shadow: 0 3px 12px rgba(158,34,32,0.18), 0 0 8px rgba(255,255,255,0.9) !important;
+    }
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.80);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      box-shadow: 0 12px 36px rgba(27, 46, 71, 0.11), 0 2px 6px rgba(27, 46, 71, 0.05);
+    }
+    .glass-tile {
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      box-shadow: 0 6px 20px rgba(27, 46, 71, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+    .glass-tile:hover {
+      background: rgba(255, 255, 255, 0.94);
+      border-color: rgba(158, 34, 32, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px rgba(158, 34, 32, 0.12);
+    }
+    .crimson-btn {
+      background: linear-gradient(135deg, #a62b28 0%, #8c211e 100%);
+      transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+    }
+    .crimson-btn:hover {
+      filter: brightness(1.06);
+      box-shadow: 0 6px 18px rgba(150, 41, 37, 0.32);
+      transform: translateY(-1px);
+    }
+
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -177,110 +296,249 @@
   </div>
 
   <!-- ==================== VIEW 1: 首页与子页面（纯净产品级 UI，零技术杂音） ==================== -->
-  <div id="view-lobby" class="min-h-screen flex flex-col">
+    <div id="view-lobby" class="min-h-screen flex flex-col">
 
-    <!-- Sub-view A: 1:1 司法行政首页 -->
-    <div id="lobby-home-pane" class="hero-parchment min-h-screen flex flex-col justify-between relative select-none">
-      <div class="hero-grain"></div>
-      <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1440 810" preserveAspectRatio="none" aria-hidden="true">
-        <defs>
-          <linearGradient id="g-left-gray" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#9ca2a6" stop-opacity="0.72"/><stop offset="100%" stop-color="#c4c3bd" stop-opacity="0.48"/></linearGradient>
-          <linearGradient id="g-left-slate" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4e637a"/><stop offset="100%" stop-color="#7c8a96" stop-opacity="0.82"/></linearGradient>
-          <linearGradient id="g-left-navy" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#223650"/><stop offset="100%" stop-color="#304866"/></linearGradient>
-          <linearGradient id="g-right-rose" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#b96d60" stop-opacity="0.78"/><stop offset="100%" stop-color="#d7a796" stop-opacity="0.55"/></linearGradient>
-          <linearGradient id="g-right-red" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#9f2e2a"/><stop offset="100%" stop-color="#b8413a"/></linearGradient>
-          <linearGradient id="g-right-dark" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6c1e1d"/><stop offset="100%" stop-color="#872624"/></linearGradient>
-          <linearGradient id="g-bottom-navy" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1c2f48"/><stop offset="50%" stop-color="#192b42"/><stop offset="100%" stop-color="#1d314b"/></linearGradient>
-        </defs>
-        <polygon points="0,58 585,685 0,685" fill="url(#g-left-gray)"/>
-        <polygon points="0,272 520,665 0,665" fill="url(#g-left-slate)"/>
-        <polygon points="0,378 465,645 0,645" fill="url(#g-left-navy)"/>
-        <polygon points="0,486 410,632 0,632" fill="#9ea6ae" fill-opacity="0.55"/>
-        <polygon points="1440,36 820,695 1440,695" fill="url(#g-right-rose)"/>
-        <polygon points="1440,210 735,705 1440,705" fill="url(#g-right-red)"/>
-        <polygon points="1440,485 615,725 1440,725" fill="url(#g-right-dark)"/>
-        <polygon points="0,552 680,682 1440,612 1440,810 0,810" fill="url(#g-bottom-navy)"/>
-      </svg>
+    <!-- ==================== Sub-view A: 水墨咏梅动态书法首页 + 考生登录 ==================== -->
+    <div id="lobby-home-pane" class="ink-hero flex flex-col justify-center">
+      <canvas id="petal-canvas" aria-hidden="true"></canvas>
 
-      <!-- Clean Candidate-Only Top-Right Navigation -->
-      <div class="relative z-20 flex items-center justify-end gap-2 px-4 sm:px-8 pt-4 sm:pt-5">
-        <button id="btn-hero-blueprint" class="hero-pill-nav px-3.5 py-1.5 rounded-full text-xs font-medium transition">专项练习</button>
-        <button id="btn-hero-mistakes" class="hero-pill-nav px-3.5 py-1.5 rounded-full text-xs font-medium transition flex items-center gap-1">
-          <span>错题收藏</span>
-          <span id="hero-mistake-cnt" class="hidden px-1.5 rounded-full bg-[#962925] text-white text-[10px]">0</span>
-        </button>
-        <button id="btn-hero-history" class="hero-pill-nav px-3.5 py-1.5 rounded-full text-xs font-medium transition">成绩档案</button>
+      <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-8 lg:py-10 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-10">
+
+        <!-- Left/Center: 动态竖排书法《卜算子·咏梅》 -->
+        <div class="flex-1 flex flex-col items-center justify-center w-full py-2 lg:py-6">
+          <div id="poem-stage" class="poem-stage" aria-label="卜算子·咏梅"></div>
+        </div>
+
+        <!-- Right: 毛玻璃考生登录卡片 + 2x2 功能导航卡片 -->
+        <div class="w-full max-w-[390px] shrink-0 space-y-4">
+
+          <!-- 1. 考生登录 / 注册 / 已登录卡片 -->
+          <div class="glass-panel rounded-2xl p-6 sm:p-7">
+
+            <!-- 未登录：登录表单 -->
+            <div id="auth-login-box">
+              <div class="flex items-center justify-center gap-3 mb-5">
+                <span class="h-px w-10 bg-gradient-to-r from-transparent to-[#962925]/60"></span>
+                <h2 class="text-lg font-bold tracking-widest text-[#962925]">考生登录</h2>
+                <span class="h-px w-10 bg-gradient-to-l from-transparent to-[#962925]/60"></span>
+              </div>
+              <form id="form-login" class="space-y-3.5" autocomplete="off">
+                <div class="relative">
+                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                  </span>
+                  <input id="login-account" type="text" required placeholder="请输入身份证号 / 账号" class="w-full pl-10 pr-3.5 py-2.5 rounded-lg bg-white/85 border border-slate-200 focus:border-[#962925] focus:ring-2 focus:ring-[#962925]/15 outline-none text-sm text-slate-800 placeholder:text-slate-400" />
+                </div>
+                <div class="relative">
+                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                  </span>
+                  <input id="login-password" type="password" required placeholder="请输入密码" class="w-full pl-10 pr-10 py-2.5 rounded-lg bg-white/85 border border-slate-200 focus:border-[#962925] focus:ring-2 focus:ring-[#962925]/15 outline-none text-sm text-slate-800 placeholder:text-slate-400" />
+                  <button type="button" id="btn-toggle-pwd" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" aria-label="显示密码">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  </button>
+                </div>
+                <button type="submit" class="crimson-btn w-full py-2.5 rounded-lg text-white font-semibold tracking-widest text-sm shadow">登 录</button>
+              </form>
+              <div class="flex items-center justify-between text-xs mt-3.5 px-0.5">
+                <button type="button" id="btn-go-reset" class="text-[#962925] hover:underline">忘记密码?</button>
+                <button type="button" id="btn-guest-enter" class="text-slate-500 hover:text-[#1b2e47]">游客直接开考</button>
+                <button type="button" id="btn-go-register" class="text-[#962925] font-medium hover:underline">注册账号</button>
+              </div>
+            </div>
+
+            <!-- 注册表单 -->
+            <div id="auth-register-box" class="hidden">
+              <div class="flex items-center justify-center gap-3 mb-4">
+                <span class="h-px w-8 bg-gradient-to-r from-transparent to-[#962925]/60"></span>
+                <h2 class="text-lg font-bold tracking-widest text-[#962925]">注册考生账号</h2>
+                <span class="h-px w-8 bg-gradient-to-l from-transparent to-[#962925]/60"></span>
+              </div>
+              <form id="form-register" class="space-y-2.5" autocomplete="off">
+                <input id="reg-account" type="text" required minlength="3" placeholder="设置登录账号（身份证号 / 手机号 / 用户名）" class="w-full px-3.5 py-2 rounded-lg bg-white/85 border border-slate-200 focus:border-[#962925] outline-none text-sm" />
+                <input id="reg-name" type="text" required maxlength="16" placeholder="考生姓名 / 昵称" class="w-full px-3.5 py-2 rounded-lg bg-white/85 border border-slate-200 focus:border-[#962925] outline-none text-sm" />
+                <input id="reg-password" type="password" required minlength="6" placeholder="设置密码（至少 6 位）" class="w-full px-3.5 py-2 rounded-lg bg-white/85 border border-slate-200 focus:border-[#962925] outline-none text-sm" />
+                <input id="reg-hint" type="text" required placeholder="密保口令（用于找回密码，如毕业院校）" class="w-full px-3.5 py-2 rounded-lg bg-white/85 border border-slate-200 focus:border-[#962925] outline-none text-sm" />
+                <button type="submit" class="crimson-btn w-full py-2.5 rounded-lg text-white font-semibold text-sm shadow">立即注册并登录</button>
+              </form>
+              <div class="text-center mt-3">
+                <button type="button" id="btn-back-login-1" class="text-xs text-[#962925] hover:underline">已有账号？返回登录</button>
+              </div>
+            </div>
+
+            <!-- 找回密码表单 -->
+            <div id="auth-reset-box" class="hidden">
+              <div class="flex items-center justify-center gap-3 mb-4">
+                <span class="h-px w-8 bg-gradient-to-r from-transparent to-[#962925]/60"></span>
+                <h2 class="text-lg font-bold tracking-widest text-[#962925]">重置密码</h2>
+                <span class="h-px w-8 bg-gradient-to-l from-transparent to-[#962925]/60"></span>
+              </div>
+              <form id="form-reset" class="space-y-2.5" autocomplete="off">
+                <input id="reset-account" type="text" required placeholder="请输入注册时的账号" class="w-full px-3.5 py-2 rounded-lg bg-white/85 border border-slate-200 focus:border-[#962925] outline-none text-sm" />
+                <input id="reset-hint" type="text" required placeholder="请输入注册时设置的密保口令" class="w-full px-3.5 py-2 rounded-lg bg-white/85 border border-slate-200 focus:border-[#962925] outline-none text-sm" />
+                <input id="reset-password" type="password" required minlength="6" placeholder="设置新密码（至少 6 位）" class="w-full px-3.5 py-2 rounded-lg bg-white/85 border border-slate-200 focus:border-[#962925] outline-none text-sm" />
+                <button type="submit" class="crimson-btn w-full py-2.5 rounded-lg text-white font-semibold text-sm shadow">确认重置密码</button>
+              </form>
+              <div class="text-center mt-3">
+                <button type="button" id="btn-back-login-2" class="text-xs text-[#962925] hover:underline">返回登录</button>
+              </div>
+            </div>
+
+            <!-- 已登录状态：直接开考工作台 -->
+            <div id="auth-logged-box" class="hidden">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div id="user-avatar-badge" class="w-11 h-11 rounded-full bg-gradient-to-br from-[#962925] to-[#1b2e47] text-white font-bold flex items-center justify-center text-base shrink-0 shadow-sm">考</div>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <span id="user-display-name" class="font-bold text-[#1b2e47] text-sm truncate">考生</span>
+                      <span id="user-sync-pill" class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] shrink-0">已登录</span>
+                    </div>
+                    <div id="user-account-sub" class="text-[11px] text-slate-500 font-mono truncate">账号：--</div>
+                  </div>
+                </div>
+                <button type="button" id="btn-logout" class="text-xs text-slate-500 hover:text-[#962925] px-2 py-1 rounded hover:bg-red-50/70 shrink-0">退出</button>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+                <div class="rounded-lg bg-white/75 border border-slate-200/70 py-2">
+                  <div id="dash-exam-cnt" class="font-bold font-mono text-base text-[#1b2e47]">0</div>
+                  <div class="text-[10px] text-slate-500">已完成模考</div>
+                </div>
+                <div class="rounded-lg bg-white/75 border border-slate-200/70 py-2">
+                  <div id="dash-best-score" class="font-bold font-mono text-base text-[#962925]">--</div>
+                  <div class="text-[10px] text-slate-500">最高模考分</div>
+                </div>
+                <div class="rounded-lg bg-white/75 border border-slate-200/70 py-2">
+                  <div id="dash-mistake-cnt" class="font-bold font-mono text-base text-amber-700">0</div>
+                  <div class="text-[10px] text-slate-500">待消灭错题</div>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <button id="btn-start-full-exam" class="crimson-btn w-full py-2.5 rounded-lg text-white font-semibold tracking-wider text-sm shadow flex items-center justify-center gap-1.5">
+                  <span>开始全真模考</span>
+                  <span class="text-base leading-none">›</span>
+                </button>
+                <button id="btn-resume-saved" class="hidden w-full py-2 rounded-lg bg-[#1b2e47] hover:bg-[#243d5e] text-white text-xs font-medium transition">继续上次未完成的考试</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 2×2 毛玻璃快捷功能区（1:1 还原设计图布局） -->
+          <div class="grid grid-cols-2 gap-3">
+            <button id="btn-tile-notice" class="glass-tile rounded-xl px-3.5 py-3.5 text-left flex items-center gap-2.5 group">
+              <div class="w-9 h-9 rounded-lg bg-[#962925]/10 text-[#962925] flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-bold text-[#1b2e47] truncate">考试须知</div>
+                <div class="text-[11px] text-slate-500 truncate">了解考试相关信息</div>
+              </div>
+              <span class="text-slate-400 group-hover:text-[#962925] text-sm">›</span>
+            </button>
+
+            <button id="btn-tile-practice" class="glass-tile rounded-xl px-3.5 py-3.5 text-left flex items-center gap-2.5 group">
+              <div class="w-9 h-9 rounded-lg bg-[#962925]/10 text-[#962925] flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-bold text-[#1b2e47] truncate">模拟练习</div>
+                <div class="text-[11px] text-slate-500 truncate">熟悉考试题型</div>
+              </div>
+              <span class="text-slate-400 group-hover:text-[#962925] text-sm">›</span>
+            </button>
+
+            <button id="btn-tile-analysis" class="glass-tile rounded-xl px-3.5 py-3.5 text-left flex items-center gap-2.5 group relative">
+              <div class="w-9 h-9 rounded-lg bg-[#962925]/10 text-[#962925] flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-bold text-[#1b2e47] truncate">成绩分析</div>
+                <div class="text-[11px] text-slate-500 truncate">查看练习报告</div>
+              </div>
+              <span id="hero-mistake-cnt" class="hidden absolute top-1.5 right-2 px-1.5 py-0.2 rounded-full bg-[#962925] text-white text-[10px] font-mono">0</span>
+              <span class="text-slate-400 group-hover:text-[#962925] text-sm">›</span>
+            </button>
+
+            <button id="btn-tile-settings" class="glass-tile rounded-xl px-3.5 py-3.5 text-left flex items-center gap-2.5 group">
+              <div class="w-9 h-9 rounded-lg bg-[#962925]/10 text-[#962925] flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-bold text-[#1b2e47] truncate">系统设置</div>
+                <div class="text-[11px] text-slate-500 truncate">个性化配置</div>
+              </div>
+              <span class="text-slate-400 group-hover:text-[#962925] text-sm">›</span>
+            </button>
+          </div>
+        </div>
       </div>
-
-      <!-- Pure Ceremonial Hero -->
-      <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-8 text-center -mt-4 sm:-mt-8">
-        <div class="flex items-center justify-center gap-3 sm:gap-5 mb-5 sm:mb-7 w-full max-w-xl">
-          <span class="h-[1px] flex-1 max-w-[72px] sm:max-w-[110px] bg-[#213752]/55"></span>
-          <span class="text-[#213752] text-xs sm:text-base font-medium tracking-[0.42em] whitespace-nowrap">以考促学&nbsp;&nbsp;以练致行</span>
-          <span class="h-[1px] flex-1 max-w-[72px] sm:max-w-[110px] bg-[#213752]/55"></span>
-        </div>
-
-        <h2 class="hero-sub-title mb-2 sm:mb-3 max-w-4xl">司法行政系统面向中央司法警官学院毕业生招录公务员考试</h2>
-        <h1 class="hero-main-title mb-4 sm:mb-5">行测机考模拟系统</h1>
-
-        <div class="flex items-center justify-center gap-4 w-full max-w-2xl mb-8 sm:mb-10">
-          <div class="hero-star-line-left flex-1"></div>
-          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#962925] shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/>
-          </svg>
-          <div class="hero-star-line-right flex-1"></div>
-        </div>
-
-        <div class="flex flex-col items-center gap-3">
-          <button id="btn-enter-prep" class="hero-cta-btn px-12 sm:px-16 py-3.5 sm:py-4 rounded-xl text-base sm:text-xl font-semibold tracking-[0.18em] flex items-center gap-2.5 cursor-pointer">
-            <span>开始考试</span>
-            <svg class="w-4 h-4 sm:w-5 sm:h-5 opacity-90" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-          </button>
-
-          <button id="btn-resume-saved" class="hidden px-6 py-2 rounded-full bg-[#1b2e47] hover:bg-[#243d5e] text-[#f5ebdc] text-xs sm:text-sm font-medium shadow-md transition">
-            恢复上次未完考试
-          </button>
-        </div>
-      </div>
-
-      <footer class="relative z-10 py-5 sm:py-7 px-4 flex items-center justify-center gap-3 sm:gap-5 text-[#e8decb]/90 text-[11px] sm:text-sm tracking-[0.35em]">
-        <span class="h-[1px] w-10 sm:w-20 bg-[#e8decb]/40"></span>
-        <span class="whitespace-nowrap">夯实基础 · 锤炼能力 · 迎接挑战</span>
-        <span class="h-[1px] w-10 sm:w-20 bg-[#e8decb]/40"></span>
-      </footer>
     </div>
 
-    <!-- Clean Sub-Page Header -->
-    <header id="subpage-header" class="hidden bg-[#1b2e47] text-[#f5ebdc] shadow-sm sticky top-0 z-20 border-b-2 border-[#962925]">
-      <div class="max-w-6xl mx-auto px-3 sm:px-5 h-14 flex items-center justify-between gap-2">
-        <button id="btn-nav-lobby" class="px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-xs font-semibold shrink-0">← 返回首页</button>
-        <div class="flex items-center gap-1.5 text-xs">
-          <button id="btn-nav-blueprint" class="px-3 py-1.5 rounded whitespace-nowrap">专项练习</button>
-          <button id="btn-nav-mistakes" class="px-3 py-1.5 rounded whitespace-nowrap">错题收藏</button>
-          <button id="btn-nav-history" class="px-3 py-1.5 rounded whitespace-nowrap">成绩档案</button>
+    <!-- ==================== 二级页面统一顶部导航栏 ==================== -->
+    <header id="subpage-header" class="hidden sticky top-0 z-30 bg-[#1b2e47] text-white shadow-md">
+      <div class="max-w-6xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <button id="btn-nav-lobby" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium flex items-center gap-1 shrink-0">← 返回首页</button>
+          <span class="hidden md:inline font-bold text-sm tracking-wide truncate text-slate-100">行测机考模拟系统</span>
+        </div>
+        <nav class="flex items-center gap-1 text-xs sm:text-sm overflow-x-auto">
+          <button id="btn-nav-notice" class="px-3 py-1.5 rounded hover:bg-white/15 whitespace-nowrap">考试须知</button>
+          <button id="btn-nav-blueprint" class="px-3 py-1.5 rounded hover:bg-white/15 whitespace-nowrap">模拟练习</button>
+          <button id="btn-nav-mistakes" class="px-3 py-1.5 rounded hover:bg-white/15 whitespace-nowrap">错题收藏</button>
+          <button id="btn-nav-history" class="px-3 py-1.5 rounded hover:bg-white/15 whitespace-nowrap">成绩分析</button>
+          <button id="btn-nav-settings" class="px-3 py-1.5 rounded hover:bg-white/15 whitespace-nowrap">系统设置</button>
+        </nav>
+        <div class="hidden sm:flex items-center gap-2 shrink-0">
+          <span id="nav-user-pill" class="text-xs text-slate-300 font-medium">未登录</span>
+          <button id="btn-nav-start-exam" class="px-3 py-1.5 rounded-lg bg-[#962925] hover:bg-[#ad302b] text-white text-xs font-semibold">全真模考</button>
         </div>
       </div>
     </header>
 
-    <!-- Sub-view B: 专项练习与考纲 -->
-    <main id="lobby-blueprint-pane" class="hidden flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 space-y-4">
-      <section class="bg-white rounded-xl border border-[#e3d9ca] overflow-hidden shadow-xs">
-        <div class="px-4 py-3 border-b border-[#e3d9ca] flex flex-wrap items-center justify-between gap-2 bg-[#faf7f2]">
-          <span class="font-bold text-sm text-[#1b2e47]">考试结构与单科限时专项（180 题 / 100 分 / 120 分钟）</span>
-          <div class="flex flex-wrap items-center gap-3">
-            <label class="inline-flex items-center gap-1.5 text-xs text-slate-600">
-              <span>模考难度</span>
-              <select id="opt-diff-profile" class="px-2 py-1 rounded border border-[#d8cbb8] bg-white text-[#1b2e47] text-xs font-medium">
-                <option value="standard" selected>标准联考（3:5:2）</option>
-                <option value="foundation">基础巩固（5:4:1）</option>
-                <option value="sprint">冲刺拔高（1:5:4）</option>
-              </select>
-            </label>
-            <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-slate-600">
-              <input id="opt-random-order" type="checkbox" checked class="rounded accent-[#962925]" />
-              <span>全真模考随机模块顺序</span>
-            </label>
+    <!-- ==================== Sub-view B: 考试须知 ==================== -->
+    <main id="lobby-notice-pane" class="hidden flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-6 space-y-5">
+      <div class="bg-white rounded-2xl border border-[#e3d9ca] shadow-sm p-5 sm:p-7 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#eee5d8] pb-4">
+          <div>
+            <h2 class="text-lg font-bold text-[#1b2e47]">司法行政系统招录公务员考试 · 机考须知</h2>
+            <p class="text-xs text-slate-500 mt-0.5">总题量 180 题 · 满分 100.0 分 · 总时长 120 分钟（分模块独立计时）</p>
           </div>
+          <button id="btn-notice-start" class="crimson-btn px-5 py-2 rounded-lg text-white text-xs sm:text-sm font-semibold">立即开始全真模考 ›</button>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4 text-xs sm:text-sm text-slate-700 leading-relaxed">
+          <div class="rounded-xl bg-[#faf7f2] border border-[#e9dfd0] p-4 space-y-2">
+            <h3 class="font-bold text-[#962925]">一、知觉速度与准确性（固定第 1 部分）</h3>
+            <p>共 60 题（数字区间定位、词表对照、字符替换各 20 题），总限时 10 分钟（含 2 分钟读题说明 + 8 分钟作答）。</p>
+            <p class="text-[#962925] font-medium">计分规则：答对 +0.15 分，答错倒扣 0.15 分（本模块最低计 0 分），不答不扣分。</p>
+          </div>
+          <div class="rounded-xl bg-[#faf7f2] border border-[#e9dfd0] p-4 space-y-2">
+            <h3 class="font-bold text-[#1b2e47]">二、模块随机顺序与独立计时</h3>
+            <p>第 2 至第 7 部分（政治理论、常识判断、言语理解、判断推理、资料分析、数量关系）按随机顺序依次解锁，答题卡遮蔽后续未开启模块。</p>
+            <p>各模块独立倒计时，时间耗尽自动锁定交卷；剩余时间不累加至下一模块，且不可返回已提交模块。</p>
+          </div>
+          <div class="rounded-xl bg-[#faf7f2] border border-[#e9dfd0] p-4 space-y-2">
+            <h3 class="font-bold text-[#1b2e47]">三、考场快捷操作</h3>
+            <p>支持键盘盲打 <span class="font-mono bg-white px-1.5 py-0.5 rounded border">A–E</span> 选答、<span class="font-mono bg-white px-1.5 py-0.5 rounded border">F4</span>/<span class="font-mono bg-white px-1.5 py-0.5 rounded border">F5</span> 切换上下题；选中题干文字按 <span class="font-mono bg-white px-1.5 py-0.5 rounded border">H</span> 可局部高亮，点击配图可全屏缩放。</p>
+          </div>
+          <div class="rounded-xl bg-[#faf7f2] border border-[#e9dfd0] p-4 space-y-2">
+            <h3 class="font-bold text-[#1b2e47]">四、组卷题型与难度标准</h3>
+            <p>言语理解严格按 15 逻辑填空 + 7 阅读理解 + 3 语句表达组卷；判断推理严格按 10 图推 + 10 定义 + 5 类比 + 10 逻辑组卷；默认按标准联考 3:5:2 阶梯难度先易后难排布。</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==================== Sub-view C: 模拟练习（全真配额 + 专项练习） ==================== -->
+    <main id="lobby-blueprint-pane" class="hidden flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 space-y-4">
+      <div class="bg-white rounded-2xl border border-[#e3d9ca] shadow-sm overflow-hidden">
+        <div class="px-5 py-3.5 border-b border-[#eee5d8] flex flex-wrap items-center justify-between gap-2 bg-[#faf7f2]">
+          <div>
+            <h2 class="font-bold text-[#1b2e47] text-sm sm:text-base">模拟练习 · 7 大模块标准配额</h2>
+            <p class="text-[11px] text-slate-500">点击右侧可针对单个模块限时专项训练，或点击全真模考完整演练 180 题</p>
+          </div>
+          <button id="btn-blueprint-full-exam" class="crimson-btn px-4 py-1.5 rounded-lg text-white text-xs font-semibold">开始 180 题全真模考 ›</button>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-xs sm:text-sm text-left border-collapse">
@@ -289,19 +547,19 @@
                 <th class="py-2.5 px-4 text-center w-12">序号</th>
                 <th class="py-2.5 px-4">科目与题型分布</th>
                 <th class="py-2.5 px-4 text-center">题量</th>
-                <th class="py-2.5 px-4 text-center">分值</th>
-                <th class="py-2.5 px-4 text-center">总分</th>
-                <th class="py-2.5 px-4 text-center">时限</th>
-                <th class="py-2.5 px-4 text-right">操作</th>
+                <th class="py-2.5 px-4 text-center">分值/题</th>
+                <th class="py-2.5 px-4 text-center">模块满分</th>
+                <th class="py-2.5 px-4 text-center">限时</th>
+                <th class="py-2.5 px-4 text-right">专项入口</th>
               </tr>
             </thead>
-            <tbody id="lobby-blueprint-body" class="divide-y divide-[#eee6da]"></tbody>
+            <tbody id="lobby-blueprint-body" class="divide-y divide-[#f0e9dd]"></tbody>
           </table>
         </div>
-      </section>
+      </div>
     </main>
 
-    <!-- Sub-view C: 错题收藏 -->
+    <!-- ==================== Sub-view D: 错题与收藏 ==================== -->
     <main id="lobby-mistakes-pane" class="hidden flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 space-y-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
@@ -317,11 +575,12 @@
       <div id="mistakes-list-box" class="space-y-3"></div>
     </main>
 
-    <!-- Sub-view D: 成绩档案 -->
+    <!-- ==================== Sub-view E: 成绩分析 ==================== -->
     <main id="lobby-history-pane" class="hidden flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="font-bold text-base text-[#1b2e47]">成绩档案</h2>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="font-bold text-base text-[#1b2e47]">成绩分析与历次模考档案</h2>
         <div class="flex items-center gap-2">
+          <button id="btn-go-mistakes-from-hist" class="px-3 py-1 rounded border border-[#962925]/40 text-[#962925] bg-white hover:bg-red-50 text-xs font-medium">前往错题本</button>
           <button id="btn-export-backup-h" class="px-3 py-1 rounded border border-[#d8cbb8] text-[#1b2e47] bg-white hover:bg-[#faf7f2] text-xs">导出备份</button>
           <button id="btn-import-backup-h" class="px-3 py-1 rounded border border-[#d8cbb8] text-[#1b2e47] bg-white hover:bg-[#faf7f2] text-xs">恢复备份</button>
           <button id="btn-clear-history" class="px-3 py-1 rounded border border-red-300 text-red-700 bg-white text-xs">清空记录</button>
@@ -329,9 +588,68 @@
       </div>
       <div id="history-list-box" class="space-y-2.5"></div>
     </main>
+
+    <!-- ==================== Sub-view F: 系统设置 ==================== -->
+    <main id="lobby-settings-pane" class="hidden flex-1 max-w-4xl w-full mx-auto px-3 sm:px-6 py-6 space-y-4">
+      <div class="bg-white rounded-2xl border border-[#e3d9ca] shadow-sm p-5 sm:p-6 space-y-5">
+        <h2 class="font-bold text-base text-[#1b2e47] border-b border-[#eee5d8] pb-3">系统设置与个性化配置</h2>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="rounded-xl bg-[#faf7f2] border border-[#e9dfd0] p-4 space-y-2.5">
+            <div class="font-semibold text-sm text-[#1b2e47]">组卷难度曲线</div>
+            <p class="text-xs text-slate-500">控制各模块基础、中等、偏难题目的抽题比例，模块内按先易后难排布。</p>
+            <select id="opt-diff-profile" class="w-full px-3 py-2 rounded-lg border border-[#d8cbb8] bg-white text-[#1b2e47] text-xs font-medium">
+              <option value="standard" selected>标准联考（基础 30% · 中等 50% · 偏难 20%）</option>
+              <option value="foundation">基础巩固（基础 50% · 中等 40% · 偏难 10%）</option>
+              <option value="sprint">冲刺拔高（基础 10% · 中等 50% · 偏难 40%）</option>
+            </select>
+          </div>
+
+          <div class="rounded-xl bg-[#faf7f2] border border-[#e9dfd0] p-4 space-y-2.5">
+            <div class="font-semibold text-sm text-[#1b2e47]">考场流程偏好</div>
+            <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 pt-1">
+              <input id="opt-random-order" type="checkbox" checked class="rounded accent-[#962925]" />
+              <span>全真模考随机打乱第 2–7 模块顺序</span>
+            </label>
+            <div class="text-[11px] text-slate-500">关闭后将按固定序号顺序依次进入各模块。</div>
+          </div>
+        </div>
+
+        <div class="rounded-xl bg-[#faf7f2] border border-[#e9dfd0] p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div class="font-semibold text-sm text-[#1b2e47]">学习数据备份与迁移</div>
+              <div class="text-xs text-slate-500">将当前账号的错题本、收藏夹、历史成绩导出为 JSON 文件，换设备一键恢复。</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btn-export-backup-s" class="px-3.5 py-1.5 rounded-lg bg-white border border-[#d8cbb8] text-[#1b2e47] hover:bg-slate-50 text-xs font-medium">导出备份</button>
+              <button id="btn-import-backup-s" class="px-3.5 py-1.5 rounded-lg bg-[#1b2e47] hover:bg-[#243d5e] text-white text-xs font-medium">恢复备份</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-xl bg-[#faf7f2] border border-[#e9dfd0] p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-semibold text-sm text-[#1b2e47]">云端账号同步（可选）</div>
+              <div class="text-xs text-slate-500">填入自有 Supabase 项目地址与密钥后，注册/登录与错题成绩将自动实时同步至云端。</div>
+            </div>
+            <span id="cloud-sync-status" class="px-2 py-0.5 rounded text-[11px] bg-slate-200 text-slate-600">本地账号模式</span>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-2.5">
+            <input id="cfg-sb-url" type="text" placeholder="Supabase Project URL（可选）" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs" />
+            <input id="cfg-sb-key" type="password" placeholder="Supabase Anon Key（可选）" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs" />
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btn-save-cloud-cfg" class="px-3.5 py-1.5 rounded-lg bg-[#962925] text-white text-xs font-medium">保存云端配置</button>
+            <button id="btn-clear-cloud-cfg" class="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-600 text-xs">切回本地模式</button>
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
 
-  <!-- ==================== VIEW 2: 考前准备页（100% 还原视频 00:08–00:30） ==================== -->
+<!-- ==================== VIEW 2: 考前准备页（100% 还原视频 00:08–00:30） ==================== -->
   <div id="view-prep" class="hidden min-h-screen flex flex-col bg-[#f3f5f8]">
     <div class="bg-[#1b4d89] text-white py-3 px-4 shadow-md">
       <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -884,9 +1202,11 @@
 
     function showTopView(name) { ['lobby','prep','exam','report'].forEach(v => document.getElementById(`view-${v}`).classList.toggle('hidden', v !== name)); }
     function switchLobbyPane(pane) {
-      ['home','blueprint','mistakes','history'].forEach(p => document.getElementById(`lobby-${p}-pane`).classList.toggle('hidden', p !== pane));
-      document.getElementById('subpage-header').classList.toggle('hidden', pane === 'home');
-      ['blueprint','mistakes','history'].forEach(p => {
+      ['home','notice','blueprint','mistakes','history','settings'].forEach(p => {
+        document.getElementById(`lobby-${p}-pane`)?.classList.toggle('hidden', p !== pane);
+      });
+      document.getElementById('subpage-header')?.classList.toggle('hidden', pane === 'home');
+      ['notice','blueprint','mistakes','history','settings'].forEach(p => {
         const btn = document.getElementById(`btn-nav-${p}`);
         if (btn) btn.className = p === pane ? 'px-3 py-1.5 rounded bg-[#962925] text-white font-semibold whitespace-nowrap' : 'px-3 py-1.5 rounded hover:bg-white/15 whitespace-nowrap';
       });
@@ -894,19 +1214,26 @@
       if (pane === 'mistakes') renderMistakesPane();
       if (pane === 'history') renderHistoryPane();
     }
-    document.getElementById('btn-nav-lobby').addEventListener('click', () => switchLobbyPane('home'));
-    document.getElementById('btn-nav-blueprint').addEventListener('click', () => switchLobbyPane('blueprint'));
-    document.getElementById('btn-nav-mistakes').addEventListener('click', () => switchLobbyPane('mistakes'));
-    document.getElementById('btn-nav-history').addEventListener('click', () => switchLobbyPane('history'));
-    document.getElementById('btn-hero-blueprint').addEventListener('click', () => switchLobbyPane('blueprint'));
-    document.getElementById('btn-hero-mistakes').addEventListener('click', () => switchLobbyPane('mistakes'));
-    document.getElementById('btn-hero-history').addEventListener('click', () => switchLobbyPane('history'));
+    document.getElementById('btn-nav-lobby')?.addEventListener('click', () => switchLobbyPane('home'));
+    document.getElementById('btn-nav-notice')?.addEventListener('click', () => switchLobbyPane('notice'));
+    document.getElementById('btn-nav-blueprint')?.addEventListener('click', () => switchLobbyPane('blueprint'));
+    document.getElementById('btn-nav-mistakes')?.addEventListener('click', () => switchLobbyPane('mistakes'));
+    document.getElementById('btn-nav-history')?.addEventListener('click', () => switchLobbyPane('history'));
+    document.getElementById('btn-nav-settings')?.addEventListener('click', () => switchLobbyPane('settings'));
+    document.getElementById('btn-tile-notice')?.addEventListener('click', () => switchLobbyPane('notice'));
+    document.getElementById('btn-tile-practice')?.addEventListener('click', () => switchLobbyPane('blueprint'));
+    document.getElementById('btn-tile-analysis')?.addEventListener('click', () => switchLobbyPane('history'));
+    document.getElementById('btn-tile-settings')?.addEventListener('click', () => switchLobbyPane('settings'));
+    document.getElementById('btn-go-mistakes-from-hist')?.addEventListener('click', () => switchLobbyPane('mistakes'));
+    document.getElementById('btn-nav-start-exam')?.addEventListener('click', () => startExamFlow(null));
+    document.getElementById('btn-notice-start')?.addEventListener('click', () => startExamFlow(null));
+    document.getElementById('btn-blueprint-full-exam')?.addEventListener('click', () => startExamFlow(null));
 
     async function renderLobby() {
       const mCnt = document.getElementById('hero-mistake-cnt');
       mCnt.textContent = state.mistakes.length;
       mCnt.classList.toggle('hidden', state.mistakes.length === 0);
-      const saved = await dbGet('active_session');
+      const saved = await uGet('active_session');
       document.getElementById('btn-resume-saved').classList.toggle('hidden', !saved);
 
       const tbody = document.getElementById('lobby-blueprint-body');
@@ -932,8 +1259,8 @@
       box.innerHTML = list.map((q, i) => `<div class="bg-white rounded-xl border border-[#e3d9ca] p-4 space-y-2 text-sm"><div class="flex justify-between text-xs text-slate-500"><span>#${i+1} · ${MOD_MAP[q.module]?.name || q.module}${q.subType ? ' / ' + q.subType : ''}</span><button data-rm="${q.id}" class="btn-rm-m text-red-700 hover:underline">移除</button></div><div class="font-medium">${renderRich(q.stem)}</div><div class="text-xs bg-[#faf7f2] rounded p-2.5"><strong class="text-emerald-700">答案：${LETTERS[q.answer]}</strong><div class="mt-1">${renderRich(q.explanation)}</div></div></div>`).join('');
       box.querySelectorAll('.btn-rm-m').forEach(b => b.addEventListener('click', async () => {
         const id = b.dataset.rm;
-        if (state.mistakeTab === 'wrong') { state.mistakes = state.mistakes.filter(x => x.id !== id); await dbSet('mistakes', state.mistakes); }
-        else { state.favorites = state.favorites.filter(x => x.id !== id); await dbSet('favorites', state.favorites); }
+        if (state.mistakeTab === 'wrong') { state.mistakes = state.mistakes.filter(x => x.id !== id); await uSet('mistakes', state.mistakes); }
+        else { state.favorites = state.favorites.filter(x => x.id !== id); await uSet('favorites', state.favorites); }
         renderMistakesPane(); renderLobby();
       }));
     }
@@ -957,7 +1284,7 @@
         if (item?.snapshot) { state.report = item.snapshot; renderReport(); showTopView('report'); }
       }));
     }
-    document.getElementById('btn-clear-history').addEventListener('click', async () => { state.history = []; await dbSet('history', []); renderHistoryPane(); });
+    document.getElementById('btn-clear-history').addEventListener('click', async () => { state.history = []; await uSet('history', []); renderHistoryPane(); });
 
     // =========================================================================
     // LAYER 5: EXAM STATE MACHINE (INSTANT T=0ms START + MASKED FUTURE + AUTO-SAVE)
@@ -1006,9 +1333,9 @@
     }));
     document.getElementById('btn-prep-cancel').addEventListener('click', () => { if (state.prepTimer) clearInterval(state.prepTimer); showTopView('lobby'); });
     document.getElementById('btn-prep-confirm').addEventListener('click', () => { if (state.prepTimer) clearInterval(state.prepTimer); beginRealExam(pendingModules); });
-    document.getElementById('btn-enter-prep').addEventListener('click', () => startExamFlow(null));
+    document.getElementById('btn-start-full-exam').addEventListener('click', () => startExamFlow(null));
     document.getElementById('btn-resume-saved').addEventListener('click', async () => {
-      const saved = await dbGet('active_session');
+      const saved = await uGet('active_session');
       if (!saved) return;
       state.exam = { ...saved, paused: false };
       showTopView('exam'); renderExamUI(true); startExamTimer();
@@ -1026,7 +1353,7 @@
       ex.qIdxInMod = 0;
       if (mod.id === 'perceptual' && mod.introSec > 0) { mod.status = 'intro'; ex.remainingSec = mod.introSec; }
       else { mod.status = 'active'; ex.remainingSec = mod.examSec; }
-      renderExamUI(true); startExamTimer(); dbSet('active_session', ex);
+      renderExamUI(true); startExamTimer(); uSet('active_session', ex);
     }
     function clearExamTimer() { if (state.examTimer) { clearInterval(state.examTimer); state.examTimer = null; } }
     function startExamTimer() {
@@ -1042,7 +1369,7 @@
         }
         if (ex.remainingSec > 0) ex.remainingSec--;
         updateClockDisplay();
-        if (ex.totalElapsedSec % 5 === 0) dbSet('active_session', ex);
+        if (ex.totalElapsedSec % 5 === 0) uSet('active_session', ex);
         if (ex.remainingSec <= 0) {
           if (mod.status === 'intro') { mod.status = 'active'; ex.remainingSec = mod.examSec; showToast('开始 8 分钟正式作答！'); renderExamUI(true); }
           else { showToast(`「${mod.name}」时间到，已自动锁定！`, 'warning'); advanceToNextModule(); }
@@ -1076,7 +1403,7 @@
       document.getElementById('btn-pause-exam').textContent = state.exam.paused ? '▶' : '⏸';
     });
     document.getElementById('btn-exam-exit-save').addEventListener('click', async () => {
-      if (state.exam) await dbSet('active_session', state.exam);
+      if (state.exam) await uSet('active_session', state.exam);
       clearExamTimer(); showTopView('lobby'); switchLobbyPane('home');
       showToast('已暂存进度，可随时从首页恢复', 'success');
     });
@@ -1121,7 +1448,7 @@
           </div>`;
         }).join('')}</div>`;
         qArea.querySelectorAll('.perc-opt-cell').forEach(el => {
-          el.addEventListener('click', () => { const qi = Number(el.dataset.qi), oi = Number(el.dataset.oi); ex.qIdxInMod = qi; ex.answers[mod.questions[qi].id] = oi; dbSet('active_session', ex); renderExamUI(false); });
+          el.addEventListener('click', () => { const qi = Number(el.dataset.qi), oi = Number(el.dataset.oi); ex.qIdxInMod = qi; ex.answers[mod.questions[qi].id] = oi; uSet('active_session', ex); renderExamUI(false); });
           el.addEventListener('contextmenu', e => { e.preventDefault(); delete ex.answers[mod.questions[Number(el.dataset.qi)].id]; renderExamUI(false); });
         });
         qArea.querySelectorAll('.btn-perc-clear').forEach(b => b.addEventListener('click', () => { delete ex.answers[mod.questions[Number(b.dataset.clearQi)].id]; renderExamUI(false); }));
@@ -1148,7 +1475,7 @@
         qArea.querySelectorAll('.std-opt-row').forEach(el => {
           el.addEventListener('click', e => {
             if (e.target.closest('.btn-opt-strike')) return;
-            ex.answers[curQ.id] = Number(el.dataset.oi); dbSet('active_session', ex);
+            ex.answers[curQ.id] = Number(el.dataset.oi); uSet('active_session', ex);
             if (document.getElementById('opt-auto-next').checked && ex.qIdxInMod + 1 < mod.questions.length) { ex.qIdxInMod++; renderExamUI(true); }
             else renderExamUI(false);
           });
@@ -1211,7 +1538,7 @@
       const q = m.questions[ex.qIdxInMod];
       if (state.favorites.some(x => x.id === q.id)) { state.favorites = state.favorites.filter(x => x.id !== q.id); showToast('已取消收藏'); }
       else { state.favorites.push(q); showToast('已加入收藏', 'success'); }
-      await dbSet('favorites', state.favorites); renderExamUI(false);
+      await uSet('favorites', state.favorites); renderExamUI(false);
     });
     function applySelectionHighlight() {
       const sel = window.getSelection();
@@ -1290,7 +1617,7 @@
       state.report = snapshot;
       state.history.push({ title: snapshot.title, date: snapshot.date, score: snapshot.score, accuracy: snapshot.accuracy, totalSec: snapshot.totalSec, snapshot });
       if (state.history.length > 30) state.history = state.history.slice(-30);
-      await Promise.all([dbSet('history', state.history), dbSet('mistakes', state.mistakes), dbSet('seen_ids', [...state.seenIds])]);
+      await Promise.all([uSet('history', state.history), uSet('mistakes', state.mistakes), uSet('seen_ids', [...state.seenIds])]);
       state.exam = null;
       renderReport(); showTopView('report');
     }
@@ -1508,10 +1835,10 @@
       if (!file) return;
       try {
         const data = JSON.parse(await file.text());
-        if (Array.isArray(data.history)) { state.history = data.history; await dbSet('history', state.history); }
-        if (Array.isArray(data.mistakes)) { state.mistakes = data.mistakes; await dbSet('mistakes', state.mistakes); }
-        if (Array.isArray(data.favorites)) { state.favorites = data.favorites; await dbSet('favorites', state.favorites); }
-        if (Array.isArray(data.seenIds)) { state.seenIds = new Set(data.seenIds); await dbSet('seen_ids', [...state.seenIds]); }
+        if (Array.isArray(data.history)) { state.history = data.history; await uSet('history', state.history); }
+        if (Array.isArray(data.mistakes)) { state.mistakes = data.mistakes; await uSet('mistakes', state.mistakes); }
+        if (Array.isArray(data.favorites)) { state.favorites = data.favorites; await uSet('favorites', state.favorites); }
+        if (Array.isArray(data.seenIds)) { state.seenIds = new Set(data.seenIds); await uSet('seen_ids', [...state.seenIds]); }
         renderMistakesPane();
         renderHistoryPane();
         showToast('备份已恢复，错题与成绩已同步');
@@ -1519,21 +1846,346 @@
         showToast('备份文件格式无效，请检查后重试', 'error');
       }
     });
-    ['btn-export-backup-m', 'btn-export-backup-h'].forEach(id => document.getElementById(id)?.addEventListener('click', exportUserBackup));
-    ['btn-import-backup-m', 'btn-import-backup-h'].forEach(id => document.getElementById(id)?.addEventListener('click', () => backupFileInput.click()));
+    ['btn-export-backup-m', 'btn-export-backup-h', 'btn-export-backup-s'].forEach(id => document.getElementById(id)?.addEventListener('click', exportUserBackup));
+    ['btn-import-backup-m', 'btn-import-backup-h', 'btn-import-backup-s'].forEach(id => document.getElementById(id)?.addEventListener('click', () => backupFileInput.click()));
 
-    (async () => {
-      const [live, bkts, hist, mist, favs, seen] = await Promise.all([
-        dbGet('live_pool', []), dbGet('loaded_buckets', []), dbGet('history', []), dbGet('mistakes', []), dbGet('favorites', []), dbGet('seen_ids', [])
+
+    // =========================================================================
+    // V3: ANIMATED VERTICAL CALLIGRAPHY + DRIFTING PLUM PETALS + MULTI-ACCOUNT AUTH
+    // =========================================================================
+    const POEM_COLUMNS = [
+      { text: '风雨送春归，', crimson: false },
+      { text: '飞雪迎春到，', crimson: false },
+      { text: '已是悬崖百丈冰，', crimson: false },
+      { text: '犹有花枝俏。', crimson: false },
+      { text: '俏也不争春，', crimson: false },
+      { text: '只把春来报。', crimson: false },
+      { text: '待到山花烂漫时，', crimson: true },
+      { text: '她在丛中笑。', crimson: true }
+    ];
+
+    const petalParticles = [];
+    let petalCanvas = null, petalCtx = null;
+
+    function initPetalCanvas() {
+      petalCanvas = document.getElementById('petal-canvas');
+      if (!petalCanvas) return;
+      petalCtx = petalCanvas.getContext('2d');
+      const resize = () => {
+        petalCanvas.width = petalCanvas.parentElement?.clientWidth || window.innerWidth;
+        petalCanvas.height = petalCanvas.parentElement?.clientHeight || window.innerHeight;
+      };
+      resize();
+      window.addEventListener('resize', resize);
+
+      // Seed ambient drifting plum petals
+      for (let i = 0; i < 16; i++) {
+        petalParticles.push({
+          x: Math.random() * petalCanvas.width,
+          y: Math.random() * petalCanvas.height,
+          vx: -0.35 - Math.random() * 0.45,
+          vy: 0.35 + Math.random() * 0.55,
+          size: 4 + Math.random() * 4.5,
+          rot: Math.random() * Math.PI * 2,
+          vrot: (Math.random() - 0.5) * 0.03,
+          alpha: 0.45 + Math.random() * 0.4,
+          burst: false
+        });
+      }
+
+      const tick = () => {
+        if (!petalCtx || document.getElementById('lobby-home-pane').classList.contains('hidden')) {
+          requestAnimationFrame(tick);
+          return;
+        }
+        petalCtx.clearRect(0, 0, petalCanvas.width, petalCanvas.height);
+        for (let i = petalParticles.length - 1; i >= 0; i--) {
+          const p = petalParticles[i];
+          p.x += p.vx + Math.sin(p.y * 0.015) * 0.25;
+          p.y += p.vy;
+          p.rot += p.vrot;
+          if (p.burst) {
+            p.alpha -= 0.016;
+            if (p.alpha <= 0) { petalParticles.splice(i, 1); continue; }
+          } else {
+            if (p.y > petalCanvas.height + 20 || p.x < -20) {
+              p.x = Math.random() * petalCanvas.width * 1.15;
+              p.y = -15;
+            }
+          }
+          petalCtx.save();
+          petalCtx.translate(p.x, p.y);
+          petalCtx.rotate(p.rot);
+          petalCtx.globalAlpha = Math.max(0, p.alpha);
+          petalCtx.fillStyle = '#c83b36';
+          petalCtx.beginPath();
+          petalCtx.ellipse(0, 0, p.size, p.size * 0.55, 0, 0, Math.PI * 2);
+          petalCtx.fill();
+          petalCtx.restore();
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    function spawnHoverPetals(el) {
+      if (!petalCanvas) return;
+      const rect = el.getBoundingClientRect();
+      const cRect = petalCanvas.getBoundingClientRect();
+      const cx = rect.left - cRect.left + rect.width / 2;
+      const cy = rect.top - cRect.top + rect.height / 2;
+      for (let i = 0; i < 4; i++) {
+        petalParticles.push({
+          x: cx + (Math.random() - 0.5) * 14,
+          y: cy + (Math.random() - 0.5) * 14,
+          vx: (Math.random() - 0.5) * 1.8 - 0.3,
+          vy: -0.9 - Math.random() * 1.2,
+          size: 3.5 + Math.random() * 3.5,
+          rot: Math.random() * Math.PI * 2,
+          vrot: (Math.random() - 0.5) * 0.12,
+          alpha: 0.9,
+          burst: true
+        });
+      }
+    }
+
+    function renderCalligraphyPoem() {
+      const stage = document.getElementById('poem-stage');
+      if (!stage) return;
+      stage.innerHTML = '';
+      let globalIdx = 0;
+      POEM_COLUMNS.forEach((col, ci) => {
+        const colEl = document.createElement('div');
+        colEl.className = 'poem-col' + (col.crimson ? ' poem-crimson' : '');
+        const chars = [...col.text];
+        chars.forEach((ch, ri) => {
+          const sp = document.createElement('span');
+          sp.className = 'cal-char';
+          sp.textContent = ch;
+          const delay = (ci * 0.22 + ri * 0.065).toFixed(2);
+          sp.style.animationDelay = `${delay}s`;
+          sp.addEventListener('animationend', () => {
+            sp.classList.add('cal-revealed');
+            sp.style.animationDelay = `${((ci + ri) % 6) * 0.45}s`;
+          }, { once: true });
+          sp.addEventListener('mouseenter', () => {
+            spawnHoverPetals(sp);
+            const prev = sp.previousElementSibling;
+            const next = sp.nextElementSibling;
+            if (prev) prev.classList.add('cal-neighbor');
+            if (next) next.classList.add('cal-neighbor');
+          });
+          sp.addEventListener('mouseleave', () => {
+            const prev = sp.previousElementSibling;
+            const next = sp.nextElementSibling;
+            if (prev) prev.classList.remove('cal-neighbor');
+            if (next) next.classList.remove('cal-neighbor');
+          });
+          colEl.appendChild(sp);
+          globalIdx++;
+        });
+        stage.appendChild(colEl);
+      });
+    }
+
+    // --- Account System (SHA-256 salted auth + Per-Account Isolated Storage + Optional Supabase) ---
+    let currentUser = null; // { account, name, guest?: boolean }
+
+    async function sha256Hex(str) {
+      if (window.crypto?.subtle) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+        return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+      // Fallback hash for non-HTTPS local file testing
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return (h >>> 0).toString(16);
+    }
+
+    function userKey(base) {
+      const uid = currentUser?.account ? `u_${currentUser.account}` : 'u_guest';
+      return `${uid}:${base}`;
+    }
+
+    async function uGet(base, fb = null) {
+      const v = await dbGet(userKey(base), undefined);
+      if (v !== undefined && v !== null) return v;
+      // Graceful migration for legacy guest data
+      if (!currentUser || currentUser.guest) return dbGet(base, fb);
+      return fb;
+    }
+
+    async function uSet(base, val) {
+      await dbSet(userKey(base), val);
+      // Optional Supabase cloud sync hook
+      const cfg = await dbGet('cloud_sync_cfg', null);
+      if (cfg?.url && cfg?.key && currentUser && !currentUser.guest && ['history','mistakes','favorites','seen_ids'].includes(base)) {
+        try {
+          await fetch(`${cfg.url.replace(/\/$/, '')}/rest/v1/user_records`, {
+            method: 'POST',
+            headers: {
+              'apikey': cfg.key,
+              'Authorization': `Bearer ${cfg.key}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'resolution=merge-duplicates'
+            },
+            body: JSON.stringify({ account: currentUser.account, record_key: base, payload: val, updated_at: new Date().toISOString() })
+          });
+        } catch (e) {}
+      }
+    }
+
+    async function loadCurrentUserRecords() {
+      const [hist, mist, favs, seen] = await Promise.all([
+        uGet('history', []), uGet('mistakes', []), uGet('favorites', []), uGet('seen_ids', [])
       ]);
-      state.livePool = Array.isArray(live) ? live : [];
-      if (Array.isArray(bkts)) bkts.forEach(f => loadedBucketFiles.add(f));
       state.history = Array.isArray(hist) ? hist : [];
       state.mistakes = Array.isArray(mist) ? mist : [];
       state.favorites = Array.isArray(favs) ? favs : [];
       state.seenIds = new Set(Array.isArray(seen) ? seen : []);
+      renderAuthCard();
       renderLobby();
-      // Lightweight manifest check only (~2 KB); actual question buckets load lazily on exam start
+    }
+
+    function showAuthSubBox(mode) {
+      ['login', 'register', 'reset', 'logged'].forEach(m => {
+        document.getElementById(`auth-${m}-box`)?.classList.toggle('hidden', m !== mode);
+      });
+    }
+
+    function renderAuthCard() {
+      const navPill = document.getElementById('nav-user-pill');
+      if (!currentUser) {
+        showAuthSubBox('login');
+        if (navPill) navPill.textContent = '未登录';
+        return;
+      }
+      showAuthSubBox('logged');
+      const dispName = currentUser.name || currentUser.account;
+      document.getElementById('user-avatar-badge').textContent = dispName.slice(0, 1);
+      document.getElementById('user-display-name').textContent = dispName;
+      document.getElementById('user-account-sub').textContent = currentUser.guest ? '游客模式（数据保存在本机）' : `账号：${currentUser.account}`;
+      document.getElementById('dash-exam-cnt').textContent = state.history.length;
+      document.getElementById('dash-mistake-cnt').textContent = state.mistakes.length;
+      const best = state.history.length ? Math.max(...state.history.map(h => Number(h.totalScore || 0))).toFixed(1) : '--';
+      document.getElementById('dash-best-score').textContent = best;
+      if (navPill) navPill.textContent = currentUser.guest ? '游客模式' : dispName;
+    }
+
+    // Auth form bindings
+    document.getElementById('btn-toggle-pwd')?.addEventListener('click', () => {
+      const inp = document.getElementById('login-password');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    });
+    document.getElementById('btn-go-register')?.addEventListener('click', () => showAuthSubBox('register'));
+    document.getElementById('btn-go-reset')?.addEventListener('click', () => showAuthSubBox('reset'));
+    document.getElementById('btn-back-login-1')?.addEventListener('click', () => showAuthSubBox('login'));
+    document.getElementById('btn-back-login-2')?.addEventListener('click', () => showAuthSubBox('login'));
+
+    document.getElementById('btn-guest-enter')?.addEventListener('click', async () => {
+      currentUser = { account: 'guest', name: '游客考生', guest: true };
+      await dbSet('current_user', currentUser);
+      await loadCurrentUserRecords();
+      showToast('已进入游客模式，可直接开始模考');
+    });
+
+    document.getElementById('form-register')?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const account = document.getElementById('reg-account').value.trim();
+      const name = document.getElementById('reg-name').value.trim();
+      const pwd = document.getElementById('reg-password').value;
+      const hint = document.getElementById('reg-hint').value.trim();
+      if (account.length < 3 || pwd.length < 6) return showToast('账号至少 3 位、密码至少 6 位', 'warning');
+      const accounts = (await dbGet('accounts_registry', {})) || {};
+      if (accounts[account]) return showToast('该账号已注册，请直接登录', 'warning');
+      const salt = Math.random().toString(36).slice(2, 10);
+      accounts[account] = {
+        account, name, salt,
+        pwdHash: await sha256Hex(salt + ':' + pwd),
+        hintHash: await sha256Hex(salt + ':hint:' + hint),
+        createdAt: new Date().toISOString()
+      };
+      await dbSet('accounts_registry', accounts);
+      currentUser = { account, name, guest: false };
+      await dbSet('current_user', currentUser);
+      await loadCurrentUserRecords();
+      showToast(`欢迎 ${name}，注册并登录成功`);
+    });
+
+    document.getElementById('form-login')?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const account = document.getElementById('login-account').value.trim();
+      const pwd = document.getElementById('login-password').value;
+      const accounts = (await dbGet('accounts_registry', {})) || {};
+      const rec = accounts[account];
+      if (!rec) return showToast('账号不存在，请先点击右下角「注册账号」', 'warning');
+      const h = await sha256Hex(rec.salt + ':' + pwd);
+      if (h !== rec.pwdHash) return showToast('密码错误，请重试或点击「忘记密码」', 'error');
+      currentUser = { account: rec.account, name: rec.name, guest: false };
+      await dbSet('current_user', currentUser);
+      await loadCurrentUserRecords();
+      showToast(`欢迎回来，${rec.name}`);
+    });
+
+    document.getElementById('form-reset')?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const account = document.getElementById('reset-account').value.trim();
+      const hint = document.getElementById('reset-hint').value.trim();
+      const newPwd = document.getElementById('reset-password').value;
+      const accounts = (await dbGet('accounts_registry', {})) || {};
+      const rec = accounts[account];
+      if (!rec) return showToast('未找到该账号', 'warning');
+      const hh = await sha256Hex(rec.salt + ':hint:' + hint);
+      if (hh !== rec.hintHash) return showToast('密保口令不匹配', 'error');
+      rec.pwdHash = await sha256Hex(rec.salt + ':' + newPwd);
+      await dbSet('accounts_registry', accounts);
+      showAuthSubBox('login');
+      document.getElementById('login-account').value = account;
+      showToast('密码已重置，请使用新密码登录');
+    });
+
+    document.getElementById('btn-logout')?.addEventListener('click', async () => {
+      currentUser = null;
+      await dbDel('current_user');
+      renderAuthCard();
+      showToast('已退出登录');
+    });
+
+    // Cloud sync config bindings
+    document.getElementById('btn-save-cloud-cfg')?.addEventListener('click', async () => {
+      const url = document.getElementById('cfg-sb-url').value.trim();
+      const key = document.getElementById('cfg-sb-key').value.trim();
+      if (!url || !key) return showToast('请填写完整的 Supabase URL 和 Anon Key', 'warning');
+      await dbSet('cloud_sync_cfg', { url, key });
+      const st = document.getElementById('cloud-sync-status');
+      if (st) { st.textContent = '已启用云端同步'; st.className = 'px-2 py-0.5 rounded text-[11px] bg-emerald-100 text-emerald-700'; }
+      showToast('云端同步配置已保存');
+    });
+    document.getElementById('btn-clear-cloud-cfg')?.addEventListener('click', async () => {
+      await dbDel('cloud_sync_cfg');
+      document.getElementById('cfg-sb-url').value = '';
+      document.getElementById('cfg-sb-key').value = '';
+      const st = document.getElementById('cloud-sync-status');
+      if (st) { st.textContent = '本地账号模式'; st.className = 'px-2 py-0.5 rounded text-[11px] bg-slate-200 text-slate-600'; }
+      showToast('已切换回本地账号模式');
+    });
+
+    (async () => {
+      renderCalligraphyPoem();
+      initPetalCanvas();
+      const [live, bkts, savedUser, cloudCfg] = await Promise.all([
+        dbGet('live_pool', []), dbGet('loaded_buckets', []), dbGet('current_user', null), dbGet('cloud_sync_cfg', null)
+      ]);
+      state.livePool = Array.isArray(live) ? live : [];
+      if (Array.isArray(bkts)) bkts.forEach(f => loadedBucketFiles.add(f));
+      if (cloudCfg?.url && cloudCfg?.key) {
+        document.getElementById('cfg-sb-url').value = cloudCfg.url;
+        document.getElementById('cfg-sb-key').value = cloudCfg.key;
+        const st = document.getElementById('cloud-sync-status');
+        if (st) { st.textContent = '已启用云端同步'; st.className = 'px-2 py-0.5 rounded text-[11px] bg-emerald-100 text-emerald-700'; }
+      }
+      currentUser = savedUser || null;
+      await loadCurrentUserRecords();
       fetchManifest().catch(() => {});
     })();
   })();

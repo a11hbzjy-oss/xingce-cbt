@@ -175,179 +175,126 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      line-height: 1.12;
-      font-size: clamp(1.75rem, 3.1vw, 3.05rem);
-      color: #1f2429;
-      text-shadow: 0 2px 10px rgba(255,255,255,0.85);
-    }
-    .poem-col {
-      transition: opacity 0.45s ease, filter 0.45s ease;
+      line-height: 1.14;
+      font-size: clamp(1.72rem, 3.0vw, 2.95rem);
+      color: #1e2328;
+      text-shadow: 0 1px 8px rgba(248, 250, 252, 0.75);
+      transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), filter 0.65s ease, transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
     }
     .poem-stage.couplet-focus .poem-col:not(.poem-crimson) {
-      opacity: 0.52;
-      filter: blur(0.4px);
+      opacity: 0.34;
+      filter: blur(0.6px);
+      transform: translate3d(4px, 0, 0);
     }
     .poem-col.poem-crimson {
-      position: relative;
-      color: #a11c19;
-      font-size: clamp(2.25rem, 4.05vw, 3.95rem);
+      color: #8f1d1b;
+      font-size: clamp(2.25rem, 4.1vw, 4.05rem);
       line-height: 1.08;
-      margin-right: clamp(0.25rem, 0.8vw, 0.7rem);
-      filter: drop-shadow(0 3px 12px rgba(161, 28, 25, 0.24)) drop-shadow(0 1px 6px rgba(255, 250, 242, 0.95));
+      margin-right: clamp(0.35rem, 1.0vw, 0.9rem);
+      padding: 0 0.14em;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.65);
     }
-    .poem-col.poem-crimson::before {
+    /* 古籍朱丝栏：悬停时沿列悄然落下一道极细朱红界线 */
+    .poem-col.poem-crimson::after {
       content: "";
       position: absolute;
-      inset: -14% -45%;
-      background: radial-gradient(ellipse at center, rgba(214, 72, 52, 0.16) 0%, rgba(242, 201, 125, 0.10) 42%, transparent 72%);
-      pointer-events: none;
-      z-index: -1;
-      animation: auraPulse 6s ease-in-out infinite;
-    }
-    @keyframes auraPulse {
-      0%, 100% { opacity: 0.65; transform: scale(0.96); }
-      50% { opacity: 1; transform: scale(1.06); }
-    }
-    .poem-col.poem-crimson .cal-char {
-      background: linear-gradient(170deg, #630d0c 0%, #ad1f1c 32%, #f1c777 50%, #a31b18 68%, #540b0a 100%);
-      background-size: 100% 260%;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-      text-shadow: none;
-      animation: climaxStrike 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    @keyframes climaxStrike {
-      0% { opacity: 0; filter: blur(10px); transform: translate3d(0, -18px, 0) scale(1.32); }
-      55% { opacity: 1; filter: blur(0.2px); transform: translate3d(0, 2px, 0) scale(0.97); }
-      100% { opacity: 1; filter: blur(0); transform: translate3d(0, 0, 0) scale(1); }
-    }
-    .poem-col.poem-crimson .cal-char::after {
-      content: "";
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 1.15em;
-      height: 1.15em;
-      border-radius: 9999px;
-      border: 1.5px solid rgba(194, 39, 35, 0.55);
-      box-shadow: 0 0 18px rgba(241, 199, 119, 0.45);
-      transform: translate(-50%, -50%) scale(0.35);
+      right: -0.18em;
+      top: 4%;
+      width: 1px;
+      height: 0%;
+      background: linear-gradient(180deg, transparent 0%, rgba(143, 29, 27, 0.55) 15%, rgba(143, 29, 27, 0.55) 85%, transparent 100%);
+      transition: height 0.75s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
       opacity: 0;
       pointer-events: none;
     }
-    .poem-col.poem-crimson .cal-char.ink-ring::after {
-      animation: inkRingBurst 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    @keyframes inkRingBurst {
-      0% { transform: translate(-50%, -50%) scale(0.35); opacity: 0.85; }
-      100% { transform: translate(-50%, -50%) scale(1.85); opacity: 0; }
-    }
-    .poem-col.poem-crimson .cal-char.cal-revealed {
-      animation: crimsonGoldSweep 6.8s ease-in-out infinite;
+    .poem-col.poem-crimson:hover::after {
+      height: 92%;
       opacity: 1;
-      filter: blur(0);
-    }
-    @keyframes crimsonGoldSweep {
-      0% { background-position: 50% 0%; }
-      50% { background-position: 50% 100%; }
-      100% { background-position: 50% 0%; }
-    }
-    .poem-col.poem-crimson .cal-char:hover {
-      animation: none !important;
-      background-position: 50% 50% !important;
-      transform: translate3d(0, -7px, 0) scale(1.26) rotate(-2.5deg) !important;
-      filter: drop-shadow(0 0 14px rgba(241, 199, 119, 0.9)) drop-shadow(0 6px 20px rgba(173, 31, 28, 0.55)) !important;
-      color: transparent !important;
-      -webkit-text-fill-color: transparent !important;
-    }
-    .poem-seal {
-      margin-top: 0.45rem;
-      width: 1.95rem;
-      height: 1.95rem;
-      border: 2px solid #9e2220;
-      border-radius: 4px;
-      background: rgba(158, 34, 32, 0.92);
-      color: #fdf6ec;
-      font-size: 0.72rem;
-      line-height: 1.05;
-      letter-spacing: 0.05em;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      place-items: center;
-      padding: 2px;
-      box-shadow: 0 2px 10px rgba(158, 34, 32, 0.32), inset 0 0 0 1px rgba(253, 246, 236, 0.35);
-      opacity: 0;
-      transform: scale(1.85) rotate(-10deg);
-      animation: sealStamp 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    }
-    @keyframes sealStamp {
-      0% { opacity: 0; transform: scale(1.85) rotate(-10deg); filter: blur(3px); }
-      75% { opacity: 1; transform: scale(0.95) rotate(-2deg); filter: blur(0); }
-      100% { opacity: 0.92; transform: scale(1) rotate(-3deg); }
     }
     .cal-char {
       display: inline-block;
       padding: 0.04em 0.06em;
       opacity: 0;
-      filter: blur(6px);
-      transform: translateY(-16px) scale(0.92);
-      animation: inkReveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), color 0.25s ease, text-shadow 0.28s ease, filter 0.25s ease;
+      clip-path: inset(0 0 100% 0);
+      animation: brushStroke 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      transition: opacity 0.35s ease, color 0.35s ease, transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), filter 0.38s ease;
       cursor: pointer;
       position: relative;
+      will-change: clip-path, opacity, transform;
     }
-    @keyframes inkReveal {
-      0% { opacity: 0; filter: blur(6px); transform: translateY(-16px) scale(0.92); }
-      70% { opacity: 0.95; filter: blur(0.4px); transform: translateY(2px) scale(1.02); }
-      100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+    @keyframes brushStroke {
+      0% { opacity: 0.15; clip-path: inset(0 0 100% 0); }
+      100% { opacity: 1; clip-path: inset(0 0 0% 0); }
     }
-    .cal-char { will-change: transform, opacity; }
+    /* 末两句：真实宣纸洇墨 + 运笔落纸（无发光、无金粉、纯矿物朱砂） */
+    .poem-col.poem-crimson .cal-char {
+      filter: url(#ink-bleed-wet);
+      animation: cinnabarBrush 0.95s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    }
+    @keyframes cinnabarBrush {
+      0% { opacity: 0; clip-path: inset(0 0 100% 0); filter: url(#ink-bleed-wet); }
+      65% { opacity: 1; clip-path: inset(0 0 0% 0); filter: url(#ink-bleed-wet); }
+      100% { opacity: 1; clip-path: inset(0 0 0% 0); filter: url(#ink-bleed-dry); }
+    }
     .cal-char.cal-revealed {
-      animation: inkBreath 6.4s ease-in-out infinite;
+      animation: inkStillBreath 8.5s ease-in-out infinite;
       opacity: 1;
-      filter: blur(0);
-      transform: translate3d(0, 0, 0);
+      clip-path: inset(0 0 0% 0);
     }
-    @keyframes inkBreath {
-      0%, 100% {
-        opacity: 0.96;
-        text-shadow: 0 2px 10px rgba(255,255,255,0.85), 0 0 0 rgba(158,34,32,0);
-      }
-      50% {
-        opacity: 0.78;
-        text-shadow: 0 2px 16px rgba(255,255,255,0.98), 0 0 14px rgba(158,34,32,0.22);
-      }
+    @keyframes inkStillBreath {
+      0%, 100% { opacity: 0.96; }
+      50% { opacity: 0.78; }
     }
     .poem-col.poem-crimson .cal-char.cal-revealed {
-      animation-name: crimsonBreath;
+      animation: cinnabarStill 9s ease-in-out infinite;
+      filter: url(#ink-bleed-dry);
     }
-    @keyframes crimsonBreath {
-      0%, 100% {
-        opacity: 1;
-        text-shadow: 0 2px 14px rgba(255,255,255,0.92), 0 0 10px rgba(158,34,32,0.12);
-      }
-      50% {
-        opacity: 0.86;
-        text-shadow: 0 2px 18px rgba(255,245,235,1), 0 0 22px rgba(194,39,35,0.34);
-      }
+    @keyframes cinnabarStill {
+      0%, 100% { opacity: 0.98; color: #8f1d1b; }
+      50% { opacity: 0.84; color: #a62421; }
     }
-    .cal-char:hover {
+    /* 前六句悬停：克制墨韵微沉 */
+    .poem-col:not(.poem-crimson) .cal-char:hover {
       animation: none !important;
       opacity: 1 !important;
-      transform: translate3d(0, -6px, 0) scale(1.2) rotate(-2.5deg) !important;
-      color: #9e2220 !important;
-      text-shadow: 0 6px 18px rgba(158,34,32,0.34), 0 0 12px rgba(255,244,230,0.95) !important;
-      z-index: 10;
+      color: #8f1d1b;
+      transform: translate3d(0, -3px, 0);
     }
+    /* 末两句悬停：湿墨重洇、微沉定格，不跳跃不浮夸 */
     .poem-col.poem-crimson .cal-char:hover {
-      color: #c22723 !important;
-      text-shadow: 0 8px 22px rgba(194,39,35,0.42), 0 0 16px rgba(255,240,220,1) !important;
+      animation: none !important;
+      opacity: 1 !important;
+      color: #6b0f0e !important;
+      filter: url(#ink-bleed-wet) !important;
+      transform: translate3d(0, -2px, 0) scale(1.07);
     }
     .cal-char.cal-neighbor {
-      transform: translateY(-3px) scale(1.08) !important;
-      text-shadow: 0 3px 12px rgba(158,34,32,0.18), 0 0 8px rgba(255,255,255,0.9) !important;
+      opacity: 0.98 !important;
+    }
+    /* 素雅朱文古印：哑光无阴影，收束长卷 */
+    .poem-seal {
+      margin-top: 0.55rem;
+      width: 1.75rem;
+      height: 1.75rem;
+      border: 1.5px solid #8f1d1b;
+      border-radius: 2px;
+      background: rgba(143, 29, 27, 0.88);
+      color: #f4efe8;
+      font-size: 0.66rem;
+      line-height: 1.05;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      place-items: center;
+      padding: 2px;
+      filter: url(#ink-bleed-dry);
+      opacity: 0;
+      transform: scale(1.35);
+      animation: sealPress 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes sealPress {
+      0% { opacity: 0; transform: scale(1.35); }
+      100% { opacity: 0.86; transform: scale(1) rotate(-2deg); }
     }
     .glass-panel {
       background: rgba(255, 255, 255, 0.80);
@@ -424,6 +371,18 @@
 
     <!-- ==================== Sub-view A: 水墨咏梅动态书法首页 + 考生登录 ==================== -->
     <div id="lobby-home-pane" class="ink-hero flex flex-col justify-center">
+      <svg class="hidden" aria-hidden="true">
+        <defs>
+          <filter id="ink-bleed-wet" x="-8%" y="-8%" width="116%" height="116%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.6" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+          <filter id="ink-bleed-dry" x="-4%" y="-4%" width="108%" height="108%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="2" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.85" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+      </svg>
       <canvas id="petal-canvas" aria-hidden="true"></canvas>
 
       <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-8 lg:py-10 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-10">
@@ -2078,19 +2037,10 @@
           petalCtx.translate(p.x, p.y);
           petalCtx.rotate(p.rot);
           petalCtx.globalAlpha = Math.max(0, p.alpha);
-          if (p.gold) {
-            petalCtx.fillStyle = '#f3cc7a';
-            petalCtx.shadowColor = 'rgba(243,204,122,0.85)';
-            petalCtx.shadowBlur = 8;
-            petalCtx.beginPath();
-            petalCtx.arc(0, 0, p.size * 0.48, 0, Math.PI * 2);
-            petalCtx.fill();
-          } else {
-            petalCtx.fillStyle = p.deep ? '#b01e1b' : '#cf3c36';
-            petalCtx.beginPath();
-            petalCtx.ellipse(0, 0, p.size, p.size * 0.55, 0, 0, Math.PI * 2);
-            petalCtx.fill();
-          }
+          petalCtx.fillStyle = p.deep ? '#8f1d1b' : '#b8322e';
+          petalCtx.beginPath();
+          petalCtx.ellipse(0, 0, p.size, p.size * 0.52, 0, 0, Math.PI * 2);
+          petalCtx.fill();
           petalCtx.restore();
         }
         requestAnimationFrame(tick);
@@ -2104,20 +2054,18 @@
       const cRect = petalCanvas.getBoundingClientRect();
       const cx = rect.left - cRect.left + rect.width / 2;
       const cy = rect.top - cRect.top + rect.height / 2;
-      const count = isClimax ? 10 : 4;
+      const count = isClimax ? 3 : 2;
       for (let i = 0; i < count; i++) {
-        const isGold = isClimax && i % 2 === 0;
         petalParticles.push({
-          x: cx + (Math.random() - 0.5) * (isClimax ? 22 : 14),
-          y: cy + (Math.random() - 0.5) * (isClimax ? 22 : 14),
-          vx: (Math.random() - 0.5) * (isClimax ? 2.8 : 1.8) - 0.35,
-          vy: (isClimax ? -1.4 : -0.9) - Math.random() * 1.5,
-          size: isGold ? (2.6 + Math.random() * 2.8) : (3.8 + Math.random() * 4.2),
+          x: cx + (Math.random() - 0.5) * 20,
+          y: cy + (Math.random() - 0.5) * 16,
+          vx: -0.45 - Math.random() * 0.65,
+          vy: 0.35 + Math.random() * 0.55,
+          size: 3.4 + Math.random() * 3.0,
           rot: Math.random() * Math.PI * 2,
-          vrot: (Math.random() - 0.5) * 0.14,
-          alpha: isClimax ? 0.98 : 0.88,
-          gold: isGold,
-          deep: isClimax && !isGold,
+          vrot: (Math.random() - 0.5) * 0.04,
+          alpha: 0.72,
+          deep: isClimax,
           burst: true
         });
       }
@@ -2144,7 +2092,7 @@
           sp.style.animationDelay = `${baseDelay.toFixed(2)}s`;
           if (col.crimson) {
             setTimeout(() => {
-              sp.classList.add('ink-ring');
+              
               if (ch === '笑' || ch === '烂' || ch === '花') spawnHoverPetals(sp, true);
             }, Math.round((baseDelay + 0.18) * 1000));
           }
@@ -2155,9 +2103,7 @@
           sp.addEventListener('mouseenter', () => {
             spawnHoverPetals(sp, col.crimson);
             if (col.crimson) {
-              sp.classList.remove('ink-ring');
-              void sp.offsetWidth;
-              sp.classList.add('ink-ring');
+              
             }
             const prev = sp.previousElementSibling;
             const next = sp.nextElementSibling;
